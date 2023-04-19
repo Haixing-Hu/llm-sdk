@@ -1,0 +1,5 @@
+typing
+pydantic
+loguru
+pandas
+openai >= 0.27.0
