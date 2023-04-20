@@ -5,88 +5,164 @@
 #    All rights reserved.                                                      #
 #                                                                              #
 # ##############################################################################
+import logging
 from abc import ABC, abstractmethod
 from .example import Example
 
 
-class LanguageModel(ABC):
+class LargeLanguageModel(ABC):
     """
-    The abstract base class for language models.
+    The abstract base class for large language models.
     """
     def __init__(self,
-                 model: str = "davinci",
-                 temperature: float = 0.7,
-                 max_reply_tokens: int = 300) -> None:
+                 max_tokens: int = 1000,
+                 temperature: float = 1.0,
+                 top_p: int = 1) -> None:
+        self._max_tokens = max_tokens
+        self._temperature = temperature
+        self._top_p = top_p
         self._examples = {}
         self._instruction = ""
-        self._model = model
-        self._temperature = temperature
-        self._max_reply_tokens = max_reply_tokens
+        self._logger = logging.getLogger(self.__class__.__name__)
 
     @property
-    def model(self):
-        """Returns the model specified for the API."""
-        return self._model
+    def max_tokens(self):
+        """
+        The maximum number of tokens to generate in the completion.
+
+        The token count of your prompt plus max_tokens cannot exceed the model's
+        context length.
+        """
+        return self._max_tokens
 
     @property
     def temperature(self):
-        """Returns the temperature specified for the API."""
+        """
+        What sampling temperature to use, between 0 and 2. Higher values like
+        0.8 will make the output more random, while lower values like 0.2 will
+        make it more focused and deterministic.
+
+        We generally recommend altering this or top_p but not both.
+        """
         return self._temperature
 
     @property
-    def max_reply_tokens(self):
-        """Returns the max tokens of reply specified for the API."""
-        return self._max_reply_tokens
+    def top_p(self) -> int:
+        """
+        An alternative to sampling with temperature, called nucleus sampling,
+        where the model considers the results of the tokens with top_p
+        probability mass. So 0.1 means only the tokens comprising the top 10%
+        probability mass are considered.
+
+        We generally recommend altering this or temperature but not both.
+        """
+        return self._top_p
 
     @property
     def instruction(self) -> str:
-        """Get the instruction."""
+        """
+        The instruction to the model.
+        """
         return self._instruction
 
     @instruction.setter
     def instruction(self, instruction: str) -> None:
-        """Sets the instruction."""
+        """
+        Sets the instruction.
+        """
         self._instruction = instruction
 
+    @property
+    def examples(self):
+        """
+        Returns all examples.
+        """
+        return self._examples
+
+    @examples.setter
+    def examples(self, examples: list[Example]) -> None:
+        """
+        Sets all examples.
+        """
+        self._examples = examples
+
     def add_example(self, example: Example) -> None:
-        """Adds an example to this engine."""
+        """
+        Adds an example to this model.
+        """
         self._examples[example.id] = example
 
     def add_examples(self, examples: list[Example]) -> None:
-        """Adds an example to this engine."""
+        """
+        Adds an example to this model.
+        """
         for example in examples:
             self._examples[example.id] = example
 
     def remove_example(self, example_id: str) -> None:
-        """Remove the example with the specific id."""
+        """
+        Removes the example with the specific ID.
+        """
         if example_id in self._examples:
             del self._examples[example_id]
 
     def clear_examples(self) -> None:
-        """Clears all examples of this engine."""
+        """
+        Clears all examples of this model.
+        """
         self._examples = {}
 
     def get_example(self, example_id: str) -> Example:
-        """Get a single example."""
+        """
+        Gets a single example with the specified ID.
+        """
         return self._examples.get(example_id, None)
 
-    @property
-    def examples(self):
-        """Returns all examples."""
-        return self._examples
+    def generate(self, prompt: str) -> str:
+        """
+        Obtains a single generation from this model.
 
-    def get_reply(self, prompt: str) -> str:
-        """Obtains the best result as returned by the API."""
-        response = self._submit_request(prompt)
-        choice = response["choices"][0]
-        return self._extract_content(choice)
+        :param prompt: the prompt.
+        :return: the generation.
+        """
+        generations = self.generate(prompt, 1)
+        return generations[0]
+
+    def generate(self, prompt: str, n: int) -> list[str]:
+        """
+        Obtains the specified number of generations from this model.
+
+        :param prompt: the prompt.
+        :param n: the number of replies to be obtained.
+        :return: the list of generations.
+        """
+        response = self._submit_request(prompt, n)
+        return self._parse_response(response)
 
     @abstractmethod
-    def _submit_request(self, prompt: str) -> dict:
-        """Calls the OpenAI API with the specified prompt."""
-        pass
+    def _submit_request(self, prompt: str, n: int) -> dict:
+        """
+        Calls the underlying model with the specified prompt.
+
+        :param prompt: the prompt.
+        :param n: the number of replies to be obtained.
+        :return: the response of the model.
+        """
 
     @abstractmethod
-    def _extract_content(self, choice: dict) -> str:
-        """Extracts the content of a choices of a response"""
-        pass
+    def _parse_response(self, response: dict) -> list[str]:
+        """
+        Parses the replies from the response of the model.
+
+        :param response: the response.
+        :return: the list of generations.
+        """
+
+    @abstractmethod
+    def count_tokens(self, text) -> int:
+        """
+        Counts the number of tokens of a text.
+
+        :param text: the text.
+        :return: the number of tokens of the text.
+        """

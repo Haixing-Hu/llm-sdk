@@ -1,0 +1,123 @@
+# ##############################################################################
+#                                                                              #
+#    Copyright (c) 2023.  Haixing Hu.                                          #
+#                                                                              #
+#    All rights reserved.                                                      #
+#                                                                              #
+# ##############################################################################
+import openai
+from .openai_model import OpenAiModel
+from .example import Example
+
+COMPATIBLE_MODELS = [
+    "text-davinci-003",
+    "text-davinci-002",
+    "text-curie-001",
+    "text-babbage-001",
+    "text-ada-001"
+]
+
+DEFAULT_MODEL = "text-davinci-003"
+
+
+class Gpt(OpenAiModel):
+    """
+    The class of GPT models from OpenAI.
+    """
+    def __int__(self,
+                model: str = DEFAULT_MODEL,
+                max_tokens: int = None,
+                temperature: float = 1.0,
+                top_p: int = 1,
+                input_prefix: str = "input: ",
+                input_suffix: str = "\n",
+                output_prefix: str = "output: ",
+                output_suffix: str = "\n\n",
+                append_output_prefix: bool = False) -> None:
+        super().__int__(model=model,
+                        max_tokens=max_tokens,
+                        temperature=temperature,
+                        top_p=top_p)
+        if model not in COMPATIBLE_MODELS:
+            raise ValueError(f"Incompatible model {model}. "
+                             f"The compatible models are: {COMPATIBLE_MODELS}")
+        self._input_prefix = input_prefix
+        self._input_suffix = input_suffix
+        self._output_prefix = output_prefix
+        self._output_suffix = output_suffix
+        self._append_output_prefix = append_output_prefix
+        self._stop = (output_suffix + input_prefix).strip()
+
+    @property
+    def input_prefix(self) -> str:
+        return self._input_prefix
+
+    @property
+    def input_suffix(self) -> str:
+        return self._input_suffix
+
+    @property
+    def output_prefix(self) -> str:
+        return self._output_prefix
+
+    @property
+    def output_suffix(self) -> str:
+        return self._output_suffix
+
+    @property
+    def append_output_prefix(self) -> bool:
+        return self._append_output_prefix
+
+    @property
+    def stop(self) -> str:
+        return self._stop
+
+    def _submit_request(self, prompt: str, n: int) -> dict:
+        full_prompt = self._create_full_prompt(prompt)
+        self._logger.debug("Submit a prompt:\n{}", full_prompt)
+        if self._max_tokens is None:
+            prompt_tokens = self.count_tokens(full_prompt)
+            model_tokens = OpenAiModel.get_model_tokens(self._model)
+            max_tokens = model_tokens - prompt_tokens
+        else:
+            max_tokens = self._max_tokens
+        self._logger.debug("Max number of generation tokens is: {}", max_tokens)
+        # FIXME: deal with errors and retries
+        response = openai.Completion.create(engine=self.model,
+                                            prompt=full_prompt,
+                                            max_tokens=max_tokens,
+                                            temperature=self._temperature,
+                                            top_p=self._top_p,
+                                            n=n,
+                                            stop=self._stop)
+        self._logger.debug("Receive a response:\n{}", response)
+        return response
+
+    def _parse_response(self, response: dict) -> list[str]:
+        choices = response["choices"]
+        generations = [c["text"] for c in choices]
+        return generations
+
+    def _create_full_prompt(self, prompt: str) -> str:
+        """
+        Creates the query for the API request.
+        """
+        full_prompt = self._instruction + "\n" + self._create_example_prompt() \
+            + self._input_prefix + prompt + self._input_suffix
+        if self._append_output_prefix:
+            full_prompt = full_prompt + self._output_prefix
+        return full_prompt
+
+    def _create_example_prompt(self) -> str:
+        """
+        Formats all examples to prime the model.
+        """
+        examples = [self._format_example(e) for e in self.examples.values()]
+        return "".join(examples)
+
+    def _format_example(self, example: Example) -> str:
+        """
+        Formats the input, output pair.
+        """
+        return self._input_prefix + example.input + self._input_suffix \
+            + self._output_prefix + example.output + self._output_suffix

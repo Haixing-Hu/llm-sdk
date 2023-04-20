@@ -6,4 +6,6 @@
 #                                                                              #
 # ##############################################################################
 from .example import Example
-from .llm import LanguageModel
+from .llm import LargeLanguageModel
+from .gpt import Gpt
+from .chat_gpt import ChatGpt
