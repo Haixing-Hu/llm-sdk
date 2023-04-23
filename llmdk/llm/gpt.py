@@ -6,16 +6,14 @@
 #                                                                              #
 # ##############################################################################
 import openai
-from .openai_model import OpenAiModel
+from .openai import OpenAiModel
 from .example import Example
-
-COMPATIBLE_MODELS = [
-    "text-davinci-003",
-    "text-davinci-002",
-    "text-curie-001",
-    "text-babbage-001",
-    "text-ada-001"
-]
+from ..util.openai_utils import (
+    check_model_compatibility,
+    call_with_retries,
+    get_model_tokens,
+    count_tokens,
+)
 
 DEFAULT_MODEL = "text-davinci-003"
 
@@ -26,6 +24,7 @@ class Gpt(OpenAiModel):
     """
     def __int__(self,
                 model: str = DEFAULT_MODEL,
+                api_key: str = None,
                 max_tokens: int = None,
                 temperature: float = 1.0,
                 top_p: int = 1,
@@ -35,18 +34,17 @@ class Gpt(OpenAiModel):
                 output_suffix: str = "\n\n",
                 append_output_prefix: bool = False) -> None:
         super().__int__(model=model,
+                        api_key=api_key,
                         max_tokens=max_tokens,
                         temperature=temperature,
                         top_p=top_p)
-        if model not in COMPATIBLE_MODELS:
-            raise ValueError(f"Incompatible model {model}. "
-                             f"The compatible models are: {COMPATIBLE_MODELS}")
         self._input_prefix = input_prefix
         self._input_suffix = input_suffix
         self._output_prefix = output_prefix
         self._output_suffix = output_suffix
         self._append_output_prefix = append_output_prefix
         self._stop = (output_suffix + input_prefix).strip()
+        check_model_compatibility(model=model, endpoint="completions")
 
     @property
     def input_prefix(self) -> str:
@@ -76,20 +74,21 @@ class Gpt(OpenAiModel):
         full_prompt = self._create_full_prompt(prompt)
         self._logger.debug("Submit a prompt:\n{}", full_prompt)
         if self._max_tokens is None:
-            prompt_tokens = self.count_tokens(full_prompt)
-            model_tokens = OpenAiModel.get_model_tokens(self._model)
+            model_tokens = get_model_tokens(model=self._model)
+            prompt_tokens = count_tokens(model=self._model, text=full_prompt)
             max_tokens = model_tokens - prompt_tokens
         else:
             max_tokens = self._max_tokens
         self._logger.debug("Max number of generation tokens is: {}", max_tokens)
-        # FIXME: deal with errors and retries
-        response = openai.Completion.create(engine=self.model,
-                                            prompt=full_prompt,
-                                            max_tokens=max_tokens,
-                                            temperature=self._temperature,
-                                            top_p=self._top_p,
-                                            n=n,
-                                            stop=self._stop)
+        response = call_with_retries(openai_api=openai.Completion.create,
+                                     logger=self._logger,
+                                     engine=self.model,
+                                     prompt=full_prompt,
+                                     max_tokens=max_tokens,
+                                     temperature=self._temperature,
+                                     top_p=self._top_p,
+                                     n=n,
+                                     stop=self._stop)
         self._logger.debug("Receive a response:\n{}", response)
         return response
 

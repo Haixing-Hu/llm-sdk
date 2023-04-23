@@ -5,13 +5,16 @@
 #    All rights reserved.                                                      #
 #                                                                              #
 # ##############################################################################
+import logging
 from abc import ABC, abstractmethod
 
 
-class Embeddings(ABC):
+class Embedding(ABC):
     """
     Interface for embedding models.
     """
+    def __init__(self) -> None:
+        self._logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
     def embed_documents(self, documents: list[str]) -> list[list[float]]:

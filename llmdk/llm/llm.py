@@ -15,9 +15,24 @@ class LargeLanguageModel(ABC):
     The abstract base class for large language models.
     """
     def __init__(self,
-                 max_tokens: int = 1000,
+                 max_tokens: int = None,
                  temperature: float = 1.0,
                  top_p: int = 1) -> None:
+        """
+        Constructs a LargeLanguageModel.
+
+        :param max_tokens: the maximum number of tokens of the generated message.
+            If it is None, the value will be calculated automatically.
+        :param temperature: What sampling temperature to use. Higher values like
+            0.8 will make the output more random, while lower values like 0.2
+            will make it more focused and deterministic. We generally recommend
+            altering this or top_p but not both.
+        :param top_p: An alternative to sampling with temperature, called
+            nucleus sampling, where the model considers the results of the
+            tokens with top_p probability mass. So 0.1 means only the tokens
+            comprising the top 10% probability mass are considered. We generally
+            recommend altering this or temperature but not both.
+        """
         self._max_tokens = max_tokens
         self._temperature = temperature
         self._top_p = top_p
@@ -125,10 +140,10 @@ class LargeLanguageModel(ABC):
         :param prompt: the prompt.
         :return: the generation.
         """
-        generations = self.generate(prompt, 1)
+        generations = self.generate_n(prompt, 1)
         return generations[0]
 
-    def generate(self, prompt: str, n: int) -> list[str]:
+    def generate_n(self, prompt: str, n: int) -> list[str]:
         """
         Obtains the specified number of generations from this model.
 
@@ -156,13 +171,4 @@ class LargeLanguageModel(ABC):
 
         :param response: the response.
         :return: the list of generations.
-        """
-
-    @abstractmethod
-    def count_tokens(self, text) -> int:
-        """
-        Counts the number of tokens of a text.
-
-        :param text: the text.
-        :return: the number of tokens of the text.
         """

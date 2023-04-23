@@ -5,4 +5,4 @@
 #    All rights reserved.                                                      #
 #                                                                              #
 # ##############################################################################
-from .embedding import Embeddings
+from .embedding import Embedding

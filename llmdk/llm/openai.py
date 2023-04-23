@@ -13,63 +13,45 @@
 #                                                                              #
 # ##############################################################################
 from abc import ABC
-import openai
-import tiktoken
 from .llm import LargeLanguageModel
-
-MODEL_TOKEN_MAPPING = {
-    "gpt-4": 8192,
-    "gpt-4-0314": 8192,
-    "gpt-4-32k": 32768,
-    "gpt-4-32k-0314": 32768,
-    "gpt-3.5-turbo": 4096,
-    "gpt-3.5-turbo-0301": 4096,
-    "text-ada-001": 2049,
-    "ada": 2049,
-    "text-babbage-001": 2040,
-    "babbage": 2049,
-    "text-curie-001": 2049,
-    "curie": 2049,
-    "davinci": 2049,
-    "text-davinci-003": 4097,
-    "text-davinci-002": 4097,
-    "code-davinci-002": 8001,
-    "code-davinci-001": 8001,
-    "code-cushman-002": 2048,
-    "code-cushman-001": 2048,
-}
+from ..util.openai_utils import set_api_key
 
 
 class OpenAiModel(LargeLanguageModel, ABC):
     """
     The base class of models from OpenAI.
     """
+
     def __int__(self,
                 model: str,
+                api_key: str,
                 max_tokens: int,
                 temperature: float,
                 top_p: int) -> None:
-        super().__int__(max_tokens=max_tokens,
-                        temperature=temperature,
-                        top_p=top_p)
+        """
+        Create a OpenAiModel.
+
+        :param model: the name of the OpenAI model.
+        :param api_key: the OpenAI API key. If it is None, the API key will be
+            retrieved from the environment variable "OPENAI_KEY".
+        :param max_tokens: the maximum number of tokens in the reply of the
+            OpenAI's model. If it is None, the value will be calculated
+            automatically.
+        :param temperature: What sampling temperature to use, between 0 and 2.
+            Higher values like 0.8 will make the output more random, while lower
+            values like 0.2 will make it more focused and deterministic. We
+            generally recommend altering this or top_p but not both.
+        :param top_p: An alternative to sampling with temperature, called
+            nucleus sampling, where the model considers the results of the
+            tokens with top_p probability mass. So 0.1 means only the tokens
+            comprising the top 10% probability mass are considered. We generally
+            recommend altering this or temperature but not both.
+        """
+        super().__init__(max_tokens=max_tokens,
+                         temperature=temperature,
+                         top_p=top_p)
         self._model = model
-
-    @classmethod
-    def set_api_key(cls, key) -> None:
-        """
-        Sets the OpenAI API key.
-        """
-        openai.api_key = key
-
-    @classmethod
-    def get_model_tokens(cls, model) -> int:
-        """
-        Gets the context length in tokens of the specified model.
-
-        :param model: the name of the model.
-        :return: the context length in tokens of the specified model.
-        """
-        return MODEL_TOKEN_MAPPING[model]
+        set_api_key(api_key)
 
     @property
     def model(self) -> str:
@@ -77,8 +59,3 @@ class OpenAiModel(LargeLanguageModel, ABC):
         The name of model of this OpenAI LLM.
         """
         return self._model
-
-    def count_tokens(self, text) -> int:
-        codec = tiktoken.encoding_for_model(self._model)
-        tokenized_text = codec.encode(text)
-        return len(tokenized_text)
