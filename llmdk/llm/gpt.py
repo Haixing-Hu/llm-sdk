@@ -6,7 +6,7 @@
 #                                                                              #
 # ##############################################################################
 import openai
-from .openai import OpenAiModel
+from .openai_llm import OpenAiModel
 from .example import Example
 from ..util.openai_utils import (
     check_model_compatibility,
@@ -22,22 +22,25 @@ class Gpt(OpenAiModel):
     """
     The class of GPT models from OpenAI.
     """
-    def __int__(self,
-                model: str = DEFAULT_MODEL,
-                api_key: str = None,
-                max_tokens: int = None,
-                temperature: float = 1.0,
-                top_p: int = 1,
-                input_prefix: str = "input: ",
-                input_suffix: str = "\n",
-                output_prefix: str = "output: ",
-                output_suffix: str = "\n\n",
-                append_output_prefix: bool = False) -> None:
-        super().__int__(model=model,
-                        api_key=api_key,
-                        max_tokens=max_tokens,
-                        temperature=temperature,
-                        top_p=top_p)
+
+    def __init__(self,
+                 model: str = DEFAULT_MODEL,
+                 max_tokens: int = None,
+                 temperature: float = 1.0,
+                 top_p: int = 1,
+                 input_prefix: str = "input: ",
+                 input_suffix: str = "\n",
+                 output_prefix: str = "output: ",
+                 output_suffix: str = "\n\n",
+                 append_output_prefix: bool = False,
+                 api_key: str = None,
+                 use_proxy: bool = None) -> None:
+        super().__init__(model=model,
+                         max_tokens=max_tokens,
+                         temperature=temperature,
+                         top_p=top_p,
+                         api_key=api_key,
+                         use_proxy=use_proxy)
         self._input_prefix = input_prefix
         self._input_suffix = input_suffix
         self._output_prefix = output_prefix
@@ -72,24 +75,23 @@ class Gpt(OpenAiModel):
 
     def _submit_request(self, prompt: str, n: int) -> dict:
         full_prompt = self._create_full_prompt(prompt)
-        self._logger.debug("Submit a prompt:\n{}", full_prompt)
+        self._logger.debug("Submit a prompt:\n%s", full_prompt)
         if self._max_tokens is None:
             model_tokens = get_model_tokens(model=self._model)
             prompt_tokens = count_tokens(model=self._model, text=full_prompt)
             max_tokens = model_tokens - prompt_tokens
         else:
             max_tokens = self._max_tokens
-        self._logger.debug("Max number of generation tokens is: {}", max_tokens)
+        self._logger.debug("Max number of generation tokens is: %d", max_tokens)
         response = call_with_retries(openai_api=openai.Completion.create,
-                                     logger=self._logger,
-                                     engine=self.model,
+                                     model=self._model,
                                      prompt=full_prompt,
                                      max_tokens=max_tokens,
                                      temperature=self._temperature,
                                      top_p=self._top_p,
                                      n=n,
                                      stop=self._stop)
-        self._logger.debug("Receive a response:\n{}", response)
+        self._logger.debug("Receive a response:\n%s", response)
         return response
 
     def _parse_response(self, response: dict) -> list[str]:
@@ -102,7 +104,7 @@ class Gpt(OpenAiModel):
         Creates the query for the API request.
         """
         full_prompt = self._instruction + "\n" + self._create_example_prompt() \
-            + self._input_prefix + prompt + self._input_suffix
+                      + self._input_prefix + prompt + self._input_suffix
         if self._append_output_prefix:
             full_prompt = full_prompt + self._output_prefix
         return full_prompt

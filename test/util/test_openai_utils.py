@@ -13,8 +13,9 @@ from llmdk.util.openai_utils import (
     count_tokens,
     count_message_tokens,
     get_chunked_tokens,
+    set_proxy,
 )
-from llmdk.embedding.openai import DEFAULT_MODEL as DEFAULT_EMBEDDING_MODEL
+from llmdk.embedding.openai_embedding import DEFAULT_MODEL as DEFAULT_EMBEDDING_MODEL
 
 
 class TestOpenAiUtil(unittest.TestCase):
@@ -60,6 +61,12 @@ class TestOpenAiUtil(unittest.TestCase):
         result = get_chunked_tokens(model, text)
         expected = [tokens[i:i + chunk_size] for i in range(0, len(tokens), chunk_size)]
         self.assertEqual(result, expected)
+
+    def test_set_proxy(self):
+        result = set_proxy(None)
+        print(result)
+        # self.assertIsNotNone(result)
+        # self.assertNotEqual({}, result)
 
 
 if __name__ == '__main__':

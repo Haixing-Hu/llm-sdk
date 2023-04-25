@@ -9,11 +9,11 @@ import logging
 import openai
 import numpy as np
 from .embedding import Embedding
-from ..util.openai_utils import (
+from llmdk.util.openai_utils import (
     check_model_compatibility,
-    set_api_key,
     call_with_retries,
     get_chunked_tokens,
+    init_openai,
 )
 
 DEFAULT_MODEL = "text-embedding-ada-002"
@@ -26,14 +26,16 @@ class OpenAiEmbedding(Embedding):
     """
     def __init__(self,
                  model: str = DEFAULT_MODEL,
+                 batch_size: int = DEFAULT_BATCH_SIZE,
                  api_key: str = None,
-                 batch_size: int = DEFAULT_BATCH_SIZE) -> None:
+                 use_proxy: bool = None) -> None:
         super().__init__()
         self._model = model
         self._batch_size = batch_size
         self._logger = logging.getLogger(self.__class__.__name__)
         check_model_compatibility(model=model, endpoint="embeddings")
-        set_api_key(api_key)
+        init_openai(api_key=api_key,
+                    use_proxy=use_proxy)
 
     def embed_documents(self, documents: list[str]) -> list[list[float]]:
         # split all documents into list of chunked token lists

@@ -14,7 +14,7 @@
 # ##############################################################################
 from abc import ABC
 from .llm import LargeLanguageModel
-from ..util.openai_utils import set_api_key
+from ..util.openai_utils import init_openai
 
 
 class OpenAiModel(LargeLanguageModel, ABC):
@@ -22,18 +22,17 @@ class OpenAiModel(LargeLanguageModel, ABC):
     The base class of models from OpenAI.
     """
 
-    def __int__(self,
-                model: str,
-                api_key: str,
-                max_tokens: int,
-                temperature: float,
-                top_p: int) -> None:
+    def __init__(self,
+                 model: str,
+                 max_tokens: int,
+                 temperature: float,
+                 top_p: int,
+                 api_key: str,
+                 use_proxy: bool) -> None:
         """
         Create a OpenAiModel.
 
         :param model: the name of the OpenAI model.
-        :param api_key: the OpenAI API key. If it is None, the API key will be
-            retrieved from the environment variable "OPENAI_KEY".
         :param max_tokens: the maximum number of tokens in the reply of the
             OpenAI's model. If it is None, the value will be calculated
             automatically.
@@ -46,12 +45,15 @@ class OpenAiModel(LargeLanguageModel, ABC):
             tokens with top_p probability mass. So 0.1 means only the tokens
             comprising the top 10% probability mass are considered. We generally
             recommend altering this or temperature but not both.
+        :param api_key: the OpenAI API key.
+        :param use_proxy: whether to use the proxy.
         """
         super().__init__(max_tokens=max_tokens,
                          temperature=temperature,
                          top_p=top_p)
         self._model = model
-        set_api_key(api_key)
+        init_openai(api_key=api_key,
+                    use_proxy=use_proxy)
 
     @property
     def model(self) -> str:

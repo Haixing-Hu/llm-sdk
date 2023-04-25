@@ -5,5 +5,26 @@
 #    All rights reserved.                                                      #
 #                                                                              #
 # ##############################################################################
-from .embedding import Embedding
-from .openai_embedding import OpenAiEmbedding
+import unittest
+import logging
+
+import openai
+from llmdk.llm.chat_gpt import ChatGpt
+
+
+class TestChatGpt(unittest.TestCase):
+
+    def setUp(self) -> None:
+        logging.basicConfig(level=logging.DEBUG)
+        openai.debug = True
+        openai.log = "debug"
+
+    def test_generate(self):
+        model = ChatGpt()
+        message = model.generate("Say hello to me")
+        print(message)
+        self.assertIsNotNone(message)
+
+
+if __name__ == '__main__':
+    unittest.main()

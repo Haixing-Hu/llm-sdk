@@ -8,6 +8,7 @@
 import logging
 import os
 from typing import Any, Callable, List
+
 import openai
 import tiktoken
 from tenacity import (
@@ -18,7 +19,12 @@ from tenacity import (
     wait_exponential,
 )
 
-API_KEY_ENVIRONMENT_VARIABLE = "OPENAI_API_KEY"
+from .common_utils import (
+    singleton,
+    read_config_file,
+    is_website_accessible,
+)
+
 MODEL_TOKEN_MAPPING = {
     # GPT-4 models: https://platform.openai.com/docs/models/gpt-4
     "gpt-4": 8192,
@@ -50,9 +56,11 @@ DEFAULT_MAX_RETRIES = 6
 DEFAULT_WAIT_MIN_SECONDS = 4
 DEFAULT_WAIT_MAX_SECONDS = 10
 
+# the logger of the current module
+logger = logging.getLogger(__name__)
+
 
 def call_with_retries(openai_api: Callable[[Any], Any],
-                      logger: logging.Logger,
                       max_retries: int = DEFAULT_MAX_RETRIES,
                       wait_min_seconds: int = DEFAULT_WAIT_MIN_SECONDS,
                       wait_max_seconds: int = DEFAULT_WAIT_MAX_SECONDS,
@@ -61,7 +69,6 @@ def call_with_retries(openai_api: Callable[[Any], Any],
     Call an OpenAI's API with retries.
 
     :param openai_api: the OpenAI's API to call.
-    :param logger: the logger used to logging retry messages.
     :param max_retries: the maximum number of retries.
     :param wait_min_seconds: the minimum seconds to wait before each retry.
     :param wait_max_seconds: the maximum seconds to wait before each retry.
@@ -83,7 +90,7 @@ def call_with_retries(openai_api: Callable[[Any], Any],
         before_sleep=before_sleep_log(logger, logging.WARNING),
     )
     def __submit_openai_request() -> Any:
-        return openai_api(kwargs)
+        return openai_api(**kwargs)
 
     return __submit_openai_request()
 
@@ -118,8 +125,7 @@ def count_tokens(model, text) -> int:
 
 
 def count_message_tokens(model: str,
-                         messages: list[dict],
-                         logger: logging.Logger):
+                         messages: List[dict]):
     """
     Counts the number of tokens used by a list of messages.
 
@@ -127,20 +133,17 @@ def count_message_tokens(model: str,
 
     :param messages: list of messages.
     :param model: the name of OpenAI model.
-    :param logger: the logger used to logging messages.
     """
     if model == "gpt-3.5-turbo":
         logger.warning("gpt-3.5-turbo may change over time. Returning num tokens "
                        "assuming gpt-3.5-turbo-0301.")
         return count_message_tokens(model="gpt-3.5-turbo-0301",
-                                    messages=messages,
-                                    logger=logger)
+                                    messages=messages)
     elif model == "gpt-4":
         logger.warning("gpt-4 may change over time. Returning num tokens "
                        "assuming gpt-4-0314.")
         return count_message_tokens(model="gpt-4-0314",
-                                    messages=messages,
-                                    logger=logger)
+                                    messages=messages)
     elif model == "gpt-3.5-turbo-0301":
         tokens_per_message = 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
         tokens_per_name = -1  # if there's a name, the role is omitted
@@ -164,25 +167,6 @@ def count_message_tokens(model: str,
                 num_tokens += tokens_per_name
     num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
     return num_tokens
-
-
-def set_api_key(api_key: str) -> None:
-    """
-    Sets the OpenAI's API key.
-
-    If the API key is not provided by the argument 'key', the program will try
-    to get it from the environment variable 'OPENAI_API_KEY'. If it is also not set,
-    the program will raise an exception.
-
-    :param api_key: the provided API key, or None if not provided.
-    :return: the OpenAI's API key, or None if not set.
-    """
-    if api_key is None:
-        api_key = os.getenv(API_KEY_ENVIRONMENT_VARIABLE)
-    if api_key is None:
-        raise ValueError("The OpenAI's API key should be provided either by "
-                         "the argument 'api_key' or by the environment variable 'OPENAI_KEY'.")
-    openai.api_key = api_key
 
 
 def check_model_compatibility(model: str, endpoint: str) -> None:
@@ -251,7 +235,7 @@ def check_model_compatibility(model: str, endpoint: str) -> None:
 
 
 def get_chunked_tokens(model: str,
-                       text: str) -> list[list[int]]:
+                       text: str) -> List[List[int]]:
     """
     Split a long text into chunks according to the maximum number of tokens of
     the model, and returns the list of chunked token list.
@@ -271,3 +255,82 @@ def get_chunked_tokens(model: str,
     #  text.
     chunk_size = get_model_tokens(model)
     return [tokens[i:i + chunk_size] for i in range(0, len(tokens), chunk_size)]
+
+
+def set_api_key(api_key: str) -> None:
+    """
+    Sets the API key of OpenAI.
+
+    If the API key is not provided by the argument 'key', the program will try
+    to get it from the environment variable 'OPENAI_API_KEY'. If it is also not set,
+    the program will try to get it from the configuration file. The path of the
+    configuration file should be set in the environment variable "OPENAI_CONFIG_PATH".
+    If the environment variable "OPENAI_CONFIG_FILE" is not set, the program
+    will use the default configuration file path "~/.openai/config", where "~"
+    is the alias of the home directory of the current user, depending on the
+    current operating system.
+
+    :param api_key: the provided API key, or None if not provided.
+    :return: the OpenAI's API key, or None if not set.
+    """
+    if api_key is None:
+        api_key = os.getenv("OPENAI_API_KEY")
+    if api_key is None:
+        config_file = os.getenv("OPENAI_CONFIG_PATH")
+        if config_file is None:
+            config_file = os.path.join(os.path.expanduser("~"), ".openai", "config")
+        config = read_config_file(config_file)
+        api_key = config["OPENAI_API_KEY"]
+    if api_key is None:
+        raise ValueError("The OpenAI's API key is not set. "
+                         "It should be set either by the argument 'api_key', "
+                         "or by the environment variable 'OPENAI_API_KEY', "
+                         "or in the configuration file '~/.openai/config'.")
+    logger.info("Setting API key of OpenAI...")
+    openai.api_key = api_key
+
+
+def set_proxy(proxy: dict = None) -> dict:
+    """
+    Sets the proxy used by the OpenAI's API.
+
+    :param proxy: the configuration of proxy to set, which should be a dict. For
+    example: {"http": "<PROXY>", "https": "<PROXY>"}. If it is not set, the
+    program will use the proxy set in the environment variables "http_proxy"
+    and "https_proxy".
+    """
+    if proxy is None:
+        proxy = {}
+    if ("http_proxy" not in proxy) or (proxy["http_proxy"] is None):
+        proxy["http_proxy"] = os.getenv("http_proxy")
+    if ("https_proxy" not in proxy) or (proxy["https_proxy"] is None):
+        proxy["https_proxy"] = os.getenv("https_proxy")
+    # delete all items in the dict whose value is None
+    proxy = {k: v for k, v in proxy.items() if v is not None}
+    logger.info("Setting proxy of OpenAI: %s", proxy)
+    openai.proxy = proxy
+    return proxy
+
+
+@singleton
+def init_openai(api_key: str = None,
+                use_proxy: bool = None,
+                proxy: dict = None) -> None:
+    """
+    Initializes the OpenAI APIs.
+
+    :param api_key: the API KEY of the OpenAI.
+    :param use_proxy: whether to use the proxy. If it is None, the program will
+     set the proxy if "https://www.google.com" is not accessible.
+    :param proxy: the proxy setting of the OpenAI.
+    """
+    logging.info("Initializing the OpenAI's API ...")
+    set_api_key(api_key)
+    if use_proxy is None:
+        logger.info("Testing the accessibility of https://www.google.com ...")
+        accessible = is_website_accessible("https://www.google.com")
+        logger.info("The website %s accessible.", "is" if accessible else "is NOT")
+        use_proxy = not accessible
+    if use_proxy is True:
+        set_proxy(proxy)
+    logging.info("The OpenAI's API was successfully initialized.")
