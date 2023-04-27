@@ -59,8 +59,8 @@ class OpenAiEmbedding(Embedding):
 
         # collect the embedding vectors of each document
         n = len(documents)
-        vectors: list[list[list[float]]] = [] * n
-        lengths: list[list[int]] = [] * n
+        vectors: list[list[list[float]]] = [[]] * n
+        lengths: list[list[int]] = [[]] * n
         for i in range(len(all_embeddings)):
             embedding = all_embeddings[i]
             doc_index = indices[i]
