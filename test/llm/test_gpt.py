@@ -9,7 +9,7 @@ import unittest
 import logging
 
 import openai
-from llmdk.llm.gpt import Gpt
+from llmsdk.llm.gpt import Gpt
 
 
 class TestGpt(unittest.TestCase):

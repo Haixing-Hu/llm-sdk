@@ -8,14 +8,14 @@
 import logging
 import unittest
 
-from llmdk.util.openai_utils import (
+from llmsdk.util.openai_utils import (
     get_model_tokens,
     count_tokens,
     count_message_tokens,
     get_chunked_tokens,
     set_proxy,
 )
-from llmdk.embedding.openai_embedding import DEFAULT_MODEL as DEFAULT_EMBEDDING_MODEL
+from llmsdk.embedding.openai_embedding import DEFAULT_MODEL as DEFAULT_EMBEDDING_MODEL
 
 
 class TestOpenAiUtil(unittest.TestCase):

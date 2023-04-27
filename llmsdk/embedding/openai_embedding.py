@@ -9,7 +9,7 @@ import logging
 import openai
 import numpy as np
 from .embedding import Embedding
-from llmdk.util.openai_utils import (
+from llmsdk.util.openai_utils import (
     check_model_compatibility,
     call_with_retries,
     get_chunked_tokens,

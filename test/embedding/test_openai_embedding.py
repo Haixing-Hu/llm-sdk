@@ -9,7 +9,7 @@ import unittest
 import logging
 
 import openai
-from llmdk.embedding import OpenAiEmbedding
+from llmsdk.embedding import OpenAiEmbedding
 
 
 class TestOpenAiEmbedding(unittest.TestCase):

@@ -9,7 +9,7 @@ import unittest
 import logging
 
 import openai
-from llmdk.llm.chat_gpt import ChatGpt
+from llmsdk.llm.chat_gpt import ChatGpt
 
 
 class TestChatGpt(unittest.TestCase):
