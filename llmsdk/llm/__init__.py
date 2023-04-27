@@ -4,7 +4,7 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from .example import Example
 from .llm import LargeLanguageModel
+from .openai_llm import OpenAiModel
 from .gpt import Gpt
 from .chat_gpt import ChatGpt

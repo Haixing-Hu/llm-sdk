@@ -5,8 +5,11 @@
 #                                                                              =
 # ==============================================================================
 import logging
-import openai
+from typing import List
+
 import numpy as np
+import openai
+
 from .embedding import Embedding
 from llmsdk.util.openai_utils import (
     check_model_compatibility,
@@ -36,7 +39,7 @@ class OpenAiEmbedding(Embedding):
         init_openai(api_key=api_key,
                     use_proxy=use_proxy)
 
-    def embed_documents(self, documents: list[str]) -> list[list[float]]:
+    def embed_documents(self, documents: List[str]) -> List[List[float]]:
         # split all documents into list of chunked token lists
         all_token_lists = []
         indices = []
@@ -58,8 +61,8 @@ class OpenAiEmbedding(Embedding):
 
         # collect the embedding vectors of each document
         n = len(documents)
-        vectors: list[list[list[float]]] = [[]] * n
-        lengths: list[list[int]] = [[]] * n
+        vectors: List[List[List[float]]] = [[]] * n
+        lengths: List[List[int]] = [[]] * n
         for i in range(len(all_embeddings)):
             embedding = all_embeddings[i]
             doc_index = indices[i]
@@ -75,6 +78,6 @@ class OpenAiEmbedding(Embedding):
             result.append((average / np.linalg.norm(average)).tolist())
         return result
 
-    def embed_query(self, query: str) -> list[float]:
+    def embed_query(self, query: str) -> List[float]:
         vector_lists = self.embed_documents([query])
         return vector_lists[0]

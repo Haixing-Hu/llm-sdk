@@ -6,7 +6,9 @@
 # ==============================================================================
 import logging
 from abc import ABC, abstractmethod
-from .example import Example
+from typing import Any, Dict, List
+
+from llmsdk.common import Example
 
 
 class LargeLanguageModel(ABC):
@@ -94,7 +96,7 @@ class LargeLanguageModel(ABC):
         return self._examples
 
     @examples.setter
-    def examples(self, examples: list[Example]) -> None:
+    def examples(self, examples: List[Example]) -> None:
         """
         Sets all examples.
         """
@@ -106,7 +108,7 @@ class LargeLanguageModel(ABC):
         """
         self._examples[example.id] = example
 
-    def add_examples(self, examples: list[Example]) -> None:
+    def add_examples(self, examples: List[Example]) -> None:
         """
         Adds an example to this model.
         """
@@ -142,7 +144,7 @@ class LargeLanguageModel(ABC):
         generations = self.generate_n(prompt, 1)
         return generations[0]
 
-    def generate_n(self, prompt: str, n: int) -> list[str]:
+    def generate_n(self, prompt: str, n: int) -> List[str]:
         """
         Obtains the specified number of generations from this model.
 
@@ -154,7 +156,7 @@ class LargeLanguageModel(ABC):
         return self._parse_response(response)
 
     @abstractmethod
-    def _submit_request(self, prompt: str, n: int) -> dict:
+    def _submit_request(self, prompt: str, n: int) -> Dict[str, Any]:
         """
         Calls the underlying model with the specified prompt.
 
@@ -164,7 +166,7 @@ class LargeLanguageModel(ABC):
         """
 
     @abstractmethod
-    def _parse_response(self, response: dict) -> list[str]:
+    def _parse_response(self, response: Dict[str, Any]) -> List[str]:
         """
         Parses the replies from the response of the model.
 

@@ -4,10 +4,13 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
+from typing import Any, Dict, List
+
 import openai
-from .openai_llm import OpenAiModel
-from .example import Example
-from ..util.openai_utils import (
+
+from llmsdk.common.example import Example
+from llmsdk.llm.openai_llm import OpenAiModel
+from llmsdk.util.openai_utils import (
     check_model_compatibility,
     call_with_retries,
     get_model_tokens,
@@ -72,7 +75,7 @@ class Gpt(OpenAiModel):
     def stop(self) -> str:
         return self._stop
 
-    def _submit_request(self, prompt: str, n: int) -> dict:
+    def _submit_request(self, prompt: str, n: int) -> Dict[str, Any]:
         full_prompt = self._create_full_prompt(prompt)
         self._logger.debug("Submit a prompt:\n%s", full_prompt)
         if self._max_tokens is None:
@@ -93,7 +96,7 @@ class Gpt(OpenAiModel):
         self._logger.debug("Receive a response:\n%s", response)
         return response
 
-    def _parse_response(self, response: dict) -> list[str]:
+    def _parse_response(self, response: Dict[str, Any]) -> List[str]:
         choices = response["choices"]
         generations = [c["text"] for c in choices]
         return generations

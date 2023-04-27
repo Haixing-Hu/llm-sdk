@@ -4,6 +4,7 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
+from typing import Dict
 import threading
 import requests
 
@@ -44,7 +45,7 @@ def singleton(func):
     return wrapper
 
 
-def read_config_file(file_path: str) -> dict:
+def read_config_file(file_path: str) -> Dict[str, str]:
     """
     Read the specified configuration file.
 

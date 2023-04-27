@@ -4,9 +4,12 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
+from typing import Any, Dict, List
+
 import openai
-from .openai_llm import OpenAiModel
-from ..util.openai_utils import (
+
+from llmsdk.llm import OpenAiModel
+from llmsdk.util.openai_utils import (
     check_model_compatibility,
     call_with_retries,
     count_message_tokens,
@@ -44,7 +47,7 @@ class ChatGpt(OpenAiModel):
                          use_proxy=use_proxy)
         check_model_compatibility(model=model, endpoint="chat-completions")
 
-    def _submit_request(self, prompt: str, n: int) -> dict:
+    def _submit_request(self, prompt: str, n: int) -> Dict[str, Any]:
         messages = self._create_messages(prompt)
         self._logger.debug("Submit messages:\n%s", messages)
         if self._max_tokens is None:
@@ -65,12 +68,12 @@ class ChatGpt(OpenAiModel):
         self._logger.debug("Receive a response:\n%s", response)
         return response
 
-    def _parse_response(self, response: dict) -> list[str]:
+    def _parse_response(self, response: Dict[str, Any]) -> List[str]:
         choices = response["choices"]
         replies = [c["message"]["content"] for c in choices]
         return replies
 
-    def _create_messages(self, prompt: str) -> list[dict]:
+    def _create_messages(self, prompt: str) -> List[Dict[str, str]]:
         """
         Creates the list of messages for the API request.
         """

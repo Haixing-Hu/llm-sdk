@@ -6,7 +6,7 @@
 # ==============================================================================
 import logging
 import os
-from typing import Any, Callable, List
+from typing import Any, Callable, Dict, List
 
 import openai
 import tiktoken
@@ -124,7 +124,7 @@ def count_tokens(model, text) -> int:
 
 
 def count_message_tokens(model: str,
-                         messages: List[dict]):
+                         messages: List[Dict[str, str]]):
     """
     Counts the number of tokens used by a list of messages.
 
@@ -229,7 +229,8 @@ def check_model_compatibility(model: str, endpoint: str) -> None:
         case _:
             raise ValueError(f"Unsupported API endpoint: '{endpoint}'")
     if model not in compatible_models:
-        raise ValueError(f"Model '{model}' is incompatible with the endpoint '{endpoint}'. "
+        raise ValueError(f"Model '{model}' is incompatible with the endpoint "
+                         f"'{endpoint}'. "
                          f"The compatible models are: {compatible_models}")
 
 
@@ -323,13 +324,14 @@ def init_openai(api_key: str = None,
      set the proxy if "https://www.google.com" is not accessible.
     :param proxy: the proxy setting of the OpenAI.
     """
-    logging.info("Initializing the OpenAI's API ...")
+    logger.info("Initializing the OpenAI's API ...")
     set_api_key(api_key)
     if use_proxy is None:
+        # Use proxy to bypass the China Greate Firewall
         logger.info("Testing the accessibility of https://www.google.com ...")
         accessible = is_website_accessible("https://www.google.com")
         logger.info("The website %s accessible.", "is" if accessible else "is NOT")
         use_proxy = not accessible
     if use_proxy is True:
         set_proxy(proxy)
-    logging.info("The OpenAI's API was successfully initialized.")
+    logger.info("The OpenAI's API was successfully initialized.")
