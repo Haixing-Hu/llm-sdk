@@ -4,8 +4,10 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from .document import Document
-from .example import Example
-from .point import Point
-from .metadata import Metadata
-from .vector import Vector
+from typing import List
+
+"""
+The type of points, representing a list of coordinates in the high dimensional 
+space.
+"""
+Point = List[float]

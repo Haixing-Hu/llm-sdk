@@ -4,7 +4,9 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
+
+from .metadata import Metadata
 
 
 class Document:
@@ -16,26 +18,15 @@ class Document:
 
     def __init__(self,
                  content: str,
-                 title: Optional[str] = None,
-                 metadata: Optional[Dict[str, str]] = None) -> None:
+                 metadata: Optional[Metadata] = None) -> None:
         """
         Creates a Document object.
 
-        :param title: the title of the document, or None if no title.
         :param content: the content of the document.
         :param metadata: the metadata of the document, or None if no metadata.
         """
         self._content = content
-        self._title = title
-        self._metadata = metadata
-
-    @property
-    def title(self) -> Optional[str]:
-        return self._title
-
-    @title.setter
-    def title(self, value: Optional[str]) -> None:
-        self._title = value
+        self._metadata = {} if metadata is None else metadata
 
     @property
     def content(self) -> str:
@@ -46,16 +37,15 @@ class Document:
         self._content = value
 
     @property
-    def metadata(self) -> Optional[Dict[str, str]]:
+    def metadata(self) -> Metadata:
         return self._metadata
 
     @metadata.setter
-    def metadata(self, value: Optional[Dict[str, str]]) -> None:
-        self._metadata = value
+    def metadata(self, value: Optional[Metadata]) -> None:
+        self._metadata = {} if value is None else value
 
-    def dict(self) -> Dict[str, str | Dict[str, str]]:
+    def dict(self) -> Dict[str, Any]:
         return {
-            "title": self._title,
             "content": self._content,
             "metadata": self._metadata,
         }
@@ -64,4 +54,4 @@ class Document:
         return str(self.dict())
 
     def __repr__(self) -> str:
-        return str(self.dict())
+        return str(self)

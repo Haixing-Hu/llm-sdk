@@ -5,9 +5,10 @@
 #                                                                              =
 # ==============================================================================
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, TypeVar
+from typing import Any, Iterable, List, Optional
 
-from llmsdk.common import Document
+from llmsdk.common import Point, Vector
+
 
 class VectorStore(ABC):
     """
@@ -15,26 +16,51 @@ class VectorStore(ABC):
     """
 
     @abstractmethod
-    def add_texts(self,
-                  texts: Iterable[str],
-                  metadata: Optional[List[dict]] = None,
-                  **kwargs: Any) -> List[str]:
+    def add(self,
+            vector: Vector,
+            **kwargs: Any) -> str:
         """
-        Run more texts through the embeddings and add to the vector store.
+        Adds a vector to the vector store.
 
-        :param texts: Iterable of strings to add to the vector store.
-        :param metadata: Optional list of metadata associated with the texts.
-        :param kwargs: vector store specific parameters.
-        :return: List of IDs from adding the texts into the vector store.
+        :param vector: the vector to be added. After adding, the `id` field of
+            this argument will be set.
+        :param kwargs: other vector store specific parameters.
+        :return: the ID of the vector added into the vector store.
         """
 
-    def add_documents(self,
-                      documents: List[Document],
-                      **kwargs: Any) -> List[str]:
+    def add_all(self,
+                vectors: Iterable[Vector],
+                **kwargs: Any) -> List[str]:
         """
-        Run more texts through the embeddings and add to the vector store.
+        Adds a vector to the vector store.
 
-        :param documents: List of documents to add to the vector store.
-        :param kwargs: vector store specific parameters.
-        :return: List of IDs from adding the documents into the vector store.
+        The subclass may override the default implementation of this method for
+        optimization.
+
+        :param vectors: the vectors to be added, the `id` field of vectors in
+            this argument will be set.
+        :param kwargs: other vector store specific parameters.
+        :return: the list of IDs of the vectors added into the vector store.
+        """
+        result = []
+        for vector in vectors:
+            id = self.add(vector, **kwargs)
+            result.append(id)
+        return result
+
+    @abstractmethod
+    def search(self,
+               query: Point,
+               limit: int,
+               filter: Optional[Any] = None,
+               **kwargs: Any) -> List[Vector]:
+        """
+        Searches in the vector store for the vectors similar to the specified
+        point.
+
+        :param query: the specified point to be searched.
+        :param limit: the number of the most similar results to return.
+        :param filter: the filter used to filter attributes of searching results.
+        :param kwargs: other vector store specific parameters.
+        :return: the list of search results.
         """

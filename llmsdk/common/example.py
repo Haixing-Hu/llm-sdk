@@ -4,7 +4,7 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from typing import Dict
+from typing import Any, Dict
 
 
 class Example:
@@ -60,7 +60,7 @@ class Example:
     def output(self, value: str) -> None:
         self._output = value
 
-    def dict(self) -> Dict[str, str]:
+    def dict(self) -> Dict[str, Any]:
         return {
             "id": self._id,
             "input": self._input,
@@ -71,4 +71,4 @@ class Example:
         return str(self.dict())
 
     def __repr__(self) -> str:
-        return str(self.dict())
+        return str(self)
