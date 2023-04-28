@@ -6,7 +6,7 @@
 # ==============================================================================
 import logging
 import os
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 import openai
 import tiktoken
@@ -80,11 +80,11 @@ def call_with_retries(openai_api: Callable[[Any], Any],
         stop=stop_after_attempt(max_retries),
         wait=wait_exponential(multiplier=1, min=wait_min_seconds, max=wait_max_seconds),
         retry=(
-                retry_if_exception_type(openai.error.Timeout)
-                | retry_if_exception_type(openai.error.APIError)
-                | retry_if_exception_type(openai.error.APIConnectionError)
-                | retry_if_exception_type(openai.error.TryAgain)
-                | retry_if_exception_type(openai.error.ServiceUnavailableError)
+            retry_if_exception_type(openai.error.Timeout)
+            | retry_if_exception_type(openai.error.APIError)
+            | retry_if_exception_type(openai.error.APIConnectionError)
+            | retry_if_exception_type(openai.error.TryAgain)
+            | retry_if_exception_type(openai.error.ServiceUnavailableError)
         ),
         before_sleep=before_sleep_log(logger, logging.WARNING),
     )
@@ -257,7 +257,7 @@ def get_chunked_tokens(model: str,
     return [tokens[i:i + chunk_size] for i in range(0, len(tokens), chunk_size)]
 
 
-def set_api_key(api_key: str) -> None:
+def set_api_key(api_key: Optional[str]) -> None:
     """
     Sets the API key of OpenAI.
 
@@ -290,12 +290,12 @@ def set_api_key(api_key: str) -> None:
     openai.api_key = api_key
 
 
-def set_proxy(proxy: dict = None) -> dict:
+def set_proxy(proxy: Optional[Dict] = None) -> dict:
     """
     Sets the proxy used by the OpenAI's API.
 
     :param proxy: the configuration of proxy to set, which should be a dict. For
-    example: {"http": "<PROXY>", "https": "<PROXY>"}. If it is not set, the
+    example: {"http": "<PROXY>", "https": "<PROXY>"}. If it is None, the
     program will use the proxy set in the environment variables "http_proxy"
     and "https_proxy".
     """
@@ -313,13 +313,15 @@ def set_proxy(proxy: dict = None) -> dict:
 
 
 @singleton
-def init_openai(api_key: str = None,
-                use_proxy: bool = None,
-                proxy: dict = None) -> None:
+def init_openai(api_key: Optional[str] = None,
+                use_proxy: Optional[bool] = None,
+                proxy: Optional[Dict] = None) -> None:
     """
     Initializes the OpenAI APIs.
 
-    :param api_key: the API KEY of the OpenAI.
+    :param api_key: the API KEY of the OpenAI. If it is None, the program will
+     try to get it from the environment variable "OPENAI_API_KEY" or from the
+     configuration file "~.openai/config".
     :param use_proxy: whether to use the proxy. If it is None, the program will
      set the proxy if "https://www.google.com" is not accessible.
     :param proxy: the proxy setting of the OpenAI.

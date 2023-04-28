@@ -5,7 +5,7 @@
 #                                                                              =
 # ==============================================================================
 import logging
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import openai
@@ -29,8 +29,8 @@ class OpenAiEmbedding(Embedding):
     def __init__(self,
                  model: str = DEFAULT_MODEL,
                  batch_size: int = DEFAULT_BATCH_SIZE,
-                 api_key: str = None,
-                 use_proxy: bool = None) -> None:
+                 api_key: Optional[str] = None,
+                 use_proxy: Optional[bool] = None) -> None:
         super().__init__()
         self._model = model
         self._batch_size = batch_size

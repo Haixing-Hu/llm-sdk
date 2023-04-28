@@ -6,7 +6,7 @@
 # ==============================================================================
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from llmsdk.common import Example
 
@@ -16,7 +16,7 @@ class LargeLanguageModel(ABC):
     The abstract base class for large language models.
     """
     def __init__(self,
-                 max_tokens: int = None,
+                 max_tokens: Optional[int] = None,
                  temperature: float = 1.0,
                  top_p: int = 1) -> None:
         """

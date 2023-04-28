@@ -4,7 +4,7 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import openai
 
@@ -34,11 +34,11 @@ class ChatGpt(OpenAiModel):
     """
     def __init__(self,
                  model: str = DEFAULT_MODEL,
-                 max_tokens: int = None,
+                 max_tokens: Optional[int] = None,
                  temperature: float = 1.0,
                  top_p: int = 1,
-                 api_key: str = None,
-                 use_proxy: bool = None) -> None:
+                 api_key: Optional[str] = None,
+                 use_proxy: Optional[bool] = None) -> None:
         super().__init__(model=model,
                          max_tokens=max_tokens,
                          temperature=temperature,

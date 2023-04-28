@@ -4,7 +4,7 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from typing import Dict
+from typing import Dict, Optional
 
 
 class Document:
@@ -16,8 +16,8 @@ class Document:
 
     def __init__(self,
                  content: str,
-                 title: str = None,
-                 metadata: Dict[str, str] = None) -> None:
+                 title: Optional[str] = None,
+                 metadata: Optional[Dict[str, str]] = None) -> None:
         """
         Creates a Document object.
 
@@ -30,11 +30,11 @@ class Document:
         self._metadata = metadata
 
     @property
-    def title(self) -> str:
+    def title(self) -> Optional[str]:
         return self._title
 
     @title.setter
-    def title(self, value: str) -> None:
+    def title(self, value: Optional[str]) -> None:
         self._title = value
 
     @property
@@ -46,11 +46,11 @@ class Document:
         self._content = value
 
     @property
-    def metadata(self) -> Dict[str, str]:
+    def metadata(self) -> Optional[Dict[str, str]]:
         return self._metadata
 
     @metadata.setter
-    def metadata(self, value: Dict[str, str]) -> None:
+    def metadata(self, value: Optional[Dict[str, str]]) -> None:
         self._metadata = value
 
     def dict(self) -> Dict[str, str | Dict[str, str]]:
