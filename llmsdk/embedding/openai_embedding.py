@@ -10,9 +10,9 @@ from typing import List, Optional
 import numpy as np
 import openai
 
-from llmsdk.common import Vector
-from llmsdk.embedding import Embedding
-from llmsdk.util.openai_utils import (
+from .embedding import Embedding
+from ..common import Vector
+from ..util.openai_utils import (
     check_model_compatibility,
     call_with_retries,
     get_chunked_tokens,

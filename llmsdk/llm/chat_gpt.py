@@ -8,8 +8,8 @@ from typing import Any, Dict, List, Optional
 
 import openai
 
-from llmsdk.llm import OpenAiModel
-from llmsdk.util.openai_utils import (
+from .openai_llm import OpenAiModel
+from ..util.openai_utils import (
     check_model_compatibility,
     call_with_retries,
     count_message_tokens,

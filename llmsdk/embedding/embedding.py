@@ -8,7 +8,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import List
 
-from llmsdk.common import Document, Vector, Point
+from ..common import Document, Vector, Point
 
 TEXT_ATTRIBUTE = "__text__"
 

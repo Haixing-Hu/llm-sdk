@@ -8,9 +8,9 @@ from typing import Any, Dict, List, Optional
 
 import openai
 
-from llmsdk.common.example import Example
-from llmsdk.llm.openai_llm import OpenAiModel
-from llmsdk.util.openai_utils import (
+from .openai_llm import OpenAiModel
+from ..common import Example
+from ..util.openai_utils import (
     check_model_compatibility,
     call_with_retries,
     get_model_tokens,

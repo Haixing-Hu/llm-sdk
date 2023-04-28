@@ -8,7 +8,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
-from llmsdk.common import Example
+from ..common import Example
 
 
 class LargeLanguageModel(ABC):
