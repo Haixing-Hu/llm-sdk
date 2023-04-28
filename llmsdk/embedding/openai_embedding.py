@@ -10,7 +10,7 @@ from typing import List, Optional
 import numpy as np
 import openai
 
-from llmsdk.common import Point
+from llmsdk.common import Vector
 from llmsdk.embedding import Embedding
 from llmsdk.util.openai_utils import (
     check_model_compatibility,
@@ -40,7 +40,7 @@ class OpenAiEmbedding(Embedding):
         init_openai(api_key=api_key,
                     use_proxy=use_proxy)
 
-    def _embed_texts(self, texts: List[str]) -> List[Point]:
+    def _embed_texts(self, texts: List[str]) -> List[Vector]:
         # split all documents into list of chunked token lists
         all_token_lists = []
         indices = []

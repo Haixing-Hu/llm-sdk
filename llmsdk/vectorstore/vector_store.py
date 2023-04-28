@@ -17,50 +17,50 @@ class VectorStore(ABC):
 
     @abstractmethod
     def add(self,
-            vector: Vector,
+            point: Point,
             **kwargs: Any) -> str:
         """
-        Adds a vector to the vector store.
+        Adds a point to the vector store.
 
-        :param vector: the vector to be added. After adding, the `id` field of
-            this argument will be set.
+        :param point: the point to be added. After adding this function, the
+            `id` field of this point will be set.
         :param kwargs: other vector store specific parameters.
-        :return: the ID of the vector added into the vector store.
+        :return: the ID of the point added into the vector store.
         """
 
     def add_all(self,
-                vectors: Iterable[Vector],
+                points: Iterable[Point],
                 **kwargs: Any) -> List[str]:
         """
-        Adds a vector to the vector store.
+        Adds all points to the vector store.
 
         The subclass may override the default implementation of this method for
         optimization.
 
-        :param vectors: the vectors to be added, the `id` field of vectors in
-            this argument will be set.
+        :param points: the points to be added. After adding this function, the
+            `id` field of each point in this argument will be set.
         :param kwargs: other vector store specific parameters.
         :return: the list of IDs of the vectors added into the vector store.
         """
         result = []
-        for vector in vectors:
-            id = self.add(vector, **kwargs)
+        for point in points:
+            id = self.add(point, **kwargs)
             result.append(id)
         return result
 
     @abstractmethod
     def search(self,
-               query: Point,
+               vector: Vector,
                limit: int,
                filter: Optional[Any] = None,
                **kwargs: Any) -> List[Vector]:
         """
-        Searches in the vector store for the vectors similar to the specified
-        point.
+        Searches in the vector store for points whose vector similar to the
+        specified vector and satisfies the specified filter.
 
-        :param query: the specified point to be searched.
+        :param vector: the specified vector to be searched.
         :param limit: the number of the most similar results to return.
-        :param filter: the filter used to filter attributes of searching results.
+        :param filter: the filter used to filter attributes of points.
         :param kwargs: other vector store specific parameters.
-        :return: the list of search results.
+        :return: the list of points as the searching result.
         """

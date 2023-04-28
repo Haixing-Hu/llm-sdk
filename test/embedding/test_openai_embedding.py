@@ -20,8 +20,8 @@ class TestOpenAiEmbedding(unittest.TestCase):
 
     def test_embed_query(self) -> None:
         embedding = OpenAiEmbedding()
-        vectors = embedding.embed_query("Hello world!")
-        print(vectors)
+        point = embedding.embed_query("Hello world!")
+        print(point)
 
     def test_embed_documents(self) -> None:
         pass

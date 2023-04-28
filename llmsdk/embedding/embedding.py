@@ -8,7 +8,9 @@ import logging
 from abc import ABC, abstractmethod
 from typing import List
 
-from llmsdk.common import Point, Document, Vector
+from llmsdk.common import Document, Vector, Point
+
+TEXT_ATTRIBUTE = "__text__"
 
 
 class Embedding(ABC):
@@ -18,7 +20,7 @@ class Embedding(ABC):
     def __init__(self) -> None:
         self._logger = logging.getLogger(self.__class__.__name__)
 
-    def embed_query(self, query: str) -> Vector:
+    def embed_query(self, query: str) -> Point:
         """
         Embeds a query string.
 
@@ -26,33 +28,33 @@ class Embedding(ABC):
         for optimization.
 
         :param query: the query string to be embedded.
-        :return: the embedded vector of the query string.
+        :return: the embedded point of the query string.
         """
         document = Document(query, metadata={"type": "query"})
         vectors = self.embed_documents([document])
         return vectors[0]
 
-    def embed_documents(self, documents: List[Document]) -> List[Vector]:
+    def embed_documents(self, documents: List[Document]) -> List[Point]:
         """
         Embeds a list of documents.
 
         :param documents: the list of documents.
         :return: the list of embedded vectors of each document.
         """
-        points = self._embed_texts([doc.content for doc in documents])
+        vectors = self._embed_texts([doc.content for doc in documents])
         n = len(documents)
         result = []
         for i in range(n):
             doc = documents[i]
-            point = points[i]
-            metadata = {"_text": doc.content}
+            vector = vectors[i]
+            metadata = {TEXT_ATTRIBUTE: doc.content}
             if doc.metadata is not None:
                 metadata.update(doc.metadata)
-            result.append(Vector(point, metadata=metadata))
+            result.append(Point(vector, metadata=metadata))
         return result
 
     @abstractmethod
-    def _embed_texts(self, texts: List[str]) -> List[Point]:
+    def _embed_texts(self, texts: List[str]) -> List[Vector]:
         """
         Embeds a list of texts.
 
