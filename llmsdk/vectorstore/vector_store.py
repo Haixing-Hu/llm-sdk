@@ -53,7 +53,7 @@ class VectorStore(ABC):
                vector: Vector,
                limit: int,
                filter: Optional[Any] = None,
-               **kwargs: Any) -> List[Vector]:
+               **kwargs: Any) -> List[Point]:
         """
         Searches in the vector store for points whose vector similar to the
         specified vector and satisfies the specified filter.
