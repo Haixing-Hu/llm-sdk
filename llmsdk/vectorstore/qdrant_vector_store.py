@@ -4,7 +4,7 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from typing import Optional, Any, List, Iterable
+from typing import Optional, Any, List
 import uuid
 
 from qdrant_client import QdrantClient
@@ -14,17 +14,57 @@ from .vector_store import VectorStore
 from ..common import Vector, Point
 
 
-def scored_point_to_point(scored_point: ScoredPoint) -> Point:
+class QdrantVectorStore(VectorStore):
     """
-    Converts a qdrant ScoredPoint object into a Point object.
+    The vector store based on the Qdrant vector database.
+    """
 
-    :param scored_point: a qdrant ScoredPoint object.
-    :return: the converted Point object.
-    """
-    return Point(id=scored_point.id,
-                 vector=scored_point.vector,
-                 metadata=scored_point.payload,
-                 score=scored_point.score)
+    def __init__(self,
+                 client: QdrantClient,
+                 collection_name: str) -> None:
+        """
+        Construct a QdrantVectorStore object.
+
+        To use you should have the ``qdrant-client`` package installed.
+
+        :param client: the qdrant client object.
+        :param collection_name: the name of the collection.
+        """
+        super().__init__()
+        self._client = client
+        self._collection_name = collection_name
+
+    def add(self,
+            point: Point,
+            **kwargs: Any) -> str:
+        structs = [point_to_point_struct(point)]
+        self._logger.debug("Insert points: %s", structs)
+        self._client.upsert(collection_name=self._collection_name,
+                            points=structs,
+                            **kwargs)
+        return point.id
+
+    def add_all(self,
+                points: List[Point],
+                **kwargs: Any) -> List[str]:
+        structs = [point_to_point_struct(pt) for pt in points]
+        self._logger.debug("Insert points: %s", structs)
+        self._client.upsert(collection_name=self._collection_name,
+                            points=structs,
+                            **kwargs)
+        return [p.id for p in points]
+
+    def search(self,
+               vector: Vector,
+               limit: int,
+               filter: Optional[Any] = None,
+               **kwargs: Any) -> List[Point]:
+        points = self._client.search(collection_name=self._collection_name,
+                                     query_filter=filter,
+                                     query_vector=vector,
+                                     limit=limit,
+                                     **kwargs)
+        return [scored_point_to_point(p) for p in points]
 
 
 def point_to_point_struct(point: Point) -> PointStruct:
@@ -41,50 +81,14 @@ def point_to_point_struct(point: Point) -> PointStruct:
                        payload=point.metadata)
 
 
-class QdrantVectorStore(VectorStore):
+def scored_point_to_point(scored_point: ScoredPoint) -> Point:
     """
-    The vector store based on the Qdrant vector database.
+    Converts a qdrant ScoredPoint object into a Point object.
+
+    :param scored_point: a qdrant ScoredPoint object.
+    :return: the converted Point object.
     """
-    def __init__(self,
-                 client: QdrantClient,
-                 collection: str) -> None:
-        """
-        Construct a QdrantVectorStore object.
-
-        To use you should have the ``qdrant-client`` package installed.
-
-        :param client: the qdrant client object.
-        :param collection: the name of the collection.
-        """
-        self._client = client
-        self._collection = collection
-
-    def add(self,
-            point: Point,
-            **kwargs: Any) -> str:
-        struct = point_to_point_struct(point)
-        self._client.upsert(collection_name=self._collection,
-                            points=[struct],
-                            **kwargs)
-        return point.id
-
-    def add_all(self,
-                points: Iterable[Point],
-                **kwargs: Any) -> List[str]:
-        structs = [point_to_point_struct(point) for point in points]
-        self._client.upsert(collection_name=self._collection,
-                            points=structs,
-                            **kwargs)
-        return [point.id for point in points]
-
-    def search(self,
-               vector: Vector,
-               limit: int,
-               filter: Optional[Any] = None,
-               **kwargs: Any) -> List[Point]:
-        result = self._client.search(collection_name=self._collection,
-                                     query_filter=filter,
-                                     query_vector=vector,
-                                     limit=limit,
-                                     **kwargs)
-        return [scored_point_to_point(point) for point in result]
+    return Point(id=scored_point.id,
+                 vector=scored_point.vector,
+                 metadata=scored_point.payload,
+                 score=scored_point.score)

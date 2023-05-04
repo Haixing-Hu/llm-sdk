@@ -5,7 +5,8 @@
 #                                                                              =
 # ==============================================================================
 from abc import ABC, abstractmethod
-from typing import Any, Iterable, List, Optional
+from typing import Any, List, Optional
+import logging
 
 from llmsdk.common import Point, Vector
 
@@ -14,6 +15,8 @@ class VectorStore(ABC):
     """
     The interface of vector stores.
     """
+    def __init__(self) -> None:
+        self._logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
     def add(self,
@@ -29,7 +32,7 @@ class VectorStore(ABC):
         """
 
     def add_all(self,
-                points: Iterable[Point],
+                points: List[Point],
                 **kwargs: Any) -> List[str]:
         """
         Adds all points to the vector store.
@@ -64,3 +67,9 @@ class VectorStore(ABC):
         :param kwargs: other vector store specific parameters.
         :return: the list of points as the searching result.
         """
+
+    def close(self) -> None:
+        """
+        Closes this vector store.
+        """
+        pass
