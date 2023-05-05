@@ -7,30 +7,64 @@
 from typing import Dict, Optional, Any, List
 import uuid
 
-from pymilvus import Collection, DataType, connections
+from pymilvus import Collection, DataType, connections, Index
 
 from .vector_store import VectorStore
 from ..common import Vector, Point
+
+DEFAULT_INDEX_PARAMS = {
+    "IVF_FLAT": {"nprobe": 10},
+    "IVF_SQ8": {"nprobe": 10},
+    "IVF_PQ": {"nprobe": 10},
+    "HNSW": {"ef": 10},
+    "RHNSW_FLAT": {"ef": 10},
+    "RHNSW_SQ": {"ef": 10},
+    "RHNSW_PQ": {"ef": 10},
+    "IVF_HNSW": {"nprobe": 10, "ef": 10},
+    "ANNOY": {"search_k": 10},
+}
 
 
 class MilvusVectorStore(VectorStore):
     """
     The vector store based on the Milvus vector database.
     """
+
     def __init__(self,
-                 connection_args: Dict,
-                 collection_name: str) -> None:
+                 collection_name: str,
+                 id_field: Optional[str] = None,
+                 vector_field: Optional[str] = None,
+                 connection_args: Optional[Dict] = None,
+                 auto_close_connection: bool = True) -> None:
+        """
+        Construct a vector store based on a collection of a Milvus vector
+        database.
+
+        :param collection_name: the name of the collection in the vector database.
+        :param id_field: the name of ID field in the collection.
+        :param vector_field: the name of vector field in the collection.
+        :param connection_args: the arguments for the database connection.
+        :param auto_close_connection: indicate whether to close the connection
+            automatically while closing this vector store.
+        """
         super().__init__()
         # Connecting to Milvus instance
-        if not connections.has_connection("default"):
-            connections.connect(**connection_args)
-        self._collection_name = collection_name
-        self._collection = Collection(collection_name)
+        if connection_args is None:
+            self._connection_args = None
+            self._connection_alias = "default"
+        else:
+            self._connection_args = connection_args
+            self._connection_alias = connection_args.get("alias", "default")
+            if not connections.has_connection(self._connection_alias):
+                connections.connect(**connection_args)
+        self._collection = Collection(name=collection_name,
+                                      using=self._connection_alias)
         self._auto_id = self._collection.schema.auto_id
-        self._id_field = None
-        self._vector_field = None
+        self._auto_close_connection = auto_close_connection
+        self._id_field = id_field
+        self._vector_field = vector_field
         self._fields = []
-        # Grabbing the fields for the existing collection.
+        # grab the fields for the existing collection.
         for f in self._collection.schema.fields:
             self._fields.append(f.name)
             if f.is_primary and self._id_field is None:
@@ -38,23 +72,29 @@ class MilvusVectorStore(VectorStore):
             elif f.dtype == DataType.FLOAT_VECTOR and self._vector_field is None:
                 self._vector_field = f.name
         if self._id_field is None:
-            raise ValueError(f"No primary field in the collection {collection_name}.")
+            raise ValueError(f"No primary field in the collection '{collection_name}'.")
         if self._vector_field is None:
-            raise ValueError(f"No float vector field in the collection {collection_name}.")
+            raise ValueError(f"No float vector field in the collection '{collection_name}'.")
+        if self._id_field not in self._fields:
+            raise ValueError(f"The ID field '{self._id_field}' is not in the "
+                             f"collection '{collection_name}'.")
+        if self._vector_field not in self._fields:
+            raise ValueError(f"The vector field '{self._vector_field}' is not in "
+                             f"the collection '{collection_name}'.")
+        # find the index for the vector field
+        self._vector_index = None
+        for index in self._collection.indexes:
+            if index.field_name == self._vector_field:
+                self._vector_index = index
+        if self._vector_index is None:
+            raise ValueError(f"No index for the vector field '{self._vector_field}' "
+                             f"in the collection '{collection_name}'.")
+        # exclude the ID field and vector field from the metadata fields
+        self._metadata_fields = self._fields.copy()
+        self._metadata_fields.remove(self._id_field)
+        self._metadata_fields.remove(self._vector_field)
         # load the collection
         self._collection.load()
-        # Default search params when one is not provided.
-        self._index_params = {
-            "IVF_FLAT": {"params": {"nprobe": 10}},
-            "IVF_SQ8": {"params": {"nprobe": 10}},
-            "IVF_PQ": {"params": {"nprobe": 10}},
-            "HNSW": {"params": {"ef": 10}},
-            "RHNSW_FLAT": {"params": {"ef": 10}},
-            "RHNSW_SQ": {"params": {"ef": 10}},
-            "RHNSW_PQ": {"params": {"ef": 10}},
-            "IVF_HNSW": {"params": {"nprobe": 10, "ef": 10}},
-            "ANNOY": {"params": {"search_k": 10}},
-        }
 
     def add(self,
             point: Point,
@@ -94,8 +134,35 @@ class MilvusVectorStore(VectorStore):
                limit: int,
                filter: Optional[Any] = None,
                **kwargs: Any) -> List[Point]:
-        pass
+        params = {"metric_type": self._vector_index.params["metric_type"]}
+        index_type = self._vector_index.params["index_type"]
+        if index_type in DEFAULT_INDEX_PARAMS:
+            params["params"] = DEFAULT_INDEX_PARAMS[index_type]
+        else:
+            params["params"] = self._vector_index.params["params"]
+        results = self._collection.search(data=[vector],
+                                          anns_field=self._vector_field,
+                                          param=params,
+                                          limit=limit,
+                                          expr=filter,
+                                          output_fields=self._fields,
+                                          **kwargs)
+        points = []
+        for r in results[0]:
+            vector = r.entity.get(self._vector_field)
+            metadata = {}
+            for f in self._metadata_fields:
+                v = r.entity.get(f)
+                if v is not None:
+                    metadata[f] = v
+            point = Point(id=r.id,
+                          vector=vector,
+                          metadata=metadata,
+                          score=r.distance)
+            points.append(point)
+        return points
 
     def close(self) -> None:
         self._collection.release()
-        connections.disconnect()
+        if self._auto_close_connection:
+            connections.disconnect(self._connection_alias)

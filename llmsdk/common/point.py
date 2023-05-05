@@ -33,7 +33,7 @@ class Point:
         """
         self._id = id
         self._vector = vector
-        self._metadata = {} if metadata is None else metadata
+        self._metadata = Metadata() if metadata is None else metadata
         self._score = score
 
     @property
