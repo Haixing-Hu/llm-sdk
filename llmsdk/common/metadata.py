@@ -4,9 +4,9 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from typing import Dict
+from typing import Dict, Any
 
 """
 The type representing the metadata.
 """
-Metadata = Dict[str, str]
+Metadata = Dict[str, Any]

@@ -75,7 +75,7 @@ def point_to_point_struct(point: Point) -> PointStruct:
     :return: the converted PointStruct object.
     """
     if point.id is None:
-        point.id = uuid.uuid4()
+        point.id = str(uuid.uuid4())
     return PointStruct(id=point.id,
                        vector=point.vector,
                        payload=point.metadata)

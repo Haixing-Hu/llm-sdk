@@ -10,13 +10,14 @@ from typing import List
 
 from ..common import Document, Vector, Point
 
-TEXT_ATTRIBUTE = "__text__"
-
 
 class Embedding(ABC):
     """
     Interface for embedding models.
     """
+
+    TEXT_ATTRIBUTE = "__text__"
+
     def __init__(self) -> None:
         self._logger = logging.getLogger(self.__class__.__name__)
 
@@ -47,7 +48,7 @@ class Embedding(ABC):
         for i in range(n):
             doc = documents[i]
             vector = vectors[i]
-            metadata = {TEXT_ATTRIBUTE: doc.content}
+            metadata = {Embedding.TEXT_ATTRIBUTE: doc.content}
             if doc.metadata is not None:
                 metadata.update(doc.metadata)
             result.append(Point(vector, metadata=metadata))

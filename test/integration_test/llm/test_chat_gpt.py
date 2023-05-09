@@ -8,10 +8,10 @@ import unittest
 import logging
 
 import openai
-from llmsdk.llm.gpt import Gpt
+from llmsdk.llm import ChatGpt
 
 
-class TestGpt(unittest.TestCase):
+class TestChatGpt(unittest.TestCase):
 
     def setUp(self) -> None:
         logging.basicConfig(level=logging.DEBUG)
@@ -19,7 +19,7 @@ class TestGpt(unittest.TestCase):
         openai.log = "debug"
 
     def test_generate(self):
-        model = Gpt()
+        model = ChatGpt()
         message = model.generate("Say hello to me")
         print(message)
         self.assertIsNotNone(message)

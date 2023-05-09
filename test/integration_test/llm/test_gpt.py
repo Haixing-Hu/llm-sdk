@@ -4,6 +4,26 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from .embedding import Embedding
-from .mock_embedding import MockEmbedding
-from .openai_embedding import OpenAiEmbedding
+import unittest
+import logging
+
+import openai
+from llmsdk.llm import Gpt
+
+
+class TestGpt(unittest.TestCase):
+
+    def setUp(self) -> None:
+        logging.basicConfig(level=logging.DEBUG)
+        openai.debug = True
+        openai.log = "debug"
+
+    def test_generate(self):
+        model = Gpt()
+        message = model.generate("Say hello to me")
+        print(message)
+        self.assertIsNotNone(message)
+
+
+if __name__ == '__main__':
+    unittest.main()
