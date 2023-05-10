@@ -63,7 +63,9 @@ class QdrantVectorStore(VectorStore):
                                      query_filter=filter,
                                      query_vector=vector,
                                      limit=limit,
+                                     with_vectors=True,
                                      **kwargs)
+        self._logger.debug("Search result: %s", points)
         return [scored_point_to_point(p) for p in points]
 
 
