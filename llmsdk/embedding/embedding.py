@@ -16,7 +16,7 @@ class Embedding(ABC):
     Interface for embedding models.
     """
 
-    TEXT_ATTRIBUTE = "__text__"
+    TEXT_ATTRIBUTE: str = "__text__"
 
     def __init__(self) -> None:
         self._logger = logging.getLogger(self.__class__.__name__)
@@ -31,7 +31,7 @@ class Embedding(ABC):
         :param query: the query string to be embedded.
         :return: the embedded point of the query string.
         """
-        document = Document(query)
+        document = Document(query, metadata={"type": "query"})
         vectors = self.embed_documents([document])
         return vectors[0]
 

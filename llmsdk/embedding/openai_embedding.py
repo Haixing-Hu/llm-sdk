@@ -35,7 +35,6 @@ class OpenAiEmbedding(Embedding):
         super().__init__()
         self._model = model
         self._batch_size = batch_size
-        self._logger = logging.getLogger(self.__class__.__name__)
         check_model_compatibility(model=model, endpoint="embeddings")
         init_openai(api_key=api_key,
                     use_proxy=use_proxy)
