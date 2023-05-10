@@ -6,8 +6,5 @@
 # ==============================================================================
 from typing import List
 
-"""
-The type of vectors, representing a list of coordinates in the high dimensional 
-space.
-"""
 Vector = List[float]
+"""The type of vectors, representing a list of coordinates in a high dimensional space."""

@@ -6,7 +6,5 @@
 # ==============================================================================
 from typing import Dict, Any
 
-"""
-The type representing the metadata.
-"""
 Metadata = Dict[str, Any]
+"""The type representing the metadata."""

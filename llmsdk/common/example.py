@@ -4,9 +4,10 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from typing import Any, Dict
+from dataclasses import dataclass
 
 
+@dataclass
 class Example:
     """
     Examples are input/output pairs that represent inputs to a function and then
@@ -18,57 +19,11 @@ class Example:
     end-to-end chain, or maybe even train a model to replace that whole chain.
     """
 
-    def __init__(self,
-                 id: str,
-                 input: str,
-                 output: str) -> None:
-        """
-        Create a Example object.
+    id: str
+    """The ID of the example."""
 
-        :param id: the ID of the example.
-        :param input: the input of the example.
-        :param output: the output of the example.
-        """
-        self._id = id
-        self._input = input
-        self._output = output
+    input: str
+    """The input of the example"""
 
-    @property
-    def id(self) -> str:
-        """Returns the unique ID of the example."""
-        return self._id
-
-    @id.setter
-    def id(self, value: str) -> None:
-        self._id = value
-
-    @property
-    def input(self) -> str:
-        """Returns the input of the example."""
-        return self._input
-
-    @input.setter
-    def input(self, value: str) -> None:
-        self._input = value
-
-    @property
-    def output(self) -> str:
-        """Returns the intended output of the example."""
-        return self._output
-
-    @output.setter
-    def output(self, value: str) -> None:
-        self._output = value
-
-    def dict(self) -> Dict[str, Any]:
-        return {
-            "id": self._id,
-            "input": self._input,
-            "output": self._output,
-        }
-
-    def __str__(self) -> str:
-        return str(self.dict())
-
-    def __repr__(self) -> str:
-        return str(self)
+    output: str
+    """The output of the example"""
