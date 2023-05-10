@@ -4,7 +4,7 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 from .metadata import Metadata
@@ -21,5 +21,5 @@ class Document:
     content: str
     """The content of the document."""
 
-    metadata: Optional[Metadata] = None
-    """The metadata of the document, or None if no metadata."""
+    metadata: Optional[Metadata] = field(default_factory=dict)
+    """The metadata of the document, or {} if no metadata."""

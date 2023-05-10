@@ -19,11 +19,11 @@ class Example:
     end-to-end chain, or maybe even train a model to replace that whole chain.
     """
 
-    id: str
-    """The ID of the example."""
-
     input: str
     """The input of the example"""
 
     output: str
     """The output of the example"""
+
+    id: str = None
+    """The ID of the example."""

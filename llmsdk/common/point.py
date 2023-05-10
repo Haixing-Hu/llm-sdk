@@ -4,7 +4,7 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 from .vector import Vector
@@ -21,14 +21,14 @@ class Point:
     and an optional score.
     """
 
-    vector: Vector
+    vector: Vector = field(default_factory=list)
     """The list of coordinates of a vector"""
+
+    metadata: Optional[Metadata] = field(default_factory=dict)
+    """The metadata of this point."""
 
     id: Optional[str] = None
     """The ID of this point."""
-
-    metadata: Optional[Metadata] = None
-    """The metadata of this point."""
 
     score: Optional[float] = None
     """The score of this point, which is set for searching result."""
