@@ -31,7 +31,7 @@ class Embedding(ABC):
         :param query: the query string to be embedded.
         :return: the embedded point of the query string.
         """
-        document = Document(query, metadata={"type": "query"})
+        document = Document(query)
         vectors = self.embed_documents([document])
         return vectors[0]
 
