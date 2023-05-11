@@ -5,7 +5,6 @@
 #                                                                              =
 # ==============================================================================
 import unittest
-from dataclasses import FrozenInstanceError
 
 from llmsdk.criterion import SimpleCriterion, ComposedCriterion, Operator, \
     Relation, ComposedCriterionBuilder
