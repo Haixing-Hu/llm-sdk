@@ -7,13 +7,25 @@
 import unittest
 import logging
 
-import parameterized
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import VectorParams, Distance
+from qdrant_client.http.models import VectorParams, Distance, Filter, FieldCondition, MatchValue
 
-from llmsdk.vectorstore import QdrantVectorStore
+from llmsdk.vectorstore import VectorStore, QdrantVectorStore
 from llmsdk.embedding import MockEmbedding
 from llmsdk.common import Document
+
+
+def prepare_store() -> VectorStore:
+    client = QdrantClient(location=":memory:")
+    collection_name = "test"
+    vectors_config = VectorParams(size=MockEmbedding.VECTOR_DIMENSION,
+                                  distance=Distance.COSINE)
+    client.create_collection(collection_name=collection_name,
+                             vectors_config=vectors_config)
+
+    store = QdrantVectorStore(client=client,
+                              collection_name=collection_name)
+    return store
 
 
 class TestQdrantVectorStore(unittest.TestCase):
@@ -27,25 +39,20 @@ class TestQdrantVectorStore(unittest.TestCase):
         embedding = MockEmbedding()
         points = embedding.embed_documents(documents)
 
-        client = QdrantClient(location=":memory:")
-        collection_name = "test"
-        vector_size = len(points[0].vector)
-        vectors_config = VectorParams(size=vector_size, distance=Distance.COSINE)
-        client.create_collection(collection_name=collection_name,
-                                 vectors_config=vectors_config)
-        store = QdrantVectorStore(client=client,
-                                  collection_name=collection_name)
-        store.add_all(points)
-        expected = embedding.embed_query("foo")
+        store = prepare_store()
+        try:
+            store.add_all(points)
+            query = embedding.embed_query("foo")
+            output = store.search(query.vector, limit=1)
+            self.assertEqual(1, len(output))
+            actual = output[0]
 
-        output = store.search(expected.vector, limit=1)
-        client.delete_collection(collection_name)
-        store.close()
-        self.assertEqual(1, len(output))
-        actual = output[0]
-        expected.id = actual.id
-        expected.score = actual.score
-        self.assertEqual(expected, actual)
+            query.metadata["page"] = 0
+            query.id = actual.id
+            query.score = actual.score
+            self.assertEqual(query, actual)
+        finally:
+            store.close()
 
     def test_search_with_filter(self):
         texts = ["foo", "bar", "baz"]
@@ -53,24 +60,23 @@ class TestQdrantVectorStore(unittest.TestCase):
         embedding = MockEmbedding()
         points = embedding.embed_documents(documents)
 
-        client = QdrantClient(location=":memory:")
-        collection_name = "test"
-        vector_size = len(points[0].vector)
-        vectors_config = VectorParams(size=vector_size, distance=Distance.COSINE)
-        client.create_collection(collection_name=collection_name,
-                                 vectors_config=vectors_config)
-        store = QdrantVectorStore(client=client,
-                                  collection_name=collection_name)
-        store.add_all(points)
-        expected = embedding.embed_query("foo")
-        output = store.search(expected.vector, limit=1)
-        client.delete_collection(collection_name)
-        store.close()
-        self.assertEqual(1, len(output))
-        actual = output[0]
-        expected.id = actual.id
-        expected.score = actual.score
-        self.assertEqual(expected, actual)
+        store = prepare_store()
+        try:
+            store.add_all(points)
+            query = embedding.embed_query("foo")
+            filter = Filter(must=[FieldCondition(key="page", match=MatchValue(value=1))])
+            output = store.search(query.vector, limit=1, filter=filter)
+            self.assertEqual(1, len(output))
+            actual = output[0]
+
+            expected = points[1]
+            expected.metadata["page"] = 1
+            expected.id = actual.id
+            expected.score = actual.score
+            self.assertEqual(expected, actual)
+        finally:
+            store.close()
+
 
 if __name__ == '__main__':
     unittest.main()
