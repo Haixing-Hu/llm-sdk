@@ -23,13 +23,13 @@ class Embedding(ABC):
 
     def embed_query(self, query: str) -> Point:
         """
-        Embeds a query string.
+        Embeds a criterion string.
 
         The subclass may override the default implementation of this method
         for optimization.
 
-        :param query: the query string to be embedded.
-        :return: the embedded point of the query string.
+        :param query: the criterion string to be embedded.
+        :return: the embedded point of the criterion string.
         """
         document = Document(query)
         vectors = self.embed_documents([document])

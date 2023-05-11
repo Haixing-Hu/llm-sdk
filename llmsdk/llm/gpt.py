@@ -103,7 +103,7 @@ class Gpt(OpenAiModel):
 
     def _create_full_prompt(self, prompt: str) -> str:
         """
-        Creates the query for the API request.
+        Creates the criterion for the API request.
         """
         full_prompt = self._instruction + "\n" + self._create_example_prompt() \
                       + self._input_prefix + prompt + self._input_suffix
