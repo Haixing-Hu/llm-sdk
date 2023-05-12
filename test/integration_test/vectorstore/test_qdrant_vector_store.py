@@ -13,6 +13,7 @@ from qdrant_client.http.models import VectorParams, Distance, Filter, FieldCondi
 from llmsdk.vectorstore import VectorStore, QdrantVectorStore
 from llmsdk.embedding import MockEmbedding
 from llmsdk.common import Document
+from llmsdk.criterion import equal
 
 
 def prepare_store() -> VectorStore:
@@ -64,8 +65,8 @@ class TestQdrantVectorStore(unittest.TestCase):
         try:
             store.add_all(points)
             query = embedding.embed_query("foo")
-            filter = Filter(must=[FieldCondition(key="page", match=MatchValue(value=1))])
-            output = store.search(query.vector, limit=1, filter=filter)
+            criterion = equal("page", 1)
+            output = store.search(query.vector, limit=1, criterion=criterion)
             self.assertEqual(1, len(output))
             actual = output[0]
 

@@ -11,6 +11,7 @@ from pymilvus import Collection, DataType, connections, Index
 
 from .vector_store import VectorStore
 from ..common import Vector, Point
+from ..criterion import Criterion
 
 DEFAULT_INDEX_PARAMS = {
     "IVF_FLAT": {"nprobe": 10},
@@ -108,7 +109,7 @@ class MilvusVectorStore(VectorStore):
         data: List[List[Any]] = [] * len(self._fields)
         for p in points:
             if not self._auto_id and p.id is None:
-                p.id = uuid.uuid4()
+                p.id = str(uuid.uuid4())
             for i, field in enumerate(self._fields):
                 if field == self._id_field:
                     data[i].append(p.id)
@@ -132,7 +133,7 @@ class MilvusVectorStore(VectorStore):
     def search(self,
                vector: Vector,
                limit: int,
-               filter: Optional[Any] = None,
+               criterion: Optional[Criterion] = None,
                **kwargs: Any) -> List[Point]:
         params = {"metric_type": self._vector_index.params["metric_type"]}
         index_type = self._vector_index.params["index_type"]
@@ -140,11 +141,11 @@ class MilvusVectorStore(VectorStore):
             params["params"] = DEFAULT_INDEX_PARAMS[index_type]
         else:
             params["params"] = self._vector_index.params["params"]
+        # FIXME: convert to criterion to filter
         results = self._collection.search(data=[vector],
                                           anns_field=self._vector_field,
                                           param=params,
                                           limit=limit,
-                                          expr=filter,
                                           output_fields=self._fields,
                                           **kwargs)
         points = []

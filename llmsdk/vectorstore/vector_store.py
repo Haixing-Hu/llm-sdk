@@ -8,7 +8,8 @@ from abc import ABC, abstractmethod
 from typing import Any, List, Optional
 import logging
 
-from llmsdk.common import Point, Vector
+from ..common import Point, Vector
+from ..criterion import Criterion
 
 
 class VectorStore(ABC):
@@ -55,7 +56,7 @@ class VectorStore(ABC):
     def search(self,
                vector: Vector,
                limit: int,
-               filter: Optional[Any] = None,
+               criterion: Optional[Criterion] = None,
                **kwargs: Any) -> List[Point]:
         """
         Searches in the vector store for points whose vector similar to the
@@ -63,7 +64,7 @@ class VectorStore(ABC):
 
         :param vector: the specified vector to be searched.
         :param limit: the number of the most similar results to return.
-        :param filter: the filter used to filter attributes of points.
+        :param criterion: the criterion used to filter attributes of points.
         :param kwargs: other vector store specific parameters.
         :return: the list of points as the searching result.
         """
