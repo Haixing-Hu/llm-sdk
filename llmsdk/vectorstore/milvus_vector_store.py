@@ -11,7 +11,7 @@ from pymilvus import Collection, DataType, connections, Index
 
 from .vector_store import VectorStore
 from ..common import Vector, Point
-from ..criterion import Criterion
+from ..criterion import Criterion, SimpleCriterion, ComposedCriterion, Operator, Relation
 
 DEFAULT_INDEX_PARAMS = {
     "IVF_FLAT": {"nprobe": 10},
@@ -141,11 +141,12 @@ class MilvusVectorStore(VectorStore):
             params["params"] = DEFAULT_INDEX_PARAMS[index_type]
         else:
             params["params"] = self._vector_index.params["params"]
-        # FIXME: convert to criterion to filter
+        expr = criterion_to_expr(criterion)
         results = self._collection.search(data=[vector],
                                           anns_field=self._vector_field,
                                           param=params,
                                           limit=limit,
+                                          expr=expr,
                                           output_fields=self._fields,
                                           **kwargs)
         points = []
@@ -167,3 +168,78 @@ class MilvusVectorStore(VectorStore):
         self._collection.release()
         if self._auto_close_connection:
             connections.disconnect(self._connection_alias)
+
+
+def criterion_to_expr(criterion: Optional[Criterion]) -> Optional[str]:
+    if criterion is None:
+        return None
+    if isinstance(criterion, SimpleCriterion):
+        return simple_criterion_to_expr(criterion)
+    elif isinstance(criterion, ComposedCriterion):
+        return composed_criterion_to_expr(criterion)
+    else:
+        raise ValueError("The criterion must be either a SimpleCriterion or a ComposedCriterion.")
+
+
+def simple_criterion_to_expr(criterion: Optional[SimpleCriterion]) -> Optional[str]:
+    if criterion is None:
+        return None
+    match criterion.operator:
+        case Operator.EQUAL:
+            return f"{criterion.property} == {criterion.value}"
+        case Operator.NOT_EQUAL:
+            return f"{criterion.property} != {criterion.value}"
+        case Operator.LESS:
+            return f"{criterion.property} < {criterion.value}"
+        case Operator.LESS_EQUAL:
+            return f"{criterion.property} <= {criterion.value}"
+        case Operator.GREATER:
+            return f"{criterion.property} > {criterion.value}"
+        case Operator.GREATER_EQUAL:
+            return f"{criterion.property} >= {criterion.value}"
+        case Operator.IN:
+            return f"{criterion.property} in {criterion.value}"
+        case Operator.NOT_IN:
+            return f"{criterion.property} not in {criterion.value}"
+        case Operator.LIKE:
+            return f"{criterion.property} like \"{criterion.value}\""
+        case Operator.NOT_LIKE:
+            return f"{criterion.property} not like \"{criterion.value}\""
+        # FIXME: IS_NULL and NOT_NULL is not supported
+        case _:
+            raise ValueError(f"Unsupported comparison operator: {criterion.operator}")
+
+
+def composed_criterion_to_expr(criterion: Optional[ComposedCriterion]) -> Optional[str]:
+    if criterion is None:
+        return None
+    match criterion.relation:
+        case Relation.AND:
+            n = len(criterion.criteria)
+            if n == 0:
+                return None
+            elif n == 1:
+                return criterion_to_expr(criterion.criteria[0])
+            else:
+                exprs = [f"({criterion_to_expr(c)})" for c in criterion.criteria]
+                return " and ".join(exprs)
+        case Relation.OR:
+            n = len(criterion.criteria)
+            if n == 0:
+                return None
+            elif n == 1:
+                return criterion_to_expr(criterion.criteria[0])
+            else:
+                exprs = [f"({criterion_to_expr(c)})" for c in criterion.criteria]
+                return " or ".join(exprs)
+        case Relation.NOT:
+            n = len(criterion.criteria)
+            if n == 0:
+                return None
+            elif n == 1:
+                return f"not ({criterion_to_expr(criterion.criteria[0])})"
+            else:
+                raise ValueError("ComposedCriterion with NOT relation should "
+                                 "have one sub-criterion.")
+        case _:
+            raise ValueError(f"Unsupported logic relation: {criterion.relation}")
