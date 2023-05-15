@@ -21,5 +21,8 @@ class Document:
     content: str
     """The content of the document."""
 
+    id: str = None
+    """The ID of the document."""
+
     metadata: Optional[Metadata] = field(default_factory=dict)
     """The metadata of the document, or {} if no metadata."""
