@@ -16,9 +16,6 @@ class Embedding(ABC):
     Interface for embedding models.
     """
 
-    ID_ATTRIBUTE: str = "__id__"
-    """The name of the metadata attribute storing the ID of a document."""
-
     TEXT_ATTRIBUTE: str = "__text__"
     """The name of the metadata attribute storing the original text of a document."""
 
@@ -47,12 +44,11 @@ class Embedding(ABC):
         """
         vectors = self._embed_texts([document.content])
         metadata = {
-            Embedding.ID_ATTRIBUTE: document.id,
             Embedding.TEXT_ATTRIBUTE: document.content,
         }
         if document.metadata is not None:
             metadata.update(document.metadata)
-        return Point(vectors[0], metadata=metadata)
+        return Point(vectors[0], id=document.id, metadata=metadata)
 
     def embed_documents(self, documents: List[Document]) -> List[Point]:
         """
@@ -68,12 +64,11 @@ class Embedding(ABC):
             doc = documents[i]
             vector = vectors[i]
             metadata = {
-                Embedding.ID_ATTRIBUTE: doc.id,
                 Embedding.TEXT_ATTRIBUTE: doc.content,
             }
             if doc.metadata is not None:
                 metadata.update(doc.metadata)
-            result.append(Point(vector, metadata=metadata))
+            result.append(Point(vector, id=doc.id, metadata=metadata))
         return result
 
     @abstractmethod
