@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from typing import Any, List, Optional
 from logging import Logger, getLogger
 
+from .field_schema import FieldSchema
 from ..common import Point, Vector
 from ..criterion import Criterion
 
@@ -57,11 +58,14 @@ class VectorStore(ABC):
         self._collection_name = None
 
     @abstractmethod
-    def create_collection(self, collection_name: str) -> None:
+    def create_collection(self,
+                          collection_name: str,
+                          field_schemas: List[FieldSchema]) -> None:
         """
         Creates a collection.
 
         :param collection_name: the name of the collection to be created.
+        :param field_schemas: the list of field schemas of the new collection.
         """
 
     @abstractmethod
