@@ -7,7 +7,7 @@
 from typing import Dict, Optional, Any, List
 import uuid
 
-from pymilvus import Collection, DataType, connections, Index
+from pymilvus import Collection, DataType, connections, Index, utility
 
 from .vector_store import VectorStore
 from ..common import Vector, Point
@@ -32,36 +32,53 @@ class MilvusVectorStore(VectorStore):
     """
 
     def __init__(self,
-                 collection_name: str,
-                 id_field: Optional[str] = None,
-                 vector_field: Optional[str] = None,
-                 connection_args: Optional[Dict] = None,
-                 auto_close_connection: bool = True) -> None:
+                 connection_args: Optional[Dict] = None) -> None:
         """
         Construct a vector store based on a collection of a Milvus vector
         database.
 
-        :param collection_name: the name of the collection in the vector database.
-        :param id_field: the name of ID field in the collection.
-        :param vector_field: the name of vector field in the collection.
         :param connection_args: the arguments for the database connection.
-        :param auto_close_connection: indicate whether to close the connection
-            automatically while closing this vector store.
         """
         super().__init__()
-        # Connecting to Milvus instance
         if connection_args is None:
-            self._connection_args = None
+            self._connection_args = {}
             self._connection_alias = "default"
         else:
             self._connection_args = connection_args
             self._connection_alias = connection_args.get("alias", "default")
-            if not connections.has_connection(self._connection_alias):
-                connections.connect(**connection_args)
+        self._collection = None
+        self._auto_id = None
+        self._fields = None
+        self._id_field = None
+        self._vector_field = None
+        self._metadata_fields = None
+        self._vector_index = None
+
+    def open(self) -> None:
+        # Connecting to Milvus instance
+        if not connections.has_connection(self._connection_alias):
+            connections.connect(**self._connection_args)
+
+    def close(self) -> None:
+        if self._collection is not None:
+            self._collection.release()
+        connections.disconnect(self._connection_alias)
+
+    def open_collection(self,
+                        collection_name: str,
+                        id_field: Optional[str] = None,
+                        vector_field: Optional[str] = None) -> None:
+        """
+        Opens the specified collection, and sets it as the current collection.
+
+        :param collection_name: the name of the collection in the vector database.
+        :param id_field: the name of ID field in the collection.
+        :param vector_field: the name of vector field in the collection.
+        """
+        super().open_collection(collection_name)
         self._collection = Collection(name=collection_name,
                                       using=self._connection_alias)
         self._auto_id = self._collection.schema.auto_id
-        self._auto_close_connection = auto_close_connection
         self._id_field = id_field
         self._vector_field = vector_field
         self._fields = []
@@ -96,6 +113,19 @@ class MilvusVectorStore(VectorStore):
         self._metadata_fields.remove(self._vector_field)
         # load the collection
         self._collection.load()
+
+    def close_collection(self) -> None:
+        super().close_collection()
+        if self._collection is not None:
+            self._collection.release()
+            self._collection = None
+
+    def create_collection(self, collection_name: str) -> None:
+        # TODO
+        pass
+
+    def delete_collection(self, collection_name: str) -> None:
+        utility.drop_collection(collection_name)
 
     def add(self,
             point: Point,
@@ -163,11 +193,6 @@ class MilvusVectorStore(VectorStore):
                           score=r.distance)
             points.append(point)
         return points
-
-    def close(self) -> None:
-        self._collection.release()
-        if self._auto_close_connection:
-            connections.disconnect(self._connection_alias)
 
 
 def criterion_to_expr(criterion: Optional[Criterion]) -> Optional[str]:

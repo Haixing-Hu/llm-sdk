@@ -36,8 +36,7 @@ class OpenAiEmbedding(Embedding):
         self._model = model
         self._batch_size = batch_size
         check_model_compatibility(model=model, endpoint="embeddings")
-        init_openai(api_key=api_key,
-                    use_proxy=use_proxy)
+        init_openai(api_key=api_key, use_proxy=use_proxy)
 
     def _embed_texts(self, texts: List[str]) -> List[Vector]:
         # split all documents into list of chunked token lists

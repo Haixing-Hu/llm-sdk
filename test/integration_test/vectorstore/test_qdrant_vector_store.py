@@ -24,8 +24,9 @@ def prepare_store() -> VectorStore:
     client.create_collection(collection_name=collection_name,
                              vectors_config=vectors_config)
 
-    store = QdrantVectorStore(client=client,
-                              collection_name=collection_name)
+    store = QdrantVectorStore(client=client)
+    store.open()
+    store.open_collection(collection_name)
     return store
 
 

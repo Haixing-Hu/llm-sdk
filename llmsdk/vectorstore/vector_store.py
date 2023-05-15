@@ -6,7 +6,7 @@
 # ==============================================================================
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional
-import logging
+from logging import Logger, getLogger
 
 from ..common import Point, Vector
 from ..criterion import Criterion
@@ -17,7 +17,60 @@ class VectorStore(ABC):
     The interface of vector stores.
     """
     def __init__(self) -> None:
-        self._logger = logging.getLogger(self.__class__.__name__)
+        self._logger = getLogger(self.__class__.__name__)
+        self._collection_name = None
+        self._auto_close_connection = False
+
+    @property
+    def logger(self) -> Logger:
+        return self._logger
+
+    @property
+    def collection_name(self) -> str:
+        return self._collection_name
+
+    def open(self) -> None:
+        """
+        Opens this vector store.
+        """
+        pass
+
+    def close(self) -> None:
+        """
+        Closes this vector store.
+        """
+        pass
+
+    def open_collection(self, collection_name: str) -> None:
+        """
+        Opens the specified collection, and sets it as the current collection.
+
+        :param collection_name: the name of the specified collection.
+        """
+        self.close_collection()
+        self._collection_name = collection_name
+
+    def close_collection(self) -> None:
+        """
+        close the current collection.
+        """
+        self._collection_name = None
+
+    @abstractmethod
+    def create_collection(self, collection_name: str) -> None:
+        """
+        Creates a collection.
+
+        :param collection_name: the name of the collection to be created.
+        """
+
+    @abstractmethod
+    def delete_collection(self, collection_name: str) -> None:
+        """
+         Deletes a collection.
+
+         :param collection_name: the name of the collection to be deleted.
+         """
 
     @abstractmethod
     def add(self,
@@ -68,9 +121,3 @@ class VectorStore(ABC):
         :param kwargs: other vector store specific parameters.
         :return: the list of points as the searching result.
         """
-
-    def close(self) -> None:
-        """
-        Closes this vector store.
-        """
-        pass

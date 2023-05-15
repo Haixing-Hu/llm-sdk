@@ -21,19 +21,24 @@ class QdrantVectorStore(VectorStore):
     """
 
     def __init__(self,
-                 client: QdrantClient,
-                 collection_name: str) -> None:
+                 client: QdrantClient) -> None:
         """
         Construct a QdrantVectorStore object.
 
         To use you should have the ``qdrant-client`` package installed.
 
         :param client: the qdrant client object.
-        :param collection_name: the name of the collection.
         """
         super().__init__()
         self._client = client
-        self._collection_name = collection_name
+
+    def create_collection(self, collection_name: str) -> None:
+        # TODO
+        pass
+
+    def delete_collection(self, collection_name: str) -> None:
+        # TODO
+        pass
 
     def add(self,
             point: Point,
@@ -111,8 +116,7 @@ def criterion_to_filter(criterion: Optional[Criterion])\
         return models.Filter(must=[cond])
 
 
-def criterion_to_condition(criterion: Optional[Criterion])\
-        -> Optional[models.Condition]:
+def criterion_to_condition(criterion: Optional[Criterion]) -> Optional[models.Condition]:
     if criterion is None:
         return None
     if isinstance(criterion, SimpleCriterion):
@@ -123,8 +127,7 @@ def criterion_to_condition(criterion: Optional[Criterion])\
         raise ValueError("The criterion must be either a SimpleCriterion or a ComposedCriterion.")
 
 
-def simple_criterion_to_condition(criterion: Optional[SimpleCriterion]) \
-        -> Optional[models.Condition]:
+def simple_criterion_to_condition(criterion: Optional[SimpleCriterion]) -> Optional[models.Condition]:
     if criterion is None:
         return None
     match criterion.operator:
@@ -170,8 +173,7 @@ def simple_criterion_to_condition(criterion: Optional[SimpleCriterion]) \
             raise ValueError(f"Unsupported comparison operator: {criterion.operator}")
 
 
-def composed_criterion_to_filter(criterion: Optional[ComposedCriterion])\
-        -> Optional[models.Filter]:
+def composed_criterion_to_filter(criterion: Optional[ComposedCriterion]) -> Optional[models.Filter]:
     if criterion is None:
         return None
     match criterion.relation:
