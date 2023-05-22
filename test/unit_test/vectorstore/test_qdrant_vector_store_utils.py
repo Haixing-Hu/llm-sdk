@@ -9,8 +9,8 @@ import unittest
 from qdrant_client.http import models
 
 from llmsdk.common import Point
-from llmsdk.vectorstore.qdrant_vector_store import point_to_point_struct, \
-    scored_point_to_point, criterion_to_filter, simple_criterion_to_condition, \
+from llmsdk.vectorstore.qdrant_vector_store import to_qdrant_point, \
+    to_local_point, criterion_to_filter, simple_criterion_to_condition, \
     composed_criterion_to_filter
 from llmsdk.criterion import equal, not_equal, less, less_equal, greater, \
     greater_equal, is_in, not_in, like, not_like, is_null, not_null, \
@@ -21,14 +21,14 @@ class TestQdrantVectorStoreUtils(unittest.TestCase):
 
     def test_point_to_point_struct(self):
         p1 = Point([1.0, 2.0], {"page": 1}, id="id-1", score=123)
-        s1 = point_to_point_struct(p1)
+        s1 = to_qdrant_point(p1)
         self.assertEqual([1.0, 2.0],  s1.vector)
         self.assertEqual({"page": 1}, s1.payload)
         self.assertEqual("id-1", s1.id)
 
         p2 = Point([2.0, 3.0], {"page": 2})
         self.assertIsNone(p2.id)
-        s2 = point_to_point_struct(p2)
+        s2 = to_qdrant_point(p2)
         self.assertEqual([2.0, 3.0],  s2.vector)
         self.assertEqual({"page": 2}, s2.payload)
         self.assertIsNotNone(p2.id)
@@ -41,7 +41,7 @@ class TestQdrantVectorStoreUtils(unittest.TestCase):
                                 score=3.14,
                                 payload={"page": 1},
                                 vector=[1.0, 2.0])
-        p1 = scored_point_to_point(s1)
+        p1 = to_local_point(s1)
         self.assertEqual("id-1", p1.id)
         self.assertEqual({"page": 1}, p1.metadata)
         self.assertEqual([1.0, 2.0], p1.vector)

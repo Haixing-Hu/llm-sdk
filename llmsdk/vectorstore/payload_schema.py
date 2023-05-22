@@ -4,22 +4,19 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from .data_type import DataType
 
 
-@dataclass(frozen=True)
-class FieldSchema:
+@dataclass(frozen=True, order=True)
+class PayloadSchema:
     """
-    The class of schema of a field.
+    The class of schema of a payload field.
     """
 
     name: str
-    """The name of the field."""
+    """The name of this payload field."""
 
     type: DataType
-    """The type of the field."""
-
-    indexed: bool
-    """Indicates whether this field should be indexed."""
+    """The type of this payload field."""

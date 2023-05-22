@@ -8,7 +8,9 @@ from abc import ABC, abstractmethod
 from typing import Any, List, Optional
 from logging import Logger, getLogger
 
-from .field_schema import FieldSchema
+from .distance import Distance
+from .payload_schema import PayloadSchema
+from .collection_info import CollectionInfo
 from ..common import Point, Vector
 from ..criterion import Criterion
 
@@ -60,12 +62,18 @@ class VectorStore(ABC):
     @abstractmethod
     def create_collection(self,
                           collection_name: str,
-                          field_schemas: List[FieldSchema]) -> None:
+                          vector_size: int,
+                          payload_schemas: List[PayloadSchema] = None,
+                          distance: Distance = Distance.COSINE) -> None:
         """
         Creates a collection.
 
         :param collection_name: the name of the collection to be created.
-        :param field_schemas: the list of field schemas of the new collection.
+        :param vector_size: the size of vectors stored in the new collection.
+        :param payload_schemas: the list of payload field schemas of the new
+            collection.
+        :param distance: the distance used to estimate the similarity of vectors
+            with each other.
         """
 
     @abstractmethod
@@ -75,6 +83,15 @@ class VectorStore(ABC):
 
          :param collection_name: the name of the collection to be deleted.
          """
+
+    @abstractmethod
+    def get_collection_info(self, collection_name: str) -> CollectionInfo:
+        """
+        Gets the information of the specified collection.
+
+        :param collection_name: the name of the specified collection.
+        :return: the information of the specified collection.
+        """
 
     @abstractmethod
     def add(self,
