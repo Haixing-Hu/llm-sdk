@@ -7,28 +7,50 @@
 from typing import Dict, Optional, Any, List
 import uuid
 
-from pymilvus import Collection, DataType, connections, Index, utility
+import pymilvus
 
-from .vector_store import VectorStore
 from ..common import Vector, Point
-from ..criterion import Criterion, SimpleCriterion, ComposedCriterion, Operator, Relation
-
-DEFAULT_INDEX_PARAMS = {
-    "IVF_FLAT": {"nprobe": 10},
-    "IVF_SQ8": {"nprobe": 10},
-    "IVF_PQ": {"nprobe": 10},
-    "HNSW": {"ef": 10},
-    "RHNSW_FLAT": {"ef": 10},
-    "RHNSW_SQ": {"ef": 10},
-    "RHNSW_PQ": {"ef": 10},
-    "IVF_HNSW": {"nprobe": 10, "ef": 10},
-    "ANNOY": {"search_k": 10},
-}
+from ..criterion import Criterion
+from .distance import Distance
+from .payload_schema import PayloadSchema
+from .collection_info import CollectionInfo
+from .vector_store import VectorStore
+from .milvus_utils import to_milvus_field_schema, criterion_to_expr, to_milvus_distance
 
 
 class MilvusVectorStore(VectorStore):
     """
     The vector store based on the Milvus vector database.
+    """
+
+    DEFAULT_ID_FIELD_NAME = "__id__"
+    """
+    The default field name of the primary ID field.
+    """
+
+    DEFAULT_VECTOR_FIELD_NAME = "__vector__"
+    """
+    The default field name of the floating vector field.
+    """
+
+    DEFAULT_VECTOR_INDEX_TYPE = "HNSW"
+    """
+    The default vector index type.
+    """
+
+    DEFAULT_INDEX_PARAMS = {
+        "IVF_FLAT": {"nprobe": 10},
+        "IVF_SQ8": {"nprobe": 10},
+        "IVF_PQ": {"nprobe": 10},
+        "HNSW": {"ef": 10},
+        "RHNSW_FLAT": {"ef": 10},
+        "RHNSW_SQ": {"ef": 10},
+        "RHNSW_PQ": {"ef": 10},
+        "IVF_HNSW": {"nprobe": 10, "ef": 10},
+        "ANNOY": {"search_k": 10},
+    }
+    """
+    The default index params for different index types.
     """
 
     def __init__(self,
@@ -56,13 +78,13 @@ class MilvusVectorStore(VectorStore):
 
     def open(self) -> None:
         # Connecting to Milvus instance
-        if not connections.has_connection(self._connection_alias):
-            connections.connect(**self._connection_args)
+        if not pymilvus.connections.has_connection(self._connection_alias):
+            pymilvus.connections.connect(**self._connection_args)
 
     def close(self) -> None:
         if self._collection is not None:
             self._collection.release()
-        connections.disconnect(self._connection_alias)
+        pymilvus.connections.disconnect(self._connection_alias)
 
     def open_collection(self,
                         collection_name: str,
@@ -76,8 +98,8 @@ class MilvusVectorStore(VectorStore):
         :param vector_field: the name of vector field in the collection.
         """
         super().open_collection(collection_name)
-        self._collection = Collection(name=collection_name,
-                                      using=self._connection_alias)
+        self._collection = pymilvus.Collection(name=collection_name,
+                                               using=self._connection_alias)
         self._auto_id = self._collection.schema.auto_id
         self._id_field = id_field
         self._vector_field = vector_field
@@ -87,7 +109,7 @@ class MilvusVectorStore(VectorStore):
             self._fields.append(f.name)
             if f.is_primary and self._id_field is None:
                 self._id_field = f.name
-            elif f.dtype == DataType.FLOAT_VECTOR and self._vector_field is None:
+            elif f.dtype == pymilvus.DataType.FLOAT_VECTOR and self._vector_field is None:
                 self._vector_field = f.name
         if self._id_field is None:
             raise ValueError(f"No primary field in the collection '{collection_name}'.")
@@ -120,12 +142,48 @@ class MilvusVectorStore(VectorStore):
             self._collection.release()
             self._collection = None
 
-    def create_collection(self, collection_name: str) -> None:
-        # TODO
+    def create_collection(self,
+                          collection_name: str,
+                          vector_size: int,
+                          distance: Distance = Distance.COSINE,
+                          payload_schemas: List[PayloadSchema] = None) -> None:
+        # prepare the collection schema
+        id_field_name = MilvusVectorStore.DEFAULT_ID_FIELD_NAME
+        vector_field_name = MilvusVectorStore.DEFAULT_VECTOR_FIELD_NAME
+        id_field = pymilvus.FieldSchema(name=id_field_name,
+                                        dtype=pymilvus.DataType.STRING,
+                                        is_primary=True)
+        vector_field = pymilvus.FieldSchema(name=vector_field_name,
+                                            dtype=pymilvus.DataType.FLOAT_VECTOR,
+                                            dim=vector_size)
+        fields = [id_field, vector_field]
+        if payload_schemas is not None:
+            for schema in payload_schemas:
+                fields.append(to_milvus_field_schema(schema))
+        collection_schema = pymilvus.CollectionSchema(fields=fields,
+                                                      auto_id=False)
+        # create the collection
+        collection = pymilvus.Collection(name=collection_name,
+                                         schema=collection_schema,
+                                         using=self._connection_alias)
+        # Create the index for the vector field
+        vector_metric_type = to_milvus_distance(distance)
+        vector_index_type = MilvusVectorStore.DEFAULT_VECTOR_INDEX_TYPE
+        vector_index_params = MilvusVectorStore.DEFAULT_INDEX_PARAMS[vector_index_type]
+        collection.create_index(field_name=vector_field_name,
+                                index_params={
+                                    "metric_type": vector_metric_type,
+                                    "index_type": vector_index_type,
+                                    "params": vector_index_params,
+                                })
+
         pass
 
     def delete_collection(self, collection_name: str) -> None:
-        utility.drop_collection(collection_name)
+        pymilvus.utility.drop_collection(collection_name)
+
+    def get_collection_info(self, collection_name: str) -> CollectionInfo:
+        pass
 
     def add(self,
             point: Point,
@@ -193,78 +251,3 @@ class MilvusVectorStore(VectorStore):
                           score=r.distance)
             points.append(point)
         return points
-
-
-def criterion_to_expr(criterion: Optional[Criterion]) -> Optional[str]:
-    if criterion is None:
-        return None
-    if isinstance(criterion, SimpleCriterion):
-        return simple_criterion_to_expr(criterion)
-    elif isinstance(criterion, ComposedCriterion):
-        return composed_criterion_to_expr(criterion)
-    else:
-        raise ValueError("The criterion must be either a SimpleCriterion or a ComposedCriterion.")
-
-
-def simple_criterion_to_expr(criterion: Optional[SimpleCriterion]) -> Optional[str]:
-    if criterion is None:
-        return None
-    match criterion.operator:
-        case Operator.EQUAL:
-            return f"{criterion.property} == {criterion.value}"
-        case Operator.NOT_EQUAL:
-            return f"{criterion.property} != {criterion.value}"
-        case Operator.LESS:
-            return f"{criterion.property} < {criterion.value}"
-        case Operator.LESS_EQUAL:
-            return f"{criterion.property} <= {criterion.value}"
-        case Operator.GREATER:
-            return f"{criterion.property} > {criterion.value}"
-        case Operator.GREATER_EQUAL:
-            return f"{criterion.property} >= {criterion.value}"
-        case Operator.IN:
-            return f"{criterion.property} in {criterion.value}"
-        case Operator.NOT_IN:
-            return f"{criterion.property} not in {criterion.value}"
-        case Operator.LIKE:
-            return f"{criterion.property} like \"{criterion.value}\""
-        case Operator.NOT_LIKE:
-            return f"{criterion.property} not like \"{criterion.value}\""
-        # FIXME: IS_NULL and NOT_NULL is not supported
-        case _:
-            raise ValueError(f"Unsupported comparison operator: {criterion.operator}")
-
-
-def composed_criterion_to_expr(criterion: Optional[ComposedCriterion]) -> Optional[str]:
-    if criterion is None:
-        return None
-    match criterion.relation:
-        case Relation.AND:
-            n = len(criterion.criteria)
-            if n == 0:
-                return None
-            elif n == 1:
-                return criterion_to_expr(criterion.criteria[0])
-            else:
-                exprs = [f"({criterion_to_expr(c)})" for c in criterion.criteria]
-                return " and ".join(exprs)
-        case Relation.OR:
-            n = len(criterion.criteria)
-            if n == 0:
-                return None
-            elif n == 1:
-                return criterion_to_expr(criterion.criteria[0])
-            else:
-                exprs = [f"({criterion_to_expr(c)})" for c in criterion.criteria]
-                return " or ".join(exprs)
-        case Relation.NOT:
-            n = len(criterion.criteria)
-            if n == 0:
-                return None
-            elif n == 1:
-                return f"not ({criterion_to_expr(criterion.criteria[0])})"
-            else:
-                raise ValueError("ComposedCriterion with NOT relation should "
-                                 "have one sub-criterion.")
-        case _:
-            raise ValueError(f"Unsupported logic relation: {criterion.relation}")

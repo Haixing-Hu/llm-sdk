@@ -63,17 +63,17 @@ class VectorStore(ABC):
     def create_collection(self,
                           collection_name: str,
                           vector_size: int,
-                          payload_schemas: List[PayloadSchema] = None,
-                          distance: Distance = Distance.COSINE) -> None:
+                          distance: Distance = Distance.COSINE,
+                          payload_schemas: List[PayloadSchema] = None) -> None:
         """
         Creates a collection.
 
         :param collection_name: the name of the collection to be created.
         :param vector_size: the size of vectors stored in the new collection.
-        :param payload_schemas: the list of payload field schemas of the new
-            collection.
         :param distance: the distance used to estimate the similarity of vectors
             with each other.
+        :param payload_schemas: the list of payload field schemas of the new
+            collection.
         """
 
     @abstractmethod

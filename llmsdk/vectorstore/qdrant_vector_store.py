@@ -41,8 +41,8 @@ class QdrantVectorStore(VectorStore):
     def create_collection(self,
                           collection_name: str,
                           vector_size: int,
-                          payload_schemas: List[PayloadSchema] = None,
-                          distance: Distance = Distance.COSINE) -> None:
+                          distance: Distance = Distance.COSINE,
+                          payload_schemas: List[PayloadSchema] = None) -> None:
         config = models.VectorParams(size=vector_size,
                                      distance=to_qdrant_distance(distance))
         self._logger.debug("Create a collection: name=%s, config={%s}",
