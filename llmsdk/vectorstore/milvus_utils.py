@@ -4,7 +4,7 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from typing import Optional
+from typing import Optional, List
 
 import pymilvus
 
@@ -14,13 +14,44 @@ from .payload_schema import PayloadSchema
 from ..criterion import Criterion, SimpleCriterion, ComposedCriterion, Operator, Relation
 
 
+DEFAULT_ID_FIELD_NAME = "__id__"
+"""
+The default field name of the primary ID field.
+"""
+
+DEFAULT_VECTOR_FIELD_NAME = "__vector__"
+"""
+The default field name of the floating vector field.
+"""
+
+DEFAULT_VECTOR_INDEX_TYPE = "HNSW"
+"""
+The default vector index type.
+"""
+
+DEFAULT_INDEX_PARAMS = {
+    "IVF_FLAT": {"nprobe": 10},
+    "IVF_SQ8": {"nprobe": 10},
+    "IVF_PQ": {"nprobe": 10},
+    "HNSW": {"ef": 10},
+    "RHNSW_FLAT": {"ef": 10},
+    "RHNSW_SQ": {"ef": 10},
+    "RHNSW_PQ": {"ef": 10},
+    "IVF_HNSW": {"nprobe": 10, "ef": 10},
+    "ANNOY": {"search_k": 10},
+}
+"""
+The default index params for different index types.
+"""
+
+
 def to_milvus_distance(distance: Distance) -> str:
     """
-    Converts the enumeration of distance used in our library into the enumeration
-    of distance used in the milvus library.
+    Converts the vector distance used in this library into the vector distance
+    used in the Milvus.
 
-    :param distance: the enumeration of distance used in our library.
-    :return: the corresponding enumeration of distance used in the milvus library.
+    :param distance: the vector distance used in this library.
+    :return: the corresponding vector distance used in the Milvus.
     """
     match distance:
         case Distance.COSINE:
@@ -35,11 +66,11 @@ def to_milvus_distance(distance: Distance) -> str:
 
 def to_local_distance(distance: str) -> Distance:
     """
-    Converts the enumeration of distance used in the milvus library into the
-    enumeration of distance used in this library.
+    Converts the vector distance used in the Milvus into the vector distance
+    used in this library.
 
-    :param distance: the enumeration of distance used in the milvus library.
-    :return: the corresponding enumeration of distance used in this library.
+    :param distance: the vector distance used in the Milvus.
+    :return: the corresponding vector distance used in this library.
     """
     match distance:
         case "IP":
@@ -51,6 +82,13 @@ def to_local_distance(distance: str) -> Distance:
 
 
 def to_milvus_type(data_type: DataType) -> pymilvus.DataType:
+    """
+    Converts the data type used in this library into the data type used in the
+    Milvus.
+
+    :param data_type: the data type used in this library.
+    :return: the corresponding data type used in the Milvus.
+    """
     match data_type:
         case DataType.INT:
             return pymilvus.DataType.INT64
@@ -63,6 +101,13 @@ def to_milvus_type(data_type: DataType) -> pymilvus.DataType:
 
 
 def to_local_type(data_type: pymilvus.DataType) -> DataType:
+    """
+    Converts the data type used in the Milvus into the data type used in this
+    library.
+
+    :param data_type: the data type used in the Milvus.
+    :return: the corresponding data type used in this library.
+    """
     match data_type:
         case pymilvus.DataType.INT8:
             return DataType.INT
@@ -85,8 +130,120 @@ def to_local_type(data_type: pymilvus.DataType) -> DataType:
 
 
 def to_milvus_field_schema(schema: PayloadSchema) -> pymilvus.FieldSchema:
+    """
+    Converts a local payload schema to a FieldSchema in pymilvus.
+
+    :param schema: the local payload schema.
+    :return: the corresponding FieldSchema in pymilvus.
+    """
     return pymilvus.FieldSchema(name=schema.name,
                                 dtype=to_milvus_type(schema.type))
+
+
+def get_vector_field(collection: pymilvus.Collection,
+                     field_name: Optional[str] = None) -> pymilvus.FieldSchema:
+    """
+    Gets the schema of the vector field of the specified Milvus collection.
+
+    :param collection: a specified Milvus collection.
+    :param field_name: the optional name of the vector field.
+    :return: the schema of the vector field of the specified Milvus collection.
+    """
+    fields = {f.name: f for f in collection.schema.fields}
+    # get the vector field of the specified name
+    if field_name is not None:
+        if field_name in fields:
+            field = fields.get(field_name)
+            if field.dtype != pymilvus.DataType.FLOAT_VECTOR:
+                raise ValueError(f"The field '{field_name}' in the collection "
+                                 f"'{collection.name}' is not a float vector.")
+            return field
+        else:
+            raise ValueError(f"Cannot find the field '{field_name}' in the "
+                             f"collection '{collection.name}'")
+    # get the vector field of the default name
+    if DEFAULT_VECTOR_FIELD_NAME in fields:
+        field = fields.get(DEFAULT_VECTOR_FIELD_NAME)
+        if field.dtype != pymilvus.DataType.FLOAT_VECTOR:
+            raise ValueError(f"The field '{DEFAULT_VECTOR_FIELD_NAME}' in the "
+                             f"collection '{collection.name}' is not a float vector.")
+        return field
+    # find the first vector field in the collection
+    for field in collection.schema.fields:
+        if field.dtype == pymilvus.DataType.FLOAT_VECTOR:
+            return field
+    raise ValueError(f"No vector field found in the collection '{collection.name}'.")
+
+
+def get_id_field(collection: pymilvus.Collection,
+                 field_name: Optional[str] = None) -> pymilvus.FieldSchema:
+    """
+    Gets the schema of the ID field of the specified Milvus collection.
+
+    :param collection: a specified Milvus collection.
+    :param field_name: the optional name of the ID field.
+    :return: the schema of the ID field of the specified Milvus collection.
+    """
+    fields = {f.name: f for f in collection.schema.fields}
+    # get the vector field of the specified name
+    if field_name is not None:
+        if field_name in fields:
+            field = fields.get(field_name)
+            if not field.is_primary:
+                raise ValueError(f"The field '{field_name}' in the collection "
+                                 f"'{collection.name}' is not a primary ID field.")
+            return field
+        else:
+            raise ValueError(f"Cannot find the field '{field_name}' in the "
+                             f"collection '{collection.name}'")
+    # get the vector field of the default name
+    if DEFAULT_ID_FIELD_NAME in fields:
+        field = fields.get(DEFAULT_ID_FIELD_NAME)
+        if not field.is_primary:
+            raise ValueError(f"The field '{DEFAULT_ID_FIELD_NAME}' in the "
+                             f"collection '{collection.name}' is not a primary "
+                             f"ID field.")
+        return field
+    # find the first vector field in the collection
+    for field in collection.schema.fields:
+        if field.is_primary:
+            return field
+    raise ValueError(f"No primary ID field found in the collection '{collection.name}'.")
+
+
+def get_index(collection: pymilvus.Collection,
+              field_name: str) -> pymilvus.Index:
+    """
+    Gets the index of the specified field of the specified Milvus collection.
+
+    :param collection: a specified Milvus collection.
+    :param field_name: the name of the specified field.
+    :return: the index of the specified field of the specified Milvus collection.
+    """
+    for index in collection.indexes:
+        if index.field_name == field_name:
+            return index
+    raise ValueError(f"Cannot find the index of the field '{field_name}' in the "
+                     f"collection '{collection.name}'")
+
+
+def get_payload_schemas(collection: pymilvus.Collection,
+                        id_field: pymilvus.FieldSchema,
+                        vector_field: pymilvus.FieldSchema) -> List[PayloadSchema]:
+    """
+    Gets the list of payload schemas of the specified collection.
+
+    :param collection: the specified collection.
+    :param id_field: the ID field of the collection.
+    :param vector_field: the vector field of the collection.
+    :return: the list of payload schemas of the specified collection.
+    """
+    result = []
+    for field in collection.schema.fields:
+        if field.name != id_field.name and field.name != vector_field.name:
+            schema = PayloadSchema(field.name, to_local_type(field.dtype))
+            result.append(schema)
+    return result
 
 
 def criterion_to_expr(criterion: Optional[Criterion]) -> Optional[str]:

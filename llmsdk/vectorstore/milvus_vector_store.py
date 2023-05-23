@@ -15,42 +15,16 @@ from .distance import Distance
 from .payload_schema import PayloadSchema
 from .collection_info import CollectionInfo
 from .vector_store import VectorStore
-from .milvus_utils import to_milvus_field_schema, criterion_to_expr, to_milvus_distance
+from .milvus_utils import to_milvus_field_schema, criterion_to_expr, \
+    to_milvus_distance, get_id_field, get_vector_field, \
+    get_index, to_local_distance, get_payload_schemas, \
+    DEFAULT_ID_FIELD_NAME, DEFAULT_VECTOR_FIELD_NAME, DEFAULT_VECTOR_INDEX_TYPE, \
+    DEFAULT_INDEX_PARAMS
 
 
 class MilvusVectorStore(VectorStore):
     """
     The vector store based on the Milvus vector database.
-    """
-
-    DEFAULT_ID_FIELD_NAME = "__id__"
-    """
-    The default field name of the primary ID field.
-    """
-
-    DEFAULT_VECTOR_FIELD_NAME = "__vector__"
-    """
-    The default field name of the floating vector field.
-    """
-
-    DEFAULT_VECTOR_INDEX_TYPE = "HNSW"
-    """
-    The default vector index type.
-    """
-
-    DEFAULT_INDEX_PARAMS = {
-        "IVF_FLAT": {"nprobe": 10},
-        "IVF_SQ8": {"nprobe": 10},
-        "IVF_PQ": {"nprobe": 10},
-        "HNSW": {"ef": 10},
-        "RHNSW_FLAT": {"ef": 10},
-        "RHNSW_SQ": {"ef": 10},
-        "RHNSW_PQ": {"ef": 10},
-        "IVF_HNSW": {"nprobe": 10, "ef": 10},
-        "ANNOY": {"search_k": 10},
-    }
-    """
-    The default index params for different index types.
     """
 
     def __init__(self,
@@ -68,13 +42,12 @@ class MilvusVectorStore(VectorStore):
         else:
             self._connection_args = connection_args
             self._connection_alias = connection_args.get("alias", "default")
-        self._collection = None
-        self._auto_id = None
-        self._fields = None
-        self._id_field = None
-        self._vector_field = None
-        self._metadata_fields = None
-        self._vector_index = None
+        self._collection: Optional[pymilvus.Collection] = None
+        self._auto_id: Optional[bool] = None
+        self._id_field: Optional[pymilvus.FieldSchema] = None
+        self._vector_field: Optional[pymilvus.FieldSchema] = None
+        self._vector_index: Optional[pymilvus.Index] = None
+        self._payload_schemas: Optional[List[PayloadSchema]] = None
 
     def open(self) -> None:
         # Connecting to Milvus instance
@@ -83,57 +56,30 @@ class MilvusVectorStore(VectorStore):
 
     def close(self) -> None:
         if self._collection is not None:
-            self._collection.release()
+            self.close_collection()
         pymilvus.connections.disconnect(self._connection_alias)
 
     def open_collection(self,
                         collection_name: str,
-                        id_field: Optional[str] = None,
-                        vector_field: Optional[str] = None) -> None:
+                        id_field_name: Optional[str] = None,
+                        vector_field_name: Optional[str] = None) -> None:
         """
         Opens the specified collection, and sets it as the current collection.
 
         :param collection_name: the name of the collection in the vector database.
-        :param id_field: the name of ID field in the collection.
-        :param vector_field: the name of vector field in the collection.
+        :param id_field_name: the name of ID field in the collection.
+        :param vector_field_name: the name of vector field in the collection.
         """
         super().open_collection(collection_name)
         self._collection = pymilvus.Collection(name=collection_name,
                                                using=self._connection_alias)
         self._auto_id = self._collection.schema.auto_id
-        self._id_field = id_field
-        self._vector_field = vector_field
-        self._fields = []
-        # grab the fields for the existing collection.
-        for f in self._collection.schema.fields:
-            self._fields.append(f.name)
-            if f.is_primary and self._id_field is None:
-                self._id_field = f.name
-            elif f.dtype == pymilvus.DataType.FLOAT_VECTOR and self._vector_field is None:
-                self._vector_field = f.name
-        if self._id_field is None:
-            raise ValueError(f"No primary field in the collection '{collection_name}'.")
-        if self._vector_field is None:
-            raise ValueError(f"No float vector field in the collection '{collection_name}'.")
-        if self._id_field not in self._fields:
-            raise ValueError(f"The ID field '{self._id_field}' is not in the "
-                             f"collection '{collection_name}'.")
-        if self._vector_field not in self._fields:
-            raise ValueError(f"The vector field '{self._vector_field}' is not in "
-                             f"the collection '{collection_name}'.")
-        # find the index for the vector field
-        self._vector_index = None
-        for index in self._collection.indexes:
-            if index.field_name == self._vector_field:
-                self._vector_index = index
-        if self._vector_index is None:
-            raise ValueError(f"No index for the vector field '{self._vector_field}' "
-                             f"in the collection '{collection_name}'.")
-        # exclude the ID field and vector field from the metadata fields
-        self._metadata_fields = self._fields.copy()
-        self._metadata_fields.remove(self._id_field)
-        self._metadata_fields.remove(self._vector_field)
-        # load the collection
+        self._id_field = get_id_field(self._collection, id_field_name)
+        self._vector_field = get_vector_field(self._collection, vector_field_name)
+        self._vector_index = get_index(self._collection, self._vector_field.name)
+        self._payload_schemas = get_payload_schemas(self._collection,
+                                                    id_field=self._id_field,
+                                                    vector_field=self._vector_field)
         self._collection.load()
 
     def close_collection(self) -> None:
@@ -141,6 +87,11 @@ class MilvusVectorStore(VectorStore):
         if self._collection is not None:
             self._collection.release()
             self._collection = None
+            self._auto_id = None
+            self._id_field = None
+            self._vector_field = None
+            self._vector_index = None
+            self._payload_schemas = None
 
     def create_collection(self,
                           collection_name: str,
@@ -148,8 +99,8 @@ class MilvusVectorStore(VectorStore):
                           distance: Distance = Distance.COSINE,
                           payload_schemas: List[PayloadSchema] = None) -> None:
         # prepare the collection schema
-        id_field_name = MilvusVectorStore.DEFAULT_ID_FIELD_NAME
-        vector_field_name = MilvusVectorStore.DEFAULT_VECTOR_FIELD_NAME
+        id_field_name = DEFAULT_ID_FIELD_NAME
+        vector_field_name = DEFAULT_VECTOR_FIELD_NAME
         id_field = pymilvus.FieldSchema(name=id_field_name,
                                         dtype=pymilvus.DataType.STRING,
                                         is_primary=True)
@@ -166,24 +117,39 @@ class MilvusVectorStore(VectorStore):
         collection = pymilvus.Collection(name=collection_name,
                                          schema=collection_schema,
                                          using=self._connection_alias)
-        # Create the index for the vector field
+        # create the index for the vector field
         vector_metric_type = to_milvus_distance(distance)
-        vector_index_type = MilvusVectorStore.DEFAULT_VECTOR_INDEX_TYPE
-        vector_index_params = MilvusVectorStore.DEFAULT_INDEX_PARAMS[vector_index_type]
+        vector_index_type = DEFAULT_VECTOR_INDEX_TYPE
+        vector_index_params = DEFAULT_INDEX_PARAMS[vector_index_type]
         collection.create_index(field_name=vector_field_name,
                                 index_params={
                                     "metric_type": vector_metric_type,
                                     "index_type": vector_index_type,
                                     "params": vector_index_params,
                                 })
-
-        pass
+        # create the index for payload fields
+        if payload_schemas is not None:
+            for schema in payload_schemas:
+                collection.create_index(field_name=schema.name,
+                                        index_name=schema.name + "_index")
 
     def delete_collection(self, collection_name: str) -> None:
         pymilvus.utility.drop_collection(collection_name)
 
     def get_collection_info(self, collection_name: str) -> CollectionInfo:
-        pass
+        collection = pymilvus.Collection(name=collection_name,
+                                         using=self._connection_alias)
+        id_field = get_id_field(collection)
+        vector_field = get_vector_field(collection)
+        vector_index = get_index(collection, vector_field.name)
+        vector_index_params = vector_index.params
+        distance = to_local_distance(vector_index_params.get("metric_type"))
+        payload_schemas = get_payload_schemas(collection, id_field, vector_field)
+        return CollectionInfo(name=collection_name,
+                              size=collection.num_entities,
+                              vector_size=vector_field.params.get("dim"),
+                              distance=distance,
+                              payload_schemas=payload_schemas)
 
     def add(self,
             point: Point,
@@ -194,20 +160,21 @@ class MilvusVectorStore(VectorStore):
     def add_all(self,
                 points: List[Point],
                 **kwargs: Any) -> List[str]:
-        data: List[List[Any]] = [] * len(self._fields)
+        fields = self._collection.schema.fields
+        data: List[List[Any]] = [] * len(fields)
         for p in points:
             if not self._auto_id and p.id is None:
                 p.id = str(uuid.uuid4())
-            for i, field in enumerate(self._fields):
-                if field == self._id_field:
+            for i, field in enumerate(fields):
+                if field.name == self._id_field.name:
                     data[i].append(p.id)
-                elif field == self._vector_field:
+                elif field.name == self._vector_field.name:
                     data[i].append(p.vector)
                 else:
-                    if p.metadata is None or field not in p.metadata.keys():
+                    if (p.metadata is None) or (field.name not in p.metadata):
                         value = None
                     else:
-                        value = p.metadata[field]
+                        value = p.metadata[field.name]
                     data[i].append(value)
         self._logger.debug("Insert data: %s", data)
         result = self._collection.insert(data=data, **kwargs)
@@ -230,18 +197,20 @@ class MilvusVectorStore(VectorStore):
         else:
             params["params"] = self._vector_index.params["params"]
         expr = criterion_to_expr(criterion)
+        payload_field_names = [f.name for f in self._payload_schemas]
         results = self._collection.search(data=[vector],
-                                          anns_field=self._vector_field,
+                                          anns_field=self._vector_field.name,
                                           param=params,
                                           limit=limit,
                                           expr=expr,
-                                          output_fields=self._fields,
+                                          output_fields=payload_field_names,
                                           **kwargs)
         points = []
         for r in results[0]:
-            vector = r.entity.get(self._vector_field)
+            # FIXME: can we get the vector field directly?
+            vector = r.entity.get(self._vector_field.name)
             metadata = {}
-            for f in self._metadata_fields:
+            for f in payload_field_names:
                 v = r.entity.get(f)
                 if v is not None:
                     metadata[f] = v

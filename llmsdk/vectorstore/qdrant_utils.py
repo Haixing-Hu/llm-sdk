@@ -17,11 +17,11 @@ from ..criterion import Relation, Operator, Criterion, SimpleCriterion, Composed
 
 def to_qdrant_distance(distance: Distance) -> models.Distance:
     """
-    Converts the enumeration of distance used in our library into the enumeration
-    of distance used in the Qdrant library.
+    Converts the vector distance used in this library into the vector distance
+    used in the Qdrant.
 
-    :param distance: the enumeration of distance used in our library.
-    :return: the corresponding enumeration of distance used in the Qdrant library.
+    :param distance: the vector distance used in this library.
+    :return: the corresponding vector distance used in the Qdrant.
     """
     match distance:
         case Distance.COSINE:
@@ -36,11 +36,11 @@ def to_qdrant_distance(distance: Distance) -> models.Distance:
 
 def to_local_distance(distance: models.Distance) -> Distance:
     """
-    Converts the enumeration of distance used in the Qdrant library into the
-    enumeration of distance used in this library.
+    Converts the vector distance used in the Qdrant into the vector distance
+    used in this library.
 
-    :param distance: the enumeration of distance used in the Qdrant library.
-    :return: the corresponding enumeration of distance used in this library.
+    :param distance: the vector distance used in the Qdrant.
+    :return: the corresponding vector distance used in this library.
     """
     match distance:
         case models.Distance.COSINE:
@@ -54,6 +54,13 @@ def to_local_distance(distance: models.Distance) -> Distance:
 
 
 def to_qdrant_type(data_type: DataType) -> models.PayloadSchemaType:
+    """
+    Converts the data type used in this library into the data type used in the
+    Qdrant.
+
+    :param data_type: the data type used in this library.
+    :return: the corresponding data type used in the Qdrant.
+    """
     match data_type:
         case DataType.INT:
             return models.PayloadSchemaType.INTEGER
@@ -66,6 +73,13 @@ def to_qdrant_type(data_type: DataType) -> models.PayloadSchemaType:
 
 
 def to_local_type(data_type: models.PayloadSchemaType) -> DataType:
+    """
+    Converts the data type used in the Qdrant into the data type used in this
+    library.
+
+    :param data_type: the data type used in the Qdrant.
+    :return: the corresponding data type used in this library.
+    """
     match data_type:
         case models.PayloadSchemaType.INTEGER:
             return DataType.INT
