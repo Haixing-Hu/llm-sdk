@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 
 import openai
 
-from .openai_llm import OpenAiModel
+from .openai import OpenAiModel
 from ..common import Example
 from ..util.openai_utils import (
     check_model_compatibility,

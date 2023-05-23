@@ -5,6 +5,6 @@
 #                                                                              =
 # ==============================================================================
 from .llm import LargeLanguageModel
-from .openai_llm import OpenAiModel
+from .openai import OpenAiModel
 from .gpt import Gpt
 from .chat_gpt import ChatGpt
