@@ -19,6 +19,7 @@ from .qdrant_utils import to_qdrant_point, to_local_point
 from .qdrant_utils import criterion_to_filter
 from ..common import Vector, Point
 from ..criterion import Criterion
+from ..id_generator import IdGenerator
 
 
 class QdrantVectorStore(VectorStore):
@@ -27,15 +28,17 @@ class QdrantVectorStore(VectorStore):
     """
 
     def __init__(self,
-                 client: QdrantClient) -> None:
+                 client: QdrantClient,
+                 id_generator: Optional[IdGenerator] = None) -> None:
         """
         Construct a QdrantVectorStore object.
 
         To use you should have the ``qdrant-client`` package installed.
 
         :param client: the qdrant client object.
+        :param id_generator: the ID generator used to generate ID of documents.
         """
-        super().__init__()
+        super().__init__(id_generator=id_generator)
         self._client = client
 
     def create_collection(self,
@@ -81,7 +84,7 @@ class QdrantVectorStore(VectorStore):
                               payload_schemas=payload_schemas)
 
     def add(self, point: Point, **kwargs: Any) -> str:
-        qdrant_points = [to_qdrant_point(point)]
+        qdrant_points = [to_qdrant_point(point, self._id_generator)]
         self._logger.debug("Add a point: %s", qdrant_points[0])
         self._client.upsert(collection_name=self._collection_name,
                             points=qdrant_points,
@@ -89,7 +92,7 @@ class QdrantVectorStore(VectorStore):
         return point.id
 
     def add_all(self, points: List[Point], **kwargs: Any) -> List[str]:
-        qdrant_points = [to_qdrant_point(pt) for pt in points]
+        qdrant_points = [to_qdrant_point(pt, self._id_generator) for pt in points]
         self._logger.debug("Add points: %s", qdrant_points)
         self._client.upsert(collection_name=self._collection_name,
                             points=qdrant_points,

@@ -13,16 +13,25 @@ from .payload_schema import PayloadSchema
 from .collection_info import CollectionInfo
 from ..common import Point, Vector
 from ..criterion import Criterion
+from ..id_generator import IdGenerator, Uuid4Generator
 
 
 class VectorStore(ABC):
     """
     The interface of vector stores.
     """
-    def __init__(self) -> None:
+
+    def __init__(self,
+                 id_generator: Optional[IdGenerator] = None) -> None:
+        """
+        Constructs a vector store.
+
+        :param id_generator: the ID generator used to generate ID of documents.
+        """
         self._logger = getLogger(self.__class__.__name__)
         self._collection_name = None
         self._auto_close_connection = False
+        self._id_generator = id_generator or Uuid4Generator()
 
     @property
     def logger(self) -> Logger:
@@ -31,6 +40,10 @@ class VectorStore(ABC):
     @property
     def collection_name(self) -> str:
         return self._collection_name
+
+    @property
+    def id_generator(self) -> IdGenerator:
+        return self._id_generator
 
     def open(self) -> None:
         """

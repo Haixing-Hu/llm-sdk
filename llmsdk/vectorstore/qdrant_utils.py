@@ -4,7 +4,6 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-import uuid
 from typing import Optional
 
 from qdrant_client.http import models
@@ -13,7 +12,7 @@ from .data_type import DataType
 from .distance import Distance
 from ..common import Point
 from ..criterion import Relation, Operator, Criterion, SimpleCriterion, ComposedCriterion
-
+from ..id_generator import IdGenerator
 
 def to_qdrant_distance(distance: Distance) -> models.Distance:
     """
@@ -93,15 +92,17 @@ def to_local_type(data_type: models.PayloadSchemaType) -> DataType:
             raise ValueError(f"Unsupported data type: {data_type}")
 
 
-def to_qdrant_point(point: Point) -> models.PointStruct:
+def to_qdrant_point(point: Point,
+                    id_generator: IdGenerator) -> models.PointStruct:
     """
     Converts a Point object into a qdrant PointStruct object.
 
     :param point: a Point object.
+    :param id_generator: the ID generator used to generate ID of documents.
     :return: the converted PointStruct object.
     """
     if point.id is None:
-        point.id = str(uuid.uuid4())
+        point.id = id_generator.generate()
     return models.PointStruct(id=point.id,
                               vector=point.vector,
                               payload=point.metadata)

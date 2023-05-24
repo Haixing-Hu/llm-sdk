@@ -5,12 +5,9 @@
 #                                                                              =
 # ==============================================================================
 from typing import Dict, Optional, Any, List
-import uuid
 
 import pymilvus
 
-from ..common import Vector, Point
-from ..criterion import Criterion
 from .distance import Distance
 from .payload_schema import PayloadSchema
 from .collection_info import CollectionInfo
@@ -20,6 +17,9 @@ from .milvus_utils import to_milvus_field_schema, criterion_to_expr, \
     get_index, to_local_distance, get_payload_schemas, \
     DEFAULT_ID_FIELD_NAME, DEFAULT_VECTOR_FIELD_NAME, DEFAULT_VECTOR_INDEX_TYPE, \
     DEFAULT_INDEX_PARAMS
+from ..common import Vector, Point
+from ..criterion import Criterion
+from ..id_generator import IdGenerator
 
 
 class MilvusVectorStore(VectorStore):
@@ -28,14 +28,16 @@ class MilvusVectorStore(VectorStore):
     """
 
     def __init__(self,
-                 connection_args: Optional[Dict] = None) -> None:
+                 connection_args: Optional[Dict] = None,
+                 id_generator: Optional[IdGenerator] = None) -> None:
         """
         Construct a vector store based on a collection of a Milvus vector
         database.
 
         :param connection_args: the arguments for the database connection.
+        :param id_generator: the ID generator used to generate ID of documents.
         """
-        super().__init__()
+        super().__init__(id_generator=id_generator)
         if connection_args is None:
             self._connection_args = {}
             self._connection_alias = "default"
@@ -164,7 +166,7 @@ class MilvusVectorStore(VectorStore):
         data: List[List[Any]] = [] * len(fields)
         for p in points:
             if not self._auto_id and p.id is None:
-                p.id = str(uuid.uuid4())
+                p.id = self._id_generator.generate()
             for i, field in enumerate(fields):
                 if field.name == self._id_field.name:
                     data[i].append(p.id)
