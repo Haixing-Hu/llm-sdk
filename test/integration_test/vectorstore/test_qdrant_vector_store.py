@@ -9,7 +9,13 @@ import logging
 
 from qdrant_client import QdrantClient
 
-from llmsdk.vectorstore import QdrantVectorStore, PayloadSchema, DataType, CollectionInfo, Distance
+from llmsdk.vectorstore import (
+    QdrantVectorStore,
+    PayloadSchema,
+    DataType,
+    CollectionInfo,
+    Distance,
+)
 from llmsdk.embedding import MockEmbedding
 from llmsdk.common import Document
 from llmsdk.criterion import equal

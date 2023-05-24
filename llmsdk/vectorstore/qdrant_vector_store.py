@@ -13,10 +13,15 @@ from .payload_schema import PayloadSchema
 from .distance import Distance
 from .collection_info import CollectionInfo
 from .vector_store import VectorStore
-from .qdrant_utils import to_qdrant_type, to_local_type
-from .qdrant_utils import to_qdrant_distance, to_local_distance
-from .qdrant_utils import to_qdrant_point, to_local_point
-from .qdrant_utils import criterion_to_filter
+from .qdrant_utils import (
+    to_qdrant_type,
+    to_local_type,
+    to_qdrant_distance,
+    to_local_distance,
+    to_qdrant_point,
+    to_local_point,
+    criterion_to_filter,
+)
 from ..common import Vector, Point
 from ..criterion import Criterion
 from ..id_generator import IdGenerator

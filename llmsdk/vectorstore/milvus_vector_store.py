@@ -12,11 +12,20 @@ from .distance import Distance
 from .payload_schema import PayloadSchema
 from .collection_info import CollectionInfo
 from .vector_store import VectorStore
-from .milvus_utils import to_milvus_field_schema, criterion_to_expr, \
-    to_milvus_distance, get_id_field, get_vector_field, \
-    get_index, to_local_distance, get_payload_schemas, \
-    DEFAULT_ID_FIELD_NAME, DEFAULT_VECTOR_FIELD_NAME, DEFAULT_VECTOR_INDEX_TYPE, \
-    DEFAULT_INDEX_PARAMS
+from .milvus_utils import (
+    to_milvus_field_schema,
+    criterion_to_expr,
+    to_milvus_distance,
+    get_id_field,
+    get_vector_field,
+    get_index,
+    to_local_distance,
+    get_payload_schemas,
+    DEFAULT_ID_FIELD_NAME,
+    DEFAULT_VECTOR_FIELD_NAME,
+    DEFAULT_VECTOR_INDEX_TYPE,
+    DEFAULT_INDEX_PARAMS,
+)
 from ..common import Vector, Point
 from ..criterion import Criterion
 from ..id_generator import IdGenerator
