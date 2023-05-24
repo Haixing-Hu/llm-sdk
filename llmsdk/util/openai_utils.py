@@ -7,10 +7,8 @@
 import logging
 import os
 from typing import Any, Callable, Dict, List, Optional
-from dataclasses import asdict
 
 import openai
-import tiktoken
 from tenacity import (
     before_sleep_log,
     retry,
@@ -19,12 +17,12 @@ from tenacity import (
     wait_exponential,
 )
 
-from ..common import ChatMessage
-from ..util.common_utils import (
+from .common_utils import (
     singleton,
     read_config_file,
     is_website_accessible,
 )
+from ..llm.tokenizer import OpenAiTokenizer
 
 MODEL_TOKEN_MAPPING = {
     # GPT-4 models: https://platform.openai.com/docs/models/gpt-4
@@ -111,66 +109,6 @@ def get_model_tokens(model) -> int:
     return result
 
 
-def count_tokens(model, text) -> int:
-    """
-    Counts the number of tokens of the specified text encoded by the specified
-    model.
-
-    :param model: the name of the OpenAI's model.
-    :param text: the specified text.
-    :return: the number of tokens of the specified text encoded by the model.
-    """
-    codec = tiktoken.encoding_for_model(model)
-    tokenized_text = codec.encode(text)
-    return len(tokenized_text)
-
-
-def count_message_tokens(model: str,
-                         messages: List[ChatMessage]):
-    """
-    Counts the number of tokens used by a list of chatting messages.
-
-    Reference: https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
-
-    :param messages: list of chatting messages.
-    :param model: the name of OpenAI model.
-    """
-    if model == "gpt-3.5-turbo":
-        logger.warning("gpt-3.5-turbo may change over time. Returning num tokens "
-                       "assuming gpt-3.5-turbo-0301.")
-        return count_message_tokens(model="gpt-3.5-turbo-0301",
-                                    messages=messages)
-    elif model == "gpt-4":
-        logger.warning("gpt-4 may change over time. Returning num tokens "
-                       "assuming gpt-4-0314.")
-        return count_message_tokens(model="gpt-4-0314",
-                                    messages=messages)
-    elif model == "gpt-3.5-turbo-0301":
-        tokens_per_message = 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
-        tokens_per_name = -1  # if there's a name, the role is omitted
-    elif model == "gpt-4-0314":
-        tokens_per_message = 3
-        tokens_per_name = 1
-    else:
-        raise NotImplementedError(f"""
-                ChatGpt._count_tokens_of_messages() is not implemented for 
-                model {model}. 
-                See https://github.com/openai/openai-python/blob/main/chatml.md 
-                for information on how messages are converted to tokens.
-            """)
-    codec = tiktoken.encoding_for_model(model)
-    num_tokens = 0
-    for message in messages:
-        num_tokens += tokens_per_message
-        msg_dict = asdict(message)
-        for key, value in msg_dict.items():
-            num_tokens += len(codec.encode(value))
-            if key == "name":
-                num_tokens += tokens_per_name
-    num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
-    return num_tokens
-
-
 def check_model_compatibility(model: str, endpoint: str) -> None:
     """
     Checks the model compatibility with the specified API endpoint.
@@ -249,8 +187,8 @@ def get_chunked_tokens(model: str,
         maximum number of tokens of the model.
     """
     # encode the text to list of tokens
-    codec = tiktoken.encoding_for_model(model)
-    tokens = codec.encode(text)
+    tokenizer = OpenAiTokenizer(model)
+    tokens = tokenizer.encode(text)
     # Here we simply divide the input text into chunks by their maximum allowed
     # length.
     # FIXME: In some cases, it may make sense to split chunks on paragraph

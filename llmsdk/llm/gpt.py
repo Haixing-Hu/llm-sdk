@@ -10,11 +10,10 @@ import openai
 
 from .openai import OpenAiModel
 from ..common import Example
-from llmsdk.llm.openai_utils import (
+from llmsdk.util.openai_utils import (
     check_model_compatibility,
     call_with_retries,
     get_model_tokens,
-    count_tokens,
 )
 
 DEFAULT_MODEL = "text-davinci-003"
@@ -80,7 +79,7 @@ class Gpt(OpenAiModel):
         self._logger.debug("Submit a prompt:\n%s", full_prompt)
         if self._max_tokens is None:
             model_tokens = get_model_tokens(model=self._model)
-            prompt_tokens = count_tokens(model=self._model, text=full_prompt)
+            prompt_tokens = self._tokenizer.count_tokens(full_prompt)
             max_tokens = model_tokens - prompt_tokens
         else:
             max_tokens = self._max_tokens

@@ -7,7 +7,8 @@
 from abc import ABC
 
 from .llm import LargeLanguageModel
-from llmsdk.llm.openai_utils import init_openai
+from llmsdk.util.openai_utils import init_openai
+from .tokenizer import OpenAiTokenizer
 
 
 class OpenAiModel(LargeLanguageModel, ABC):
@@ -41,7 +42,8 @@ class OpenAiModel(LargeLanguageModel, ABC):
         :param api_key: the OpenAI API key.
         :param use_proxy: whether to use the proxy.
         """
-        super().__init__(max_tokens=max_tokens,
+        super().__init__(tokenizer=OpenAiTokenizer(model),
+                         max_tokens=max_tokens,
                          temperature=temperature,
                          top_p=top_p)
         self._model = model

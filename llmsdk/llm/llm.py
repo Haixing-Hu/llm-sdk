@@ -8,6 +8,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
+from .tokenizer import Tokenizer
 from ..common import Example
 
 
@@ -16,12 +17,14 @@ class LargeLanguageModel(ABC):
     The abstract base class for large language models.
     """
     def __init__(self,
+                 tokenizer: Tokenizer,
                  max_tokens: Optional[int] = None,
                  temperature: float = 1.0,
                  top_p: int = 1) -> None:
         """
         Constructs a LargeLanguageModel.
 
+        :param tokenizer: the tokenizer used by this LLM.
         :param max_tokens: the maximum number of tokens of the generated message.
             If it is None, the value will be calculated automatically.
         :param temperature: What sampling temperature to use. Higher values like
@@ -34,12 +37,17 @@ class LargeLanguageModel(ABC):
             comprising the top 10% probability mass are considered. We generally
             recommend altering this or temperature but not both.
         """
+        self._tokenizer = tokenizer
         self._max_tokens = max_tokens
         self._temperature = temperature
         self._top_p = top_p
         self._examples = {}
         self._instruction = ""
         self._logger = logging.getLogger(self.__class__.__name__)
+
+    @property
+    def tokenizer(self) -> Tokenizer:
+        return self._tokenizer
 
     @property
     def max_tokens(self):

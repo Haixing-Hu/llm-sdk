@@ -11,7 +11,7 @@ import openai
 
 from .embedding import Embedding
 from ..common import Vector
-from llmsdk.llm.openai_utils import (
+from llmsdk.util.openai_utils import (
     check_model_compatibility,
     call_with_retries,
     get_chunked_tokens,

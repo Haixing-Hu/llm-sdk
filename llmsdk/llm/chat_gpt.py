@@ -10,10 +10,9 @@ from dataclasses import asdict
 import openai
 
 from .openai import OpenAiModel
-from .openai_utils import (
+from llmsdk.util.openai_utils import (
     check_model_compatibility,
     call_with_retries,
-    count_message_tokens,
     get_model_tokens,
 )
 from ..common import ChatMessage
@@ -54,15 +53,14 @@ class ChatGpt(OpenAiModel):
         self._logger.debug("Submit messages:\n%s", messages)
         if self._max_tokens is None:
             model_tokens = get_model_tokens(model=self._model)
-            messages_tokens = count_message_tokens(model=self._model,
-                                                   messages=messages)
+            messages_tokens = self._tokenizer.count_message_tokens(messages)
             max_tokens = model_tokens - messages_tokens
         else:
             max_tokens = self._max_tokens
         self._logger.debug("Max number of generation tokens is: %d", max_tokens)
         response = call_with_retries(openai_api=openai.ChatCompletion.create,
                                      model=self._model,
-                                     messages=asdict(messages),
+                                     messages=[asdict(m) for m in messages],
                                      max_tokens=max_tokens,
                                      temperature=self._temperature,
                                      top_p=self._top_p,

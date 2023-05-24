@@ -4,18 +4,14 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-import logging
 import unittest
 
-from llmsdk.llm.openai_utils import (
+from llmsdk.util.openai_utils import (
     get_model_tokens,
-    count_tokens,
-    count_message_tokens,
     get_chunked_tokens,
     set_proxy,
 )
 from llmsdk.embedding.openai_embedding import DEFAULT_MODEL as DEFAULT_EMBEDDING_MODEL
-from llmsdk.common import ChatMessage
 
 
 class TestOpenAiUtil(unittest.TestCase):
@@ -24,28 +20,6 @@ class TestOpenAiUtil(unittest.TestCase):
         self.assertEqual(get_model_tokens("code-davinci-002"), 8001)
         self.assertEqual(get_model_tokens("gpt-3.5-turbo"), 4096)
         self.assertEqual(get_model_tokens("gpt-4"), 8192)
-
-    def test_count_tokens(self):
-        model = "text-davinci-002"
-        text = "hello world"
-        result = count_tokens(model, text)
-        self.assertEqual(result, 2)
-        text = "\nHello there, how may I assist you today?"
-        result = count_tokens(model, text)
-        self.assertEqual(result, 11)
-        text = "你好，世界！"
-        result = count_tokens(model, text)
-        self.assertEqual(result, 14)
-        model = "gpt-3.5-turbo"
-        text = "你好，世界！"
-        result = count_tokens(model, text)
-        self.assertEqual(result, 7)
-
-    def test_count_message_tokens(self):
-        model = "gpt-3.5-turbo"
-        messages = [ChatMessage("user", "Hello!")]
-        result = count_message_tokens(model, messages)
-        self.assertEqual(result, 10)
 
     def test_get_chunked_tokens(self):
         model = DEFAULT_EMBEDDING_MODEL
