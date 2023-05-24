@@ -7,7 +7,7 @@
 import logging
 import unittest
 
-from llmsdk.util.openai_utils import (
+from llmsdk.llm.openai_utils import (
     get_model_tokens,
     count_tokens,
     count_message_tokens,
@@ -15,6 +15,7 @@ from llmsdk.util.openai_utils import (
     set_proxy,
 )
 from llmsdk.embedding.openai_embedding import DEFAULT_MODEL as DEFAULT_EMBEDDING_MODEL
+from llmsdk.common import ChatMessage
 
 
 class TestOpenAiUtil(unittest.TestCase):
@@ -42,9 +43,8 @@ class TestOpenAiUtil(unittest.TestCase):
 
     def test_count_message_tokens(self):
         model = "gpt-3.5-turbo"
-        logger = logging.getLogger("TestOpenAiUtil")
-        messages = [{"role": "user", "content": "Hello!"}]
-        result = count_message_tokens(model, messages, logger)
+        messages = [ChatMessage("user", "Hello!")]
+        result = count_message_tokens(model, messages)
         self.assertEqual(result, 10)
 
     def test_get_chunked_tokens(self):

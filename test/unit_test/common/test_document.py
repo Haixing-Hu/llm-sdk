@@ -18,7 +18,7 @@ class TestDocument(unittest.TestCase):
         self.assertEqual({}, doc1.metadata)
 
         meta2 = {"x": 1, "y": 2}
-        doc2 = Document("doc2", meta2)
+        doc2 = Document("doc2", metadata=meta2)
         self.assertEqual("doc2", doc2.content)
         self.assertEqual(meta2, doc2.metadata)
 

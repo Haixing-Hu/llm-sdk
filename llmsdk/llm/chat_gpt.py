@@ -5,16 +5,18 @@
 #                                                                              =
 # ==============================================================================
 from typing import Any, Dict, List, Optional
+from dataclasses import asdict
 
 import openai
 
 from .openai import OpenAiModel
-from ..util.openai_utils import (
+from .openai_utils import (
     check_model_compatibility,
     call_with_retries,
     count_message_tokens,
     get_model_tokens,
 )
+from ..common import ChatMessage
 
 COMPATIBLE_MODELS = [
     "gpt-4",
@@ -60,7 +62,7 @@ class ChatGpt(OpenAiModel):
         self._logger.debug("Max number of generation tokens is: %d", max_tokens)
         response = call_with_retries(openai_api=openai.ChatCompletion.create,
                                      model=self._model,
-                                     messages=messages,
+                                     messages=asdict(messages),
                                      max_tokens=max_tokens,
                                      temperature=self._temperature,
                                      top_p=self._top_p,
@@ -73,15 +75,15 @@ class ChatGpt(OpenAiModel):
         replies = [c["message"]["content"] for c in choices]
         return replies
 
-    def _create_messages(self, prompt: str) -> List[Dict[str, str]]:
+    def _create_messages(self, prompt: str) -> List[ChatMessage]:
         """
-        Creates the list of messages for the API request.
+        Creates the list of chatting messages for the API request.
         """
         messages = []
         if len(self._instruction) > 0:
-            messages.append({"role": "system", "content": self._instruction})
+            messages.append(ChatMessage("system", self._instruction))
         for example in self._examples.values():
-            messages.append({"role": "user", "content": example.input})
-            messages.append({"role": "assistant", "content": example.output})
-        messages.append({"role": "user", "content": prompt})
+            messages.append(ChatMessage("user", example.input))
+            messages.append(ChatMessage("assistant", example.output))
+        messages.append(ChatMessage("user", prompt))
         return messages

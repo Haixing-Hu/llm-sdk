@@ -4,9 +4,21 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from .metadata import Metadata
-from .point import Vector
-from .point import Point
-from .document import Document
-from .example import Example
-from .chat_message import ChatMessage
+from dataclasses import dataclass
+
+
+@dataclass
+class ChatMessage:
+    """
+    The data structure represents chatting messages.
+    """
+
+    role: str
+    """
+    The role of the speaker.
+    """
+
+    content: str
+    """
+    The content of the message.
+    """

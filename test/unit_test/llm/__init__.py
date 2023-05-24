@@ -4,9 +4,3 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from .metadata import Metadata
-from .point import Vector
-from .point import Point
-from .document import Document
-from .example import Example
-from .chat_message import ChatMessage

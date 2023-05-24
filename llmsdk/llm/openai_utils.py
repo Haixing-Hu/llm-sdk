@@ -7,6 +7,7 @@
 import logging
 import os
 from typing import Any, Callable, Dict, List, Optional
+from dataclasses import asdict
 
 import openai
 import tiktoken
@@ -18,7 +19,8 @@ from tenacity import (
     wait_exponential,
 )
 
-from .common_utils import (
+from ..common import ChatMessage
+from ..util.common_utils import (
     singleton,
     read_config_file,
     is_website_accessible,
@@ -124,13 +126,13 @@ def count_tokens(model, text) -> int:
 
 
 def count_message_tokens(model: str,
-                         messages: List[Dict[str, str]]):
+                         messages: List[ChatMessage]):
     """
-    Counts the number of tokens used by a list of messages.
+    Counts the number of tokens used by a list of chatting messages.
 
     Reference: https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
 
-    :param messages: list of messages.
+    :param messages: list of chatting messages.
     :param model: the name of OpenAI model.
     """
     if model == "gpt-3.5-turbo":
@@ -160,7 +162,8 @@ def count_message_tokens(model: str,
     num_tokens = 0
     for message in messages:
         num_tokens += tokens_per_message
-        for key, value in message.items():
+        msg_dict = asdict(message)
+        for key, value in msg_dict.items():
             num_tokens += len(codec.encode(value))
             if key == "name":
                 num_tokens += tokens_per_name
