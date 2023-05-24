@@ -11,13 +11,12 @@ from .embedding import Embedding
 
 
 class MockEmbedding(Embedding):
-
-    VECTOR_DIMENSION: int = 10
-    """The dimension of the vectors."""
-
     """
     A mock Embedding class used for testing.
     """
+
+    def __init__(self) -> None:
+        super().__init__(output_dimensions=10)
 
     def _embed_texts(self, texts: List[str]) -> List[Vector]:
         """

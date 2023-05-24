@@ -51,6 +51,10 @@ MODEL_TOKEN_MAPPING = {
     # embedding models: https://platform.openai.com/docs/guides/embeddings/second-generation-models
     "text-embedding-ada-002": 8191,
 }
+EMBEDDING_OUTPUT_DIMENSIONS = {
+    # https://platform.openai.com/docs/guides/embeddings/what-are-embeddings
+    "text-embedding-ada-002": 1536,
+}
 DEFAULT_MAX_RETRIES = 6
 DEFAULT_WAIT_MIN_SECONDS = 4
 DEFAULT_WAIT_MAX_SECONDS = 10
@@ -94,7 +98,7 @@ def call_with_retries(openai_api: Callable[[Any], Any],
     return __submit_openai_request()
 
 
-def get_model_tokens(model) -> int:
+def get_model_tokens(model: str) -> int:
     """
     Gets the context length in tokens of the specified model.
 
@@ -106,6 +110,20 @@ def get_model_tokens(model) -> int:
     if result is None:
         raise ValueError(f"The maximum number of tokens of the model {model} "
                          f"is unknown.")
+    return result
+
+
+def get_embedding_output_dimensions(model: str) -> int:
+    """
+    Gets the number of dimensions of the output vectors of the specified model.
+
+    :param model: the name of the OpenAI's model.
+    :return: the number of dimensions of the output vectors of the specified model.
+    :raise ValueError: if the specified model is not supported
+    """
+    result = EMBEDDING_OUTPUT_DIMENSIONS[model]
+    if result is None:
+        raise ValueError(f"The embedding model '{model}' is not supported.")
     return result
 
 

@@ -28,7 +28,6 @@ class TestQdrantVectorStore(unittest.TestCase):
 
     def test_search(self):
         collection_name = "test"
-        vector_size = MockEmbedding.VECTOR_DIMENSION
         texts = ["foo", "bar", "baz"]
         documents = [Document(t, metadata={"page": i}) for i, t in enumerate(texts)]
         embedding = MockEmbedding()
@@ -38,7 +37,7 @@ class TestQdrantVectorStore(unittest.TestCase):
         store.open()
         try:
             store.create_collection(collection_name=collection_name,
-                                    vector_size=vector_size)
+                                    vector_size=embedding.output_dimensions)
             store.open_collection(collection_name)
             store.add_all(points)
             query = embedding.embed_query("foo")
@@ -52,7 +51,6 @@ class TestQdrantVectorStore(unittest.TestCase):
 
     def test_search_with_filter(self):
         collection_name = "test"
-        vector_size = MockEmbedding.VECTOR_DIMENSION
         texts = ["foo", "bar", "baz"]
         documents = [Document(t, metadata={"page": i}) for i, t in enumerate(texts)]
         embedding = MockEmbedding()
@@ -62,7 +60,7 @@ class TestQdrantVectorStore(unittest.TestCase):
         store.open()
         try:
             store.create_collection(collection_name=collection_name,
-                                    vector_size=vector_size)
+                                    vector_size=embedding.output_dimensions)
             store.open_collection(collection_name)
             store.add_all(points)
             query = embedding.embed_query("foo")
@@ -81,7 +79,6 @@ class TestQdrantVectorStore(unittest.TestCase):
 
     def test_create_collection(self):
         collection_name = "test"
-        vector_size = MockEmbedding.VECTOR_DIMENSION
         client = QdrantClient(location="127.0.0.1")
         store = QdrantVectorStore(client)
         store.open()
@@ -93,14 +90,14 @@ class TestQdrantVectorStore(unittest.TestCase):
                 PayloadSchema(name="f4", type=DataType.STRING),
             ]
             store.create_collection(collection_name=collection_name,
-                                    vector_size=vector_size,
+                                    vector_size=10,
                                     payload_schemas=payload_schemas)
             info = store.get_collection_info(collection_name)
             info.payload_schemas.sort()
             print(info)
             expected = CollectionInfo(name=collection_name,
                                       size=0,
-                                      vector_size=vector_size,
+                                      vector_size=10,
                                       distance=Distance.COSINE,
                                       payload_schemas=payload_schemas)
             self.assertEqual(expected, info)

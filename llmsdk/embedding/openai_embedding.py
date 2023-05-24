@@ -12,6 +12,7 @@ import openai
 from .embedding import Embedding
 from ..common import Vector
 from llmsdk.util.openai_utils import (
+    get_embedding_output_dimensions,
     check_model_compatibility,
     call_with_retries,
     get_chunked_tokens,
@@ -31,7 +32,7 @@ class OpenAiEmbedding(Embedding):
                  batch_size: int = DEFAULT_BATCH_SIZE,
                  api_key: Optional[str] = None,
                  use_proxy: Optional[bool] = None) -> None:
-        super().__init__()
+        super().__init__(output_dimensions=get_embedding_output_dimensions(model))
         self._model = model
         self._batch_size = batch_size
         check_model_compatibility(model=model, endpoint="embeddings")

@@ -13,14 +13,30 @@ from ..common import Document, Vector, Point
 
 class Embedding(ABC):
     """
-    Interface for embedding models.
+    The interface of sentence embedding models.
     """
 
     TEXT_ATTRIBUTE: str = "__text__"
     """The name of the metadata attribute storing the original text of a document."""
 
-    def __init__(self) -> None:
+    def __init__(self,
+                 output_dimensions: int) -> None:
+        """
+        Creates a Embedding object.
+
+        :param output_dimensions: the number of dimension of the embedded vectors.
+        """
         self._logger = logging.getLogger(self.__class__.__name__)
+        self._output_dimensions = output_dimensions
+
+    @property
+    def output_dimensions(self) -> int:
+        """
+        Gets the number of dimensions of the embedded vectors.
+
+        :return: the number of dimensions of the embedded vectors.
+        """
+        return self._output_dimensions
 
     def embed_query(self, query: str) -> Vector:
         """
