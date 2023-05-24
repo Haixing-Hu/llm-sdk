@@ -13,7 +13,7 @@ from .payload_schema import PayloadSchema
 from .collection_info import CollectionInfo
 from ..common import Point, Vector
 from ..criterion import Criterion
-from ..id_generator import IdGenerator, Uuid4Generator
+from ..generator import IdGenerator, Uuid4Generator
 
 
 class VectorStore(ABC):

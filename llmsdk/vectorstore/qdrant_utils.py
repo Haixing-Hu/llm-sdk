@@ -12,7 +12,7 @@ from .data_type import DataType
 from .distance import Distance
 from ..common import Point
 from ..criterion import Relation, Operator, Criterion, SimpleCriterion, ComposedCriterion
-from ..id_generator import IdGenerator
+from ..generator import IdGenerator
 
 def to_qdrant_distance(distance: Distance) -> models.Distance:
     """

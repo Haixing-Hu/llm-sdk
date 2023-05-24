@@ -24,7 +24,7 @@ from .qdrant_utils import (
 )
 from ..common import Vector, Point
 from ..criterion import Criterion
-from ..id_generator import IdGenerator
+from ..generator import IdGenerator
 
 
 class QdrantVectorStore(VectorStore):
