@@ -144,21 +144,21 @@ class LargeLanguageModel(ABC):
 
     def generate(self, prompt: str) -> str:
         """
-        Obtains a single generation from this model.
+        Generates a single reply from this model.
 
         :param prompt: the prompt.
-        :return: the generation.
+        :return: the generated reply.
         """
         generations = self.generate_n(prompt, 1)
         return generations[0]
 
     def generate_n(self, prompt: str, n: int) -> List[str]:
         """
-        Obtains the specified number of generations from this model.
+        Generates the specified number of top replies from this model.
 
         :param prompt: the prompt.
         :param n: the number of replies to be obtained.
-        :return: the list of generations.
+        :return: the list of replies.
         """
         response = self._submit_request(prompt, n)
         return self._parse_response(response)
@@ -179,5 +179,5 @@ class LargeLanguageModel(ABC):
         Parses the replies from the response of the model.
 
         :param response: the response.
-        :return: the list of generations.
+        :return: the list of replies.
         """
