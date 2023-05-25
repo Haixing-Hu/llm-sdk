@@ -18,7 +18,7 @@ class MockEmbedding(Embedding):
     def __init__(self) -> None:
         super().__init__(output_dimensions=10)
 
-    def _embed_texts(self, texts: List[str]) -> List[Vector]:
+    def embed_texts(self, texts: List[str]) -> List[Vector]:
         """
         Return simple embeddings. Embeddings encode each text as its index.
 

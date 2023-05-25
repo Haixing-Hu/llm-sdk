@@ -38,7 +38,7 @@ class OpenAiEmbedding(Embedding):
         check_model_compatibility(model=model, endpoint="embeddings")
         init_openai(api_key=api_key, use_proxy=use_proxy)
 
-    def _embed_texts(self, texts: List[str]) -> List[Vector]:
+    def embed_texts(self, texts: List[str]) -> List[Vector]:
         # split all documents into list of chunked token lists
         all_token_lists = []
         indices = []

@@ -21,8 +21,7 @@ class VectorStore(ABC):
     The interface of vector stores.
     """
 
-    def __init__(self,
-                 id_generator: Optional[IdGenerator] = None) -> None:
+    def __init__(self, id_generator: Optional[IdGenerator] = None) -> None:
         """
         Constructs a vector store.
 

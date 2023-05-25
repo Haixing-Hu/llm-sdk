@@ -16,11 +16,7 @@ class Embedding(ABC):
     The interface of sentence embedding models.
     """
 
-    TEXT_ATTRIBUTE: str = "__text__"
-    """The name of the metadata attribute storing the original text of a document."""
-
-    def __init__(self,
-                 output_dimensions: int) -> None:
+    def __init__(self, output_dimensions: int) -> None:
         """
         Creates a Embedding object.
 
@@ -48,7 +44,7 @@ class Embedding(ABC):
         :param query: the query string to be embedded.
         :return: the embedded vector of the query string.
         """
-        vectors = self._embed_texts([query])
+        vectors = self.embed_texts([query])
         return vectors[0]
 
     def embed_document(self, document: Document) -> Point:
@@ -58,13 +54,8 @@ class Embedding(ABC):
         :param document: the document to be embedded.
         :return: the embedded points of the document.
         """
-        vectors = self._embed_texts([document.content])
-        metadata = {
-            Embedding.TEXT_ATTRIBUTE: document.content,
-        }
-        if document.metadata is not None:
-            metadata.update(document.metadata)
-        return Point(vectors[0], id=document.id, metadata=metadata)
+        vectors = self.embed_texts([document.content])
+        return Point.from_document(vector=vectors[0], document=document)
 
     def embed_documents(self, documents: List[Document]) -> List[Point]:
         """
@@ -73,22 +64,18 @@ class Embedding(ABC):
         :param documents: the list of documents.
         :return: the list of embedded points of each document.
         """
-        vectors = self._embed_texts([doc.content for doc in documents])
+        vectors = self.embed_texts([doc.content for doc in documents])
         n = len(documents)
         result = []
         for i in range(n):
-            doc = documents[i]
+            document = documents[i]
             vector = vectors[i]
-            metadata = {
-                Embedding.TEXT_ATTRIBUTE: doc.content,
-            }
-            if doc.metadata is not None:
-                metadata.update(doc.metadata)
-            result.append(Point(vector, id=doc.id, metadata=metadata))
+            point = Point.from_document(vector=vector, document=document)
+            result.append(point)
         return result
 
     @abstractmethod
-    def _embed_texts(self, texts: List[str]) -> List[Vector]:
+    def embed_texts(self, texts: List[str]) -> List[Vector]:
         """
         Embeds a list of texts.
 

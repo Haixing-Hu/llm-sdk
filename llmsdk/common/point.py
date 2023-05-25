@@ -4,11 +4,21 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
+from __future__ import annotations
+
+import copy
 from dataclasses import dataclass, field
 from typing import Optional
 
 from .vector import Vector
 from .metadata import Metadata
+from .document import Document
+
+DOCUMENT_ID_ATTRIBUTE: str = "__doc_id__"
+"""The name of the metadata attribute storing the ID of the document."""
+
+DOCUMENT_CONTENT_ATTRIBUTE: str = "__doc_content__"
+"""The name of the metadata attribute storing the original text of the document."""
 
 
 @dataclass
@@ -32,3 +42,29 @@ class Point:
 
     score: Optional[float] = None
     """The score of this point, which is set for searching result."""
+
+    @classmethod
+    def from_document(cls, vector: Vector, document: Document) -> Point:
+        metadata = {
+            DOCUMENT_ID_ATTRIBUTE: document.id,
+            DOCUMENT_CONTENT_ATTRIBUTE: document.content,
+        }
+        if document.metadata is not None:
+            metadata.update(document.metadata)
+        return Point(id=document.id, vector=vector, metadata=metadata)
+
+    def to_document(self) -> Document:
+        if self.metadata is None:
+            raise ValueError(f"No metadata in the point: {self}")
+        if DOCUMENT_ID_ATTRIBUTE not in self.metadata:
+            raise ValueError(f"No {DOCUMENT_ID_ATTRIBUTE} attribute in the "
+                             f"metadata of the point: {self}")
+        if DOCUMENT_CONTENT_ATTRIBUTE not in self.metadata:
+            raise ValueError(f"No {DOCUMENT_CONTENT_ATTRIBUTE} attribute in the "
+                             f"metadata of the point: {self}")
+        id = self.metadata.get(DOCUMENT_ID_ATTRIBUTE)
+        content = self.metadata.get(DOCUMENT_CONTENT_ATTRIBUTE)
+        metadata = copy.deepcopy(self.metadata)
+        metadata.pop(DOCUMENT_ID_ATTRIBUTE)
+        metadata.pop(DOCUMENT_CONTENT_ATTRIBUTE)
+        return Document(id=id, content=content, metadata=metadata)
