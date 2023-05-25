@@ -162,15 +162,13 @@ class MilvusVectorStore(VectorStore):
                               distance=distance,
                               payload_schemas=payload_schemas)
 
-    def add(self,
-            point: Point,
-            **kwargs: Any) -> str:
-        ids = self.add_all([point], **kwargs)
+    def add(self, point: Point) -> str:
+        self._ensure_collection_opened()
+        ids = self.add_all([point])
         return ids[0]
 
-    def add_all(self,
-                points: List[Point],
-                **kwargs: Any) -> List[str]:
+    def add_all(self, points: List[Point]) -> List[str]:
+        self._ensure_collection_opened()
         fields = self._collection.schema.fields
         data: List[List[Any]] = [] * len(fields)
         for p in points:
@@ -188,7 +186,7 @@ class MilvusVectorStore(VectorStore):
                         value = p.metadata[field.name]
                     data[i].append(value)
         self._logger.debug("Insert data: %s", data)
-        result = self._collection.insert(data=data, **kwargs)
+        result = self._collection.insert(data=data)
         self._collection.flush()
         # set the automatically generated IDs for points
         if self._auto_id:
@@ -199,8 +197,8 @@ class MilvusVectorStore(VectorStore):
     def search(self,
                vector: Vector,
                limit: int,
-               criterion: Optional[Criterion] = None,
-               **kwargs: Any) -> List[Point]:
+               criterion: Optional[Criterion] = None) -> List[Point]:
+        self._ensure_collection_opened()
         params = {"metric_type": self._vector_index.params["metric_type"]}
         index_type = self._vector_index.params["index_type"]
         if index_type in DEFAULT_INDEX_PARAMS:
@@ -214,8 +212,7 @@ class MilvusVectorStore(VectorStore):
                                           param=params,
                                           limit=limit,
                                           expr=expr,
-                                          output_fields=payload_field_names,
-                                          **kwargs)
+                                          output_fields=payload_field_names)
         points = []
         for r in results[0]:
             # FIXME: can we get the vector field directly?

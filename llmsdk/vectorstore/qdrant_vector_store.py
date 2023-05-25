@@ -88,27 +88,27 @@ class QdrantVectorStore(VectorStore):
                               distance=distance,
                               payload_schemas=payload_schemas)
 
-    def add(self, point: Point, **kwargs: Any) -> str:
+    def add(self, point: Point) -> str:
+        self._ensure_collection_opened()
         qdrant_points = [to_qdrant_point(point, self._id_generator)]
         self._logger.debug("Add a point: %s", qdrant_points[0])
         self._client.upsert(collection_name=self._collection_name,
-                            points=qdrant_points,
-                            **kwargs)
+                            points=qdrant_points)
         return point.id
 
-    def add_all(self, points: List[Point], **kwargs: Any) -> List[str]:
+    def add_all(self, points: List[Point]) -> List[str]:
+        self._ensure_collection_opened()
         qdrant_points = [to_qdrant_point(pt, self._id_generator) for pt in points]
         self._logger.debug("Add points: %s", qdrant_points)
         self._client.upsert(collection_name=self._collection_name,
-                            points=qdrant_points,
-                            **kwargs)
+                            points=qdrant_points)
         return [p.id for p in points]
 
     def search(self,
                vector: Vector,
                limit: int,
-               criterion: Optional[Criterion] = None,
-               **kwargs: Any) -> List[Point]:
+               criterion: Optional[Criterion] = None) -> List[Point]:
+        self._ensure_collection_opened()
         query_filter = criterion_to_filter(criterion)
         self._logger.debug("Search: vector=%s, limit=%d, filter=%s",
                            vector, limit, query_filter)
@@ -116,7 +116,6 @@ class QdrantVectorStore(VectorStore):
                                      query_filter=query_filter,
                                      query_vector=vector,
                                      limit=limit,
-                                     with_vectors=True,
-                                     **kwargs)
+                                     with_vectors=True)
         self._logger.debug("Search result: %s", points)
         return [to_local_point(p) for p in points]

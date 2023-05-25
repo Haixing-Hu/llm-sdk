@@ -70,6 +70,7 @@ class VectorStore(ABC):
         """
         close the current collection.
         """
+        self._ensure_collection_opened()
         self._collection_name = None
 
     @abstractmethod
@@ -107,21 +108,16 @@ class VectorStore(ABC):
         """
 
     @abstractmethod
-    def add(self,
-            point: Point,
-            **kwargs: Any) -> str:
+    def add(self, point: Point) -> str:
         """
         Adds a point to the vector store.
 
         :param point: the point to be added. After adding this function, the
             `id` field of this point will be set.
-        :param kwargs: other vector store specific parameters.
         :return: the ID of the point added into the vector store.
         """
 
-    def add_all(self,
-                points: List[Point],
-                **kwargs: Any) -> List[str]:
+    def add_all(self, points: List[Point]) -> List[str]:
         """
         Adds all points to the vector store.
 
@@ -130,12 +126,12 @@ class VectorStore(ABC):
 
         :param points: the points to be added. After adding this function, the
             `id` field of each point in this argument will be set.
-        :param kwargs: other vector store specific parameters.
         :return: the list of IDs of the vectors added into the vector store.
         """
+        self._ensure_collection_opened()
         result = []
         for point in points:
-            id = self.add(point, **kwargs)
+            id = self.add(point)
             result.append(id)
         return result
 
@@ -143,8 +139,7 @@ class VectorStore(ABC):
     def search(self,
                vector: Vector,
                limit: int,
-               criterion: Optional[Criterion] = None,
-               **kwargs: Any) -> List[Point]:
+               criterion: Optional[Criterion] = None) -> List[Point]:
         """
         Searches in the vector store for points whose vector similar to the
         specified vector and satisfies the specified filter.
@@ -152,6 +147,13 @@ class VectorStore(ABC):
         :param vector: the specified vector to be searched.
         :param limit: the number of the most similar results to return.
         :param criterion: the criterion used to filter attributes of points.
-        :param kwargs: other vector store specific parameters.
         :return: the list of points as the searching result.
         """
+
+    def _ensure_collection_opened(self):
+        """
+        Ensure that this store has opened a collection.
+        :raise RuntimeError: if no collection was opened for this vector store.
+        """
+        if self._collection_name is None:
+            raise RuntimeError("No collection was opened for this vector store.")
