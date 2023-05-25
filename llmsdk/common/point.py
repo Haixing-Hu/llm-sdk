@@ -44,7 +44,15 @@ class Point:
     """The score of this point, which is set for searching result."""
 
     @classmethod
-    def from_document(cls, vector: Vector, document: Document) -> Point:
+    def from_document(cls, document: Document, vector: Vector) -> Point:
+        """
+        Constructs a Point from a document and its embedded vector.
+
+        :param document: the specified document.
+        :param vector: the embedded vector of the content of the specified
+            document.
+        :return: the constructed Point.
+        """
         metadata = {
             DOCUMENT_ID_ATTRIBUTE: document.id,
             DOCUMENT_CONTENT_ATTRIBUTE: document.content,
@@ -54,6 +62,14 @@ class Point:
         return Point(id=document.id, vector=vector, metadata=metadata)
 
     def to_document(self) -> Document:
+        """
+        Convert a Point to a Document.
+
+        :return: the Document constructed from this point. Note that the metadata
+            of this point should have "__doc_id__" and "__doc_content__" attributes.
+        :raise ValueError: if the metadata of this point haven't "__doc_id__"
+            and "__doc_content__" attributes.
+        """
         if self.metadata is None:
             raise ValueError(f"No metadata in the point: {self}")
         if DOCUMENT_ID_ATTRIBUTE not in self.metadata:
