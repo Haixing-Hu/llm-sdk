@@ -11,7 +11,7 @@ import logging
 import tiktoken
 
 from .tokernizer import Tokenizer, SpecialTokenSet
-from ...common import ChatMessage
+from ...common import Message
 
 
 class OpenAiTokenizer(Tokenizer):
@@ -44,7 +44,7 @@ class OpenAiTokenizer(Tokenizer):
         return codec.decode(tokens, errors)
 
     def count_message_tokens(self,
-                             messages: List[ChatMessage],
+                             messages: List[Message],
                              allowed_special: SpecialTokenSet = None,
                              disallowed_special: SpecialTokenSet = "all") -> int:
         return self._count_message_tokens_impl(model=self._model,
@@ -54,7 +54,7 @@ class OpenAiTokenizer(Tokenizer):
 
     def _count_message_tokens_impl(self,
                                    model: str,
-                                   messages: List[ChatMessage],
+                                   messages: List[Message],
                                    allowed_special: SpecialTokenSet,
                                    disallowed_special: SpecialTokenSet) -> int:
         """

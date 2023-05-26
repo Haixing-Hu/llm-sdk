@@ -9,4 +9,7 @@ from .point import Vector
 from .point import Point
 from .document import Document
 from .example import Example
-from .chat_message import ChatMessage
+from .role import Role
+from .message import Message
+from .prompt_type import PromptType
+from .prompt import Prompt

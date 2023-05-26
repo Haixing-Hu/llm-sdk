@@ -15,7 +15,7 @@ from llmsdk.util.openai_utils import (
     call_with_retries,
     get_model_tokens,
 )
-from ..common import ChatMessage
+from ..common import Message
 
 COMPATIBLE_MODELS = [
     "gpt-4",
@@ -73,15 +73,15 @@ class ChatGpt(OpenAiModel):
         replies = [c["message"]["content"] for c in choices]
         return replies
 
-    def _create_messages(self, prompt: str) -> List[ChatMessage]:
+    def _create_messages(self, prompt: str) -> List[Message]:
         """
         Creates the list of chatting messages for the API request.
         """
         messages = []
         if len(self._instruction) > 0:
-            messages.append(ChatMessage("system", self._instruction))
+            messages.append(Message("system", self._instruction))
         for example in self._examples.values():
-            messages.append(ChatMessage("user", example.input))
-            messages.append(ChatMessage("assistant", example.output))
-        messages.append(ChatMessage("user", prompt))
+            messages.append(Message("user", example.input))
+            messages.append(Message("assistant", example.output))
+        messages.append(Message("user", prompt))
         return messages

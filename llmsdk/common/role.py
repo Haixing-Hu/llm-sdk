@@ -4,21 +4,22 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from dataclasses import dataclass
+from enum import Enum
+from frozendict import frozendict
 
 
-@dataclass
-class ChatMessage:
+class Role(Enum):
     """
-    The data structure represents chatting messages.
+    The enumeration of roles of a human-AI conversation.
     """
+    HUMAN = "Human"
 
-    role: str
-    """
-    The role of the speaker.
-    """
+    AI = "AI"
 
-    content: str
-    """
-    The content of the message.
-    """
+    SYSTEM = "System"
+
+
+ROLE_NAMES_MAP = frozendict({e: e.value for e in Role})
+"""
+A readonly map mapping a enumerator of the enumeration class Role into its name.
+"""

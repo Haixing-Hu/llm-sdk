@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
 
-from .prompt import Prompt
+from ..common import Prompt
 
 
 @dataclass

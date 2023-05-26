@@ -5,9 +5,9 @@
 #                                                                              =
 # ==============================================================================
 from typing import Union, List
-from ..common import ChatMessage
+from llmsdk.common import Message
 
-Prompt = Union[str, List[ChatMessage]]
+Prompt = Union[str, List[Message]]
 """
 The type of prompts. 
 
