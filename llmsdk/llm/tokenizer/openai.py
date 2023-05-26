@@ -4,14 +4,19 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from dataclasses import asdict
 from typing import List
 import logging
 
 import tiktoken
 
 from .tokernizer import Tokenizer, SpecialTokenSet
-from ...common import Message
+from ...common import Role, Message
+
+OPENAI_ROLE_NAMES_MAP = {
+    Role.SYSTEM: "system",
+    Role.HUMAN: "user",
+    Role.AI: "assistant"
+}
 
 
 class OpenAiTokenizer(Tokenizer):
@@ -100,7 +105,7 @@ class OpenAiTokenizer(Tokenizer):
         num_tokens = 0
         for message in messages:
             num_tokens += tokens_per_message
-            msg_dict = asdict(message)
+            msg_dict = message.to_dict(role_names_map=OPENAI_ROLE_NAMES_MAP)
             for key, value in msg_dict.items():
                 tokens = codec.encode(value,
                                       allowed_special=allowed_special,

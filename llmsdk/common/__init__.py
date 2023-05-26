@@ -10,6 +10,6 @@ from .point import Point
 from .document import Document
 from .example import Example
 from .role import Role
-from .message import Message
+from .message import Message, MessageList
 from .prompt_type import PromptType
 from .prompt import Prompt

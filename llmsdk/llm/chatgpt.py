@@ -5,7 +5,6 @@
 #                                                                              =
 # ==============================================================================
 from typing import Any, Dict, List, Optional
-from dataclasses import asdict
 
 import openai
 
@@ -14,8 +13,9 @@ from llmsdk.util.openai_utils import (
     check_model_compatibility,
     call_with_retries,
     get_model_tokens,
+    OPENAI_ROLE_NAMES_MAP,
 )
-from ..common import Message
+from ..common import Message, Prompt
 
 COMPATIBLE_MODELS = [
     "gpt-4",
@@ -48,19 +48,23 @@ class ChatGpt(OpenAiModel):
                          use_proxy=use_proxy)
         check_model_compatibility(model=model, endpoint="chat-completions")
 
-    def _submit_request(self, prompt: str, n: int) -> Dict[str, Any]:
-        messages = self._create_messages(prompt)
+    def _submit_request(self, prompt: Prompt, n: int) -> Dict[str, Any]:
+        if (not isinstance(prompt, list)) \
+                or (len(prompt) == 0) \
+                or (not isinstance(prompt[0], Message)):
+            raise ValueError("The OpenAI's GPT-3.5+ model only support message list prompt.")
+        messages = [m.to_dict(role_names_map=OPENAI_ROLE_NAMES_MAP) for m in prompt]
         self._logger.debug("Submit messages:\n%s", messages)
         if self._max_tokens is None:
             model_tokens = get_model_tokens(model=self._model)
-            messages_tokens = self._tokenizer.count_message_tokens(messages)
+            messages_tokens = self._tokenizer.count_message_tokens(prompt)
             max_tokens = model_tokens - messages_tokens
         else:
             max_tokens = self._max_tokens
         self._logger.debug("Max number of generation tokens is: %d", max_tokens)
         response = call_with_retries(openai_api=openai.ChatCompletion.create,
                                      model=self._model,
-                                     messages=[asdict(m) for m in messages],
+                                     messages=messages,
                                      max_tokens=max_tokens,
                                      temperature=self._temperature,
                                      top_p=self._top_p,
@@ -72,16 +76,3 @@ class ChatGpt(OpenAiModel):
         choices = response["choices"]
         replies = [c["message"]["content"] for c in choices]
         return replies
-
-    def _create_messages(self, prompt: str) -> List[Message]:
-        """
-        Creates the list of chatting messages for the API request.
-        """
-        messages = []
-        if len(self._instruction) > 0:
-            messages.append(Message("system", self._instruction))
-        for example in self._examples.values():
-            messages.append(Message("user", example.input))
-            messages.append(Message("assistant", example.output))
-        messages.append(Message("user", prompt))
-        return messages

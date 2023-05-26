@@ -7,7 +7,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Union, AbstractSet, Literal
 
-from ...common import Message
+from ...common import MessageList
 
 
 SpecialTokenSet = Union[Literal["all"], AbstractSet[str], type(None)]
@@ -89,7 +89,7 @@ class Tokenizer(ABC):
 
     @abstractmethod
     def count_message_tokens(self,
-                             messages: List[Message],
+                             messages: MessageList,
                              allowed_special: SpecialTokenSet = None,
                              disallowed_special: SpecialTokenSet = "all") -> int:
         """

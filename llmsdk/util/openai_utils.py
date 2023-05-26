@@ -22,6 +22,7 @@ from .common_utils import (
     read_config_file,
     is_website_accessible,
 )
+from ..common import Role
 from ..llm.tokenizer import OpenAiTokenizer
 
 MODEL_TOKEN_MAPPING = {
@@ -58,6 +59,12 @@ EMBEDDING_OUTPUT_DIMENSIONS = {
 DEFAULT_MAX_RETRIES = 6
 DEFAULT_WAIT_MIN_SECONDS = 4
 DEFAULT_WAIT_MAX_SECONDS = 10
+
+OPENAI_ROLE_NAMES_MAP = {
+    Role.SYSTEM: "system",
+    Role.HUMAN: "user",
+    Role.AI: "assistant"
+}
 
 # the logger of the current module
 logger = logging.getLogger(__name__)

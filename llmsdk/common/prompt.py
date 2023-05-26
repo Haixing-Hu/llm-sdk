@@ -4,10 +4,10 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from typing import Union, List
-from llmsdk.common import Message
+from typing import Union
+from llmsdk.common import MessageList
 
-Prompt = Union[str, List[Message]]
+Prompt = Union[str, MessageList]
 """
 The type of prompts. 
 

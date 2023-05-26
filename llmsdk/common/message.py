@@ -5,7 +5,7 @@
 #                                                                              =
 # ==============================================================================
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, List
 
 from .role import Role, ROLE_NAMES_MAP
 
@@ -48,3 +48,9 @@ class Message:
         if self.name is not None:
             result["name"] = self.name
         return result
+
+
+MessageList = List[Message]
+"""
+The type of list of chatting messages.
+"""

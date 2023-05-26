@@ -7,7 +7,7 @@
 import unittest
 
 from llmsdk.llm.tokenizer import OpenAiTokenizer
-from llmsdk.common import Message
+from llmsdk.common import Role, Message
 
 
 class TestOpenAiTokenizer(unittest.TestCase):
@@ -34,7 +34,7 @@ class TestOpenAiTokenizer(unittest.TestCase):
 
     def test_count_message_tokens(self):
         tokenizer = OpenAiTokenizer("gpt-3.5-turbo")
-        messages = [Message("user", "Hello!")]
+        messages = [Message(Role.HUMAN, "Hello!")]
         result = tokenizer.count_message_tokens(messages)
         self.assertEqual(result, 10)
 

@@ -8,6 +8,7 @@ import unittest
 import logging
 
 import openai
+from llmsdk.common import Role, Message
 from llmsdk.llm import ChatGpt
 
 
@@ -20,9 +21,10 @@ class TestChatGpt(unittest.TestCase):
 
     def test_generate(self):
         model = ChatGpt()
-        message = model.generate("Say hello to me")
-        print(message)
-        self.assertIsNotNone(message)
+        message = Message(Role.HUMAN, "Say hello to me")
+        reply = model.generate([message])
+        print(reply)
+        self.assertIsNotNone(reply)
 
 
 if __name__ == '__main__':

@@ -20,9 +20,9 @@ class TestGpt(unittest.TestCase):
 
     def test_generate(self):
         model = Gpt()
-        message = model.generate("Say hello to me")
-        print(message)
-        self.assertIsNotNone(message)
+        reply = model.generate("Say hello to me")
+        print(reply)
+        self.assertIsNotNone(reply)
 
 
 if __name__ == '__main__':

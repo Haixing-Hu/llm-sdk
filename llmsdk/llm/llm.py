@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
 from .tokenizer import Tokenizer
-from ..common import Example
+from ..common import Prompt
 
 
 class LargeLanguageModel(ABC):
@@ -41,8 +41,6 @@ class LargeLanguageModel(ABC):
         self._max_tokens = max_tokens
         self._temperature = temperature
         self._top_p = top_p
-        self._examples = {}
-        self._instruction = ""
         self._logger = logging.getLogger(self.__class__.__name__)
 
     @property
@@ -82,67 +80,7 @@ class LargeLanguageModel(ABC):
         """
         return self._top_p
 
-    @property
-    def instruction(self) -> str:
-        """
-        The instruction to the model.
-        """
-        return self._instruction
-
-    @instruction.setter
-    def instruction(self, instruction: str) -> None:
-        """
-        Sets the instruction.
-        """
-        self._instruction = instruction
-
-    @property
-    def examples(self):
-        """
-        Returns all examples.
-        """
-        return self._examples
-
-    @examples.setter
-    def examples(self, examples: List[Example]) -> None:
-        """
-        Sets all examples.
-        """
-        self._examples = examples
-
-    def add_example(self, example: Example) -> None:
-        """
-        Adds an example to this model.
-        """
-        self._examples[example.id] = example
-
-    def add_examples(self, examples: List[Example]) -> None:
-        """
-        Adds an example to this model.
-        """
-        for example in examples:
-            self._examples[example.id] = example
-
-    def remove_example(self, example_id: str) -> None:
-        """
-        Removes the example with the specific ID.
-        """
-        if example_id in self._examples:
-            del self._examples[example_id]
-
-    def clear_examples(self) -> None:
-        """
-        Clears all examples of this model.
-        """
-        self._examples = {}
-
-    def get_example(self, example_id: str) -> Example:
-        """
-        Gets a single example with the specified ID.
-        """
-        return self._examples.get(example_id, None)
-
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: Prompt) -> str:
         """
         Generates a single reply from this model.
 
@@ -152,7 +90,7 @@ class LargeLanguageModel(ABC):
         generations = self.generate_n(prompt, 1)
         return generations[0]
 
-    def generate_n(self, prompt: str, n: int) -> List[str]:
+    def generate_n(self, prompt: Prompt, n: int) -> List[str]:
         """
         Generates the specified number of top replies from this model.
 
@@ -164,7 +102,7 @@ class LargeLanguageModel(ABC):
         return self._parse_response(response)
 
     @abstractmethod
-    def _submit_request(self, prompt: str, n: int) -> Dict[str, Any]:
+    def _submit_request(self, prompt: Prompt, n: int) -> Dict[str, Any]:
         """
         Calls the underlying model with the specified prompt.
 
