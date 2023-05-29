@@ -7,18 +7,18 @@
 import unittest
 
 from llmsdk.common import Example, Role, Message
-from llmsdk.prompt import FewShotMessagePromptTemplate
+from llmsdk.prompt import ChatPromptTemplate
 
 
-class TestFewShotMessagePromptTemplate(unittest.TestCase):
+class TestChatPromptTemplate(unittest.TestCase):
 
     def test_constructor(self):
-        p1 = FewShotMessagePromptTemplate()
+        p1 = ChatPromptTemplate()
         self.assertEqual("", p1.instruction_template)
         self.assertEqual([], p1.examples)
         self.assertEqual("", p1.prompt_template)
 
-        p2 = FewShotMessagePromptTemplate("Translate the following text into {language}.")
+        p2 = ChatPromptTemplate("Translate the following text into {language}.")
         self.assertEqual("", p2.instruction_template)
         self.assertEqual([], p2.examples)
         self.assertEqual("Translate the following text into {language}.",
@@ -28,7 +28,7 @@ class TestFewShotMessagePromptTemplate(unittest.TestCase):
             Example(input="Hello, world!", output="你好，世界！"),
             Example(input="What's your name?", output="你叫什么名字？"),
         ]
-        p3 = FewShotMessagePromptTemplate(
+        p3 = ChatPromptTemplate(
             "Translate the following text into {language}.",
             examples=e3,
         )
@@ -38,7 +38,7 @@ class TestFewShotMessagePromptTemplate(unittest.TestCase):
                          p3.prompt_template)
 
     def test_format(self):
-        p1 = FewShotMessagePromptTemplate(
+        p1 = ChatPromptTemplate(
             instruction_template="Translate the following text into {language}.",
             prompt_template="{prompt}")
         p1.examples.append(Example(input="Hello, world!", output="你好，世界！"))
@@ -54,7 +54,7 @@ class TestFewShotMessagePromptTemplate(unittest.TestCase):
             Message(Role.HUMAN, "Today is Sunday."),
         ], v1)
 
-        p2 = FewShotMessagePromptTemplate(
+        p2 = ChatPromptTemplate(
             instruction_template="{instruction}",
             prompt_template="{prompt}"
         )
@@ -72,7 +72,7 @@ class TestFewShotMessagePromptTemplate(unittest.TestCase):
             Message(Role.HUMAN, "Today is Sunday."),
         ], v2)
 
-        p3 = FewShotMessagePromptTemplate("{prompt}")
+        p3 = ChatPromptTemplate("{prompt}")
         p3.examples.append(Example(input="Hello, world!", output="你好，世界！"))
         p3.examples.append(Example(input="What's your name?", output="你叫什么名字？"))
         v3 = p3.format(instruction="Translate the following text into Chinese.",
