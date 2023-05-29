@@ -53,7 +53,7 @@ class TestPoint(unittest.TestCase):
                       content=texts[0],
                       metadata={"f1": "v1", "f2": "v2"})
 
-        p0 = Point.from_document(vectors[0], d0)
+        p0 = Point.from_document(d0, vectors[0])
         self.assertEqual(d0.id, p0.id)
         self.assertEqual(vectors[0], p0.vector)
         m0 = {
@@ -69,7 +69,7 @@ class TestPoint(unittest.TestCase):
                       content=texts[1],
                       metadata={"f1": "v1", "f2": "v2", "f3": "v3"})
 
-        p1 = Point.from_document(vectors[1], d1)
+        p1 = Point.from_document(d1, vectors[1])
         self.assertEqual(d1.id, p1.id)
         self.assertEqual(vectors[1], p1.vector)
         m1 = {
@@ -90,14 +90,14 @@ class TestPoint(unittest.TestCase):
         d0 = Document(id="001",
                       content=texts[0],
                       metadata={"f1": "v1", "f2": "v2"})
-        p0 = Point.from_document(vectors[0], d0)
+        p0 = Point.from_document(d0, vectors[0])
         a0 = p0.to_document()
         self.assertEqual(d0, a0)
 
         d1 = Document(id="001",
                       content=texts[1],
                       metadata={"f1": "v1", "f2": "v2", "f3": "v3"})
-        p1 = Point.from_document(vectors[1], d1)
+        p1 = Point.from_document(d1, vectors[1])
         a1 = p1.to_document()
         self.assertEqual(d1, a1)
 

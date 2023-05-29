@@ -14,10 +14,10 @@ from .vector import Vector
 from .metadata import Metadata
 from .document import Document
 
-DOCUMENT_ID_ATTRIBUTE: str = "__doc_id__"
+DOCUMENT_ID_ATTRIBUTE: str = "__document_id__"
 """The name of the metadata attribute storing the ID of the document."""
 
-DOCUMENT_CONTENT_ATTRIBUTE: str = "__doc_content__"
+DOCUMENT_CONTENT_ATTRIBUTE: str = "__document_content__"
 """The name of the metadata attribute storing the original text of the document."""
 
 
