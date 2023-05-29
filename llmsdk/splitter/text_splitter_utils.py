@@ -4,91 +4,15 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-import copy
-from typing import List, Dict, Optional
+from typing import Iterable, List, Dict, Callable, Optional
+import logging
 
-from ..common import Metadata, Document
-
-ORIGINAL_DOCUMENT_ID_ATTRIBUTE: str = "__original_document_id__"
-
-ORIGINAL_DOCUMENT_INDEX_ATTRIBUTE: str = "__original_document_index__"
+from ..common import Document
 
 
-def create_splitted_document(text: str,
-                             index: int,
-                             original_document: Document) -> Document:
+def sort_splitted_documents(splitted_documents: List[Document]) -> List[Document]:
     """
-    Creates a splitted document.
-
-    :param text: the splitted text of the content of the original document.
-    :param index: the index of the splitted document.
-    :param original_document: the original document.
-    :return: the specified splitted document of the original document.
-    """
-    id = original_document.id + "-" + str(index)
-    metadata = copy.deepcopy(original_document.metadata)
-    metadata[ORIGINAL_DOCUMENT_ID_ATTRIBUTE] = original_document.id
-    metadata[ORIGINAL_DOCUMENT_INDEX_ATTRIBUTE] = index
-    return Document(id=id, content=text, metadata=metadata)
-
-
-def get_original_document_id(splitted_document: Document) -> str:
-    """
-    Gets the ID of the original document from the metadata of a splitted document.
-
-    :param splitted_document: a splitted document.
-    :return: the ID of the original document where the specified document is
-        splitted from.
-    :raise ValueError: if there is any error while getting the ID of the
-        original document from the metadata of a splitted document.
-    """
-    metadata = splitted_document.metadata
-    if metadata is None:
-        raise ValueError(f"No metadata for the document: {splitted_document}")
-    if ORIGINAL_DOCUMENT_ID_ATTRIBUTE not in metadata:
-        raise ValueError(f"The document has no {ORIGINAL_DOCUMENT_ID_ATTRIBUTE} "
-                         f"attribute in its metadata: {splitted_document}")
-    original_doc_id = metadata[ORIGINAL_DOCUMENT_ID_ATTRIBUTE]
-    if original_doc_id is None:
-        raise ValueError(f"The document has an empty {ORIGINAL_DOCUMENT_ID_ATTRIBUTE} "
-                         f"attribute in its metadata: {splitted_document}")
-    if not isinstance(original_doc_id, str):
-        raise ValueError(f"The document has an invalid {ORIGINAL_DOCUMENT_ID_ATTRIBUTE} "
-                         f"attribute in its metadata: {splitted_document}")
-    return original_doc_id
-
-
-def get_original_document_index(splitted_document: Document) -> int:
-    """
-    Gets the index of a splitted document in its original document.
-
-    :param splitted_document: a splitted document.
-    :return: the index of a splitted document in its original document.
-    :raise ValueError: if there is any error while getting the index of the
-        splitted document in its original document.
-    """
-    metadata = splitted_document.metadata
-    if metadata is None:
-        raise ValueError(f"No metadata for the document: {splitted_document}")
-    if ORIGINAL_DOCUMENT_INDEX_ATTRIBUTE not in metadata:
-        raise ValueError(f"The document has no {ORIGINAL_DOCUMENT_INDEX_ATTRIBUTE} "
-                         f"attribute in its metadata: {splitted_document}")
-    original_doc_index = metadata[ORIGINAL_DOCUMENT_INDEX_ATTRIBUTE]
-    if original_doc_index is None:
-        raise ValueError(f"The document has an empty {ORIGINAL_DOCUMENT_INDEX_ATTRIBUTE} "
-                         f"attribute in its metadata: {splitted_document}")
-    if not isinstance(original_doc_index, int):
-        if isinstance(original_doc_index, str):
-            original_doc_index = int(original_doc_index)
-        else:
-            raise ValueError(f"The document has an invalid {ORIGINAL_DOCUMENT_INDEX_ATTRIBUTE} "
-                             f"attribute in its metadata: {splitted_document}")
-    return original_doc_index
-
-
-def get_ordered_splitted_documents(splitted_documents: List[Document]) -> List[Document]:
-    """
-    Order a list of document splitted from the same original document by their
+    Sorts a list of document splitted from the same original document by their
     index in the original document.
 
     :param splitted_documents: a list of document splitted from the same
@@ -102,7 +26,7 @@ def get_ordered_splitted_documents(splitted_documents: List[Document]) -> List[D
         raise ValueError("Empty list of splitted documents.")
     result: List[Optional[Document]] = [None] * n
     for doc in splitted_documents:
-        index = get_original_document_index(doc)
+        index = doc.get_original_document_index()
         if index < 0 or index >= n:
             raise ValueError(f"Invalid splitted index of the document: {doc}")
         if result[index] is not None:
@@ -126,30 +50,13 @@ def check_original_document_id(splitted_documents: List[Document]) -> str:
     n = len(splitted_documents)
     if n <= 0:
         raise ValueError("Empty list of splitted documents.")
-    original_id = get_original_document_id(splitted_documents[0])
+    original_id = splitted_documents[0].get_original_document_id()
     for i in range(1, n):
-        doc_id = get_original_document_id(splitted_documents[i])
+        doc_id = splitted_documents[i].get_original_document_id()
         if doc_id != original_id:
             raise ValueError(f"The splitted documents have different original IDs:\n"
                              f"{splitted_documents[0]}\n{splitted_documents[i]}")
     return original_id
-
-
-def get_original_metadata(splitted_document: Document) -> Metadata:
-    """
-    Gets the metadata of the original document from the metadata of the splitted
-    document.
-
-    :param splitted_document: a splitted document.
-    :return: the metadata of the original document.
-    """
-    metadata = splitted_document.metadata
-    if metadata is None:
-        raise ValueError(f"No metadata for the document: {splitted_document}")
-    result = copy.deepcopy(metadata)
-    result.pop(ORIGINAL_DOCUMENT_ID_ATTRIBUTE)
-    result.pop(ORIGINAL_DOCUMENT_INDEX_ATTRIBUTE)
-    return result
 
 
 def group_splitted_documents(documents: List[Document]) -> Dict[str, List[Document]]:
@@ -162,9 +69,72 @@ def group_splitted_documents(documents: List[Document]) -> Dict[str, List[Docume
     """
     result: Dict[str, List[Document]] = {}
     for doc in documents:
-        original_id = get_original_document_id(doc)
+        original_id = doc.get_original_document_id()
         if original_id in result:
             result[original_id].append(doc)
         else:
             result[original_id] = [doc]
+    return result
+
+
+def combine_splits(splits: Iterable[str],
+                   separator: str,
+                   chunk_size: int,
+                   chunk_overlap: int,
+                   length_function: Callable[[str], int]) -> List[str]:
+    """
+    Combines the smaller pieces of text into medium size chunks to send to
+    the LLMs.
+
+    :param splits: the list of splitted pieces of texts.
+    :param separator: the separator used to combine texts.
+    :param chunk_size: the maximum number of basic unit in each splitted chunk.
+    :param chunk_overlap: the number of basic units should overlap in each chunk.
+    :param length_function: the function to calculate the length of the text
+        in the basic unit.
+    :return: the list of medium size chunks of texts.
+    """
+    if chunk_overlap > chunk_size:
+        raise ValueError(
+            f"Got a larger chunk overlap ({chunk_overlap}) than chunk size "
+            f"({chunk_size}), should be smaller."
+        )
+    seperator_len = length_function(separator)
+    result: List[str] = []
+    current: List[str] = []
+    current_size = 0
+
+    def next_size(new_size: int) -> int:
+        """
+        Calculates the total size if a new piece of text is added to the current
+        list of texts.
+        :param new_size: the size of the new piece of text.
+        :return: the total size if a new piece of text is added to the current
+            list of texts.
+        """
+        return current_size + new_size + (seperator_len if len(current) > 0 else 0)
+
+    for split in splits:
+        split_len = length_function(split)
+        if next_size(split_len) > chunk_size:
+            if current_size > chunk_size:
+                logging.warning(f"Created a chunk of size {current_size}, "
+                                f"which is longer than the specified {chunk_size}")
+            if len(current) > 0:
+                text = separator.join(current).strip()
+                if len(text) > 0:
+                    result.append(text)
+                # Keep on popping if:
+                # - we have a larger chunk than in the chunk overlap
+                # - or if we still have any chunks and the length is long
+                while (current_size > chunk_overlap) \
+                        or ((current_size > 0) and (next_size(split_len) > chunk_size)):
+                    current_size -= length_function(current[0]) \
+                                    + (seperator_len if len(current) > 1 else 0)
+                    current.pop(0)
+        current_size = next_size(split_len)
+        current.append(split)
+    text = separator.join(current).strip()
+    if len(text) > 0:
+        result.append(text)
     return result

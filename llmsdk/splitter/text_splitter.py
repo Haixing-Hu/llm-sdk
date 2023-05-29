@@ -7,16 +7,14 @@
 import copy
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Callable, Optional
+from typing import List, Callable
 
 from ..common import Document
-from .text_splitter_utils import (
-    create_splitted_document,
-    get_ordered_splitted_documents,
-    check_original_document_id,
-    get_original_metadata,
-    group_splitted_documents,
-)
+# from .text_splitter_utils import (
+#     sort_splitted_documents,
+#     check_original_document_id,
+#     group_splitted_documents,
+# )
 
 
 class TextSplitter(ABC):
@@ -77,7 +75,7 @@ class TextSplitter(ABC):
         else:
             result = []
             for index, text in enumerate(texts):
-                doc = create_splitted_document(text, index, document)
+                doc = Document.from_splitted_document(text, index, document)
                 result.append(doc)
             return result
 
@@ -93,91 +91,50 @@ class TextSplitter(ABC):
             result.extend(self.split_document(document))
         return result
 
-    @abstractmethod
-    def join_texts(self, texts: List[str]) -> str:
-        """
-        Joins the list of texts split from the same original text.
-
-        :param texts: the list of texts splitted from the same original text.
-        :return: the original text.
-        """
-
-    def join_document(self, documents: List[Document]) -> Document:
-        """
-        Joins the split list of documents.
-
-        :param documents: the list of documents splitted from the same original
-            document.
-        :return: the original document.
-        """
-        ordered_docs = get_ordered_splitted_documents(documents)
-        original_id = check_original_document_id(ordered_docs)
-        texts = [doc.content for doc in ordered_docs]
-        original_content = self.join_texts(texts)
-        original_metadata = get_original_metadata(ordered_docs[0])
-        return Document(id=original_id,
-                        content=original_content,
-                        metadata=original_metadata)
-
-    def join_documents(self, documents: List[Document]) -> List[Document]:
-        """
-        Joins the split list of documents.
-
-        :param documents: the list of documents splitted from some original
-            documents.
-        :return: the original documents.
-        """
-        grouped_docs = group_splitted_documents(documents)
-        result = []
-        for key, value in grouped_docs.items():
-            doc = self.join_document(value)
-            result.append(doc)
-        return result
-
-    def _combine_splits(self,
-                        splits: List[str],
-                        separator: str) -> List[str]:
-        """
-        Combines the smaller pieces of text into medium size chunks to send to
-        the LLMs.
-
-        :param splits: the list of splitted pieces of texts.
-        :param separator: the separator used to combine texts.
-        :return: the list of medium size chunks of texts.
-        """
-        separator_len = self._length_function(separator)
-        texts = []
-        current_texts: List[str] = []
-        total = 0
-        for split in splits:
-            split_len = self._length_function(split)
-            chunk_size = total + split_len \
-                + (separator_len if len(current_texts) > 0 else 0)
-            if chunk_size > self._chunk_size:
-                if total > self._chunk_size:
-                    self._logger.warning(
-                        f"Created a chunk of size {total}, "
-                        f"which is longer than the specified {self._chunk_size}"
-                    )
-                if len(current_texts) > 0:
-                    text = self._join_text(current_texts, separator)
-                    if text is not None:
-                        texts.append(text)
-                    # Keep on popping if:
-                    # - we have a larger chunk than in the chunk overlap
-                    # - or if we still have any chunks and the length is long
-                    while total > self._chunk_overlap or (
-                        total + split_len + (separator_len if len(current_doc) > 0 else 0)
-                            > self._chunk_size
-                            and total > 0
-                    ):
-                        total -= self._length_function(current_doc[0]) + (
-                            separator_len if len(current_doc) > 1 else 0
-                        )
-                        current_doc = current_doc[1:]
-
-
-    def _join_text(self, texts: List[str], separator: str) -> Optional[str]:
-        text = separator.join(texts)
-        text = text.strip()
-        return text if len(text) > 0 else None
+    # @abstractmethod
+    # def join_texts(self, texts: List[str]) -> str:
+    #     """
+    #     Joins the list of texts split from the same original text.
+    #
+    #     :param texts: the list of texts splitted from the same original text.
+    #     :return: the original text.
+    #     """
+    #
+    # def join_document(self, documents: List[Document]) -> Document:
+    #     """
+    #     Joins the split list of documents.
+    #
+    #     :param documents: the list of documents splitted from the same original
+    #         document.
+    #     :return: the original document.
+    #     """
+    #     if len(documents) == 0:
+    #         raise ValueError("Empty document list.")
+    #     if len(documents) == 1:
+    #         return Document(id=documents[0].id,
+    #                         content=documents[0].content,
+    #                         metadata=documents[0].get_original_document_metadata())
+    #     else:
+    #         sorted_docs = sort_splitted_documents(documents)
+    #         original_id = check_original_document_id(sorted_docs)
+    #         texts = [doc.content for doc in sorted_docs]
+    #         original_content = self.join_texts(texts)
+    #         original_metadata = sorted_docs[0].get_original_document_metadata()
+    #         return Document(id=original_id,
+    #                         content=original_content,
+    #                         metadata=original_metadata)
+    #
+    # def join_documents(self, documents: List[Document]) -> List[Document]:
+    #     """
+    #     Joins the split list of documents.
+    #
+    #     :param documents: the list of documents splitted from some original
+    #         documents.
+    #     :return: the original documents.
+    #     """
+    #     grouped_docs = group_splitted_documents(documents)
+    #     result = []
+    #     for key, value in grouped_docs.items():
+    #         doc = self.join_document(value)
+    #         result.append(doc)
+    #     return result

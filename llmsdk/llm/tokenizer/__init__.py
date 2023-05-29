@@ -4,5 +4,5 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from .tokernizer import Tokenizer
+from .tokernizer import Tokenizer, SpecialTokenSet
 from .openai import OpenAiTokenizer

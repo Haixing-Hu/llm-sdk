@@ -7,9 +7,10 @@
 from typing import List, Any
 
 from .text_splitter import TextSplitter
+from .text_splitter_utils import combine_splits
 
 
-class SeparatorTextSplitter(TextSplitter):
+class CharacterTextSplitter(TextSplitter):
     """
     A TextSplitter splits texts with the specified separator.
     """
@@ -33,7 +34,9 @@ class SeparatorTextSplitter(TextSplitter):
         return self._separator
 
     def split_text(self, text: str) -> List[str]:
-        return text.split(self._separator)
-
-    def join_texts(self, texts: List[str]) -> str:
-        pass
+        splits = text.split(self._separator)
+        return combine_splits(splits=splits,
+                              separator=self._separator,
+                              chunk_size=self._chunk_size,
+                              chunk_overlap=self._chunk_overlap,
+                              length_function=self._length_function)
