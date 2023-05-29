@@ -110,10 +110,10 @@ class Document:
         return result
 
     @classmethod
-    def from_splitted_document(cls,
-                               text: str,
-                               index: int,
-                               original_document: Document) -> Document:
+    def create_splitted_document(cls,
+                                 text: str,
+                                 index: int,
+                                 original_document: Document) -> Document:
         """
         Creates a splitted document.
 
@@ -122,6 +122,8 @@ class Document:
         :param original_document: the original document.
         :return: the specified splitted document of the original document.
         """
+        if (original_document.id is None) or (len(original_document.id) == 0):
+            raise ValueError("The ID of the original document must be set.")
         id = original_document.id + "-" + str(index)
         metadata = copy.deepcopy(original_document.metadata)
         metadata[ORIGINAL_DOCUMENT_ID_ATTRIBUTE] = original_document.id

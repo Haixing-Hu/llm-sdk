@@ -25,7 +25,7 @@ class CharacterTextSplitter(TextSplitter):
         :param kwargs: other arguments passed to the constructor of the super class.
         """
         super().__init__(**kwargs)
-        if separator is None or len(separator) == 0:
+        if separator is None:
             raise ValueError(f"Invalid separator: {separator}")
         self._separator = separator
 
@@ -34,7 +34,10 @@ class CharacterTextSplitter(TextSplitter):
         return self._separator
 
     def split_text(self, text: str) -> List[str]:
-        splits = text.split(self._separator)
+        if len(self._separator) > 0:
+            splits = text.split(self._separator)
+        else:
+            splits = list(text)
         return combine_splits(splits=splits,
                               separator=self._separator,
                               chunk_size=self._chunk_size,

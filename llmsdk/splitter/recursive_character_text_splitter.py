@@ -26,15 +26,15 @@ class RecursiveCharacterTextSplitter(TextSplitter):
         result = []
         # Get appropriate separator to use
         separator = self._separators[-1]
-        for sep in self._separators:
-            if sep == "":
-                separator = sep
+        for s in self._separators:
+            if s == "":
+                separator = s
                 break
-            if sep in text:
-                separator = sep
+            if s in text:
+                separator = s
                 break
         # Now that we have the separator, split the text
-        if separator:
+        if len(separator) > 0:
             splits = text.split(separator)
         else:
             splits = list(text)
