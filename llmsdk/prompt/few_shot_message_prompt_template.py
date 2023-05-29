@@ -68,7 +68,14 @@ class FewShotMessagePromptTemplate(PromptTemplate):
 
     """
 
-    instruction_template: str = "{instruction}"
+    prompt_template: str = ""
+    """
+    The template of the prompt of the final input.
+
+    The template of prompt may contain formatting placeholders.
+    """
+
+    instruction_template: str = ""
     """
     The template of the instruction of the prompt.
     
@@ -82,17 +89,11 @@ class FewShotMessagePromptTemplate(PromptTemplate):
     Note that the examples should not contain formatting placeholders.
     """
 
-    prompt_template: str = "{prompt}"
-    """
-    The template of the prompt of the final input.
-    
-    The template of prompt may contain formatting placeholders.
-    """
-
     def format(self, **kwargs: Any) -> List[Message]:
         result = []
         instruction = Message(Role.SYSTEM, self.instruction_template.format(**kwargs))
-        result.append(instruction)
+        if len(instruction.content) > 0:
+            result.append(instruction)
         for e in self.examples:
             result.append(Message(Role.HUMAN, e.input))
             result.append(Message(Role.AI, e.output))

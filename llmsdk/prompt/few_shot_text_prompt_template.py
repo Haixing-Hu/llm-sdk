@@ -65,7 +65,14 @@ class FewShotTextPromptTemplate(PromptTemplate):
 
     """
 
-    instruction_template: str = "{instruction}"
+    prompt_template: str = ""
+    """
+    The template of the prompt of the final input.
+    
+    The template of prompt may contain formatting placeholders.
+    """
+
+    instruction_template: str = ""
     """
     The template of the instruction of the prompt.
     
@@ -104,21 +111,16 @@ class FewShotTextPromptTemplate(PromptTemplate):
     The suffix for the input of an example.
     """
 
-    prompt_template: str = "{prompt}"
-    """
-    The template of the prompt of the final input.
-    
-    The template of prompt may contain formatting placeholders.
-    """
-
     def format(self, **kwargs: Any) -> str:
         instruction = self.instruction_template.format(**kwargs)
         examples = [self._format_example(e) for e in self.examples]
         prompt = self.prompt_template.format(**kwargs)
-        return instruction + self.instruction_suffix \
-            + "".join(examples) \
-            + self.example_input_prefix + prompt + self.example_input_suffix \
-            + self.example_output_prefix
+        if (len(instruction) > 0) and (len(examples) > 0 or len(prompt) > 0):
+            instruction += self.instruction_suffix
+        if len(examples) > 0 and len(prompt) > 0:
+            prompt = self.example_input_prefix + prompt + self.example_input_suffix \
+                + self.example_output_prefix
+        return instruction + "".join(examples) + prompt
 
     def _format_example(self, example: Example) -> str:
         """
