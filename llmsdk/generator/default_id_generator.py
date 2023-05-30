@@ -4,7 +4,12 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from .id_generator import IdGenerator
-from .uuid1_id_generator import Uuid1Generator
+from typing import TypeAlias
+
 from .uuid4_id_generator import Uuid4Generator
-from .default_id_generator import DefaultIdGenerator
+
+
+DefaultIdGenerator: TypeAlias = Uuid4Generator
+"""
+The class of default ID generator.
+"""

@@ -11,7 +11,7 @@ from llmsdk.util.openai_utils import (
     get_chunked_tokens,
     set_proxy,
 )
-from llmsdk.embedding.openai_embedding import DEFAULT_MODEL as DEFAULT_EMBEDDING_MODEL
+from llmsdk.embedding.openai_embedding import OpenAiEmbedding
 from llmsdk.llm.tokenizer import OpenAiTokenizer
 
 
@@ -23,7 +23,7 @@ class TestOpenAiUtil(unittest.TestCase):
         self.assertEqual(get_model_tokens("gpt-4"), 8192)
 
     def test_get_chunked_tokens(self):
-        model = DEFAULT_EMBEDDING_MODEL
+        model = OpenAiEmbedding.DEFAULT_MODEL
         tokenizer = OpenAiTokenizer(model)
         text = "The food was delicious and the waiter..."
         result = get_chunked_tokens(model, tokenizer, text)

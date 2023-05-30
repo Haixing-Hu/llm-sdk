@@ -9,8 +9,8 @@ import logging
 
 import tiktoken
 
-from .tokernizer import Tokenizer, SpecialTokenSet
 from ...common import Role, Message
+from .tokernizer import Tokenizer, SpecialTokenSet
 
 OPENAI_ROLE_NAMES_MAP = {
     Role.SYSTEM: "system",

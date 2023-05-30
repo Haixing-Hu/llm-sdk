@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Optional, ClassVar, Type
+from typing import List, ClassVar
 import copy
 
 from .metadata import Metadata

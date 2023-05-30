@@ -10,7 +10,7 @@ from logging import Logger, getLogger
 
 from ..common import Point, Vector, SearchType
 from ..criterion import Criterion
-from ..generator import IdGenerator, Uuid4Generator
+from ..generator import IdGenerator, DefaultIdGenerator
 from .distance import Distance
 from .payload_schema import PayloadSchema
 from .collection_info import CollectionInfo
@@ -31,7 +31,7 @@ class VectorStore(ABC):
         self._logger = getLogger(self.__class__.__name__)
         self._collection_name = None
         self._auto_close_connection = False
-        self._id_generator = id_generator or Uuid4Generator()
+        self._id_generator = id_generator or DefaultIdGenerator()
 
     @property
     def logger(self) -> Logger:

@@ -13,12 +13,11 @@ from qdrant_client import QdrantClient
 from llmsdk.vectorstore import (
     QdrantVectorStore,
     PayloadSchema,
-    DataType,
     CollectionInfo,
     Distance,
 )
 from llmsdk.embedding import MockEmbedding
-from llmsdk.common import Document
+from llmsdk.common import Document, DataType, Metadata
 from llmsdk.criterion import equal
 
 
@@ -30,7 +29,8 @@ class TestQdrantVectorStore(unittest.TestCase):
     def test_search(self):
         collection_name = "test"
         texts = ["foo", "bar", "baz"]
-        documents = [Document(t, metadata={"page": i}) for i, t in enumerate(texts)]
+        documents = [Document(content=t, metadata=Metadata({"page": i}))
+                     for i, t in enumerate(texts)]
         embedding = MockEmbedding()
         points = embedding.embed_documents(documents)
         client = QdrantClient(location=":memory:")
@@ -53,7 +53,8 @@ class TestQdrantVectorStore(unittest.TestCase):
     def test_search_with_filter(self):
         collection_name = "test"
         texts = ["foo", "bar", "baz"]
-        documents = [Document(t, metadata={"page": i}) for i, t in enumerate(texts)]
+        documents = [Document(content=t, metadata=Metadata({"page": i}))
+                     for i, t in enumerate(texts)]
         embedding = MockEmbedding()
         points = embedding.embed_documents(documents)
         client = QdrantClient(location=":memory:")
@@ -81,7 +82,8 @@ class TestQdrantVectorStore(unittest.TestCase):
     def test_max_marginal_relevance_search(self):
         collection_name = "test"
         texts = ["foo", "bar", "baz"]
-        documents = [Document(t, metadata={"page": i}) for i, t in enumerate(texts)]
+        documents = [Document(content=t, metadata=Metadata({"page": i}))
+                     for i, t in enumerate(texts)]
         embedding = MockEmbedding()
         points = embedding.embed_documents(documents)
         client = QdrantClient(location=":memory:")
