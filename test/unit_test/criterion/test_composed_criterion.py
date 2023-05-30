@@ -7,8 +7,12 @@
 import unittest
 from dataclasses import FrozenInstanceError
 
-from llmsdk.criterion import SimpleCriterion, ComposedCriterion, Operator, Relation
-
+from llmsdk.criterion import (
+    SimpleCriterion,
+    ComposedCriterion,
+    Operator,
+    Relation,
+)
 
 class TestComposedCriterion(unittest.TestCase):
 

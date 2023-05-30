@@ -8,12 +8,13 @@ from abc import ABC, abstractmethod
 from typing import Any, List, Optional
 from logging import Logger, getLogger
 
+from ..common import Point, Vector, SearchType
+from ..criterion import Criterion
+from ..generator import IdGenerator, Uuid4Generator
 from .distance import Distance
 from .payload_schema import PayloadSchema
 from .collection_info import CollectionInfo
-from ..common import Point, Vector
-from ..criterion import Criterion
-from ..generator import IdGenerator, Uuid4Generator
+from .vector_store_utils import maximal_marginal_relevance
 
 
 class VectorStore(ABC):
@@ -69,7 +70,6 @@ class VectorStore(ABC):
         """
         close the current collection.
         """
-        self._ensure_collection_opened()
         self._collection_name = None
 
     @abstractmethod
@@ -134,20 +134,94 @@ class VectorStore(ABC):
             result.append(id)
         return result
 
-    @abstractmethod
     def search(self,
-               vector: Vector,
+               query_vector: Vector,
                limit: int,
-               criterion: Optional[Criterion] = None) -> List[Point]:
+               criterion: Optional[Criterion] = None,
+               search_type: SearchType = SearchType.SIMILARITY,
+               **kwargs: Any) -> List[Point]:
         """
-        Searches in the vector store for points whose vector similar to the
-        specified vector and satisfies the specified filter.
+        Searches in the vector store for the specified points.
 
-        :param vector: the specified vector to be searched.
+        :param query_vector: the specified vector to be searched.
         :param limit: the number of the most similar results to return.
         :param criterion: the criterion used to filter attributes of points.
+        :param search_type: the type of searching.
+        :param kwargs: other arguments.
         :return: the list of points as the searching result.
         """
+        self._ensure_collection_opened()
+        match search_type:
+            case SearchType.SIMILARITY:
+                return self.similarity_search(
+                    query_vector=query_vector,
+                    limit=limit,
+                    criterion=criterion,
+                    **kwargs
+                )
+            case SearchType.MAX_MARGINAL_RELEVANCE:
+                return self.max_marginal_relevance_search(
+                    query_vector=query_vector,
+                    limit=limit,
+                    criterion=criterion,
+                    **kwargs
+                )
+            case _:
+                raise ValueError(f"Unsupported search type: {search_type}")
+
+    @abstractmethod
+    def similarity_search(self,
+                          query_vector: Vector,
+                          limit: int,
+                          criterion: Optional[Criterion] = None,
+                          **kwargs: Any) -> List[Point]:
+        """
+        Searches in the vector store for points whose vector is similar to the
+        specified vector and satisfies the specified filter.
+
+        :param query_vector: the specified vector to be searched.
+        :param limit: the number of the most similar results to return.
+        :param criterion: the criterion used to filter attributes of points.
+        :param kwargs: other arguments.
+        :return: the list of points as the searching result.
+        """
+
+    def max_marginal_relevance_search(self,
+                                      query_vector: Vector,
+                                      limit: int,
+                                      criterion: Optional[Criterion] = None,
+                                      fetch_limit: int = 20,
+                                      lambda_multiply: float = 0.5,
+                                      **kwargs: Any) -> List[Point]:
+        """
+        Searches in the vector store for points whose vector similar to the
+        specified vector and satisfies the specified filter, using the maximal
+        marginal relevance.
+
+        :param query_vector: the specified vector to be searched.
+        :param limit: the number of the most similar results to return.
+        :param criterion: the criterion used to filter attributes of points.
+        :param fetch_limit: the number of documents to fetch to pass to MMR
+            algorithm.
+        :param lambda_multiply: a number between 0 and 1 that determines the
+            degree of diversity among the result, with 0 corresponding to the
+            maximum diversity and 1 to minimum diversity. Defaults to 0.5.
+        :param kwargs: other arguments.
+        :return: the list of points as the searching result.
+        """
+        self._ensure_collection_opened()
+        result = self.similarity_search(query_vector=query_vector,
+                                        limit=fetch_limit,
+                                        criterion=criterion,
+                                        **kwargs)
+        similarity_vectors = [p.vector for p in result]
+        mmr_selected = maximal_marginal_relevance(
+            query_vector=query_vector,
+            similarity_vectors=similarity_vectors,
+            limit=limit,
+            lambda_multipy=lambda_multiply
+        )
+        return [result[i] for i in mmr_selected]
 
     def _ensure_collection_opened(self):
         """

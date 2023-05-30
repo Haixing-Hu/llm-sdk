@@ -9,26 +9,46 @@ import unittest
 from qdrant_client.http import models
 
 from llmsdk.common import Point
-from llmsdk.vectorstore.qdrant_vector_store import to_qdrant_point, \
-    to_local_point, criterion_to_filter, simple_criterion_to_condition, \
-    composed_criterion_to_filter
-from llmsdk.criterion import equal, not_equal, less, less_equal, greater, \
-    greater_equal, is_in, not_in, like, not_like, is_null, not_null, \
-    ComposedCriterionBuilder, Relation
+from llmsdk.generator import Uuid4Generator
+from llmsdk.vectorstore.qdrant_utils import (
+    to_qdrant_point,
+    to_local_point,
+    criterion_to_filter,
+    simple_criterion_to_condition,
+    composed_criterion_to_filter,
+)
+from llmsdk.criterion import (
+    equal,
+    not_equal,
+    less,
+    less_equal,
+    greater,
+    greater_equal,
+    is_in,
+    not_in,
+    like,
+    not_like,
+    is_null,
+    not_null,
+    ComposedCriterionBuilder,
+    Relation
+)
 
 
-class TestQdrantVectorStoreUtils(unittest.TestCase):
+class TestQdrantUtils(unittest.TestCase):
 
     def test_point_to_point_struct(self):
+        id_generator = Uuid4Generator()
+
         p1 = Point([1.0, 2.0], {"page": 1}, id="id-1", score=123)
-        s1 = to_qdrant_point(p1)
+        s1 = to_qdrant_point(p1, id_generator)
         self.assertEqual([1.0, 2.0],  s1.vector)
         self.assertEqual({"page": 1}, s1.payload)
         self.assertEqual("id-1", s1.id)
 
         p2 = Point([2.0, 3.0], {"page": 2})
         self.assertIsNone(p2.id)
-        s2 = to_qdrant_point(p2)
+        s2 = to_qdrant_point(p2, id_generator)
         self.assertEqual([2.0, 3.0],  s2.vector)
         self.assertEqual({"page": 2}, s2.payload)
         self.assertIsNotNone(p2.id)
@@ -196,3 +216,7 @@ class TestQdrantVectorStoreUtils(unittest.TestCase):
         self.assertEqual(e2, r2.must[2])
         e3 = simple_criterion_to_condition(not_in("f4", ["a", "b", "c"]))
         self.assertEqual(e3, r2.must[3])
+
+
+if __name__ == '__main__':
+    unittest.main()

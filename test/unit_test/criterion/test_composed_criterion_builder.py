@@ -6,8 +6,13 @@
 # ==============================================================================
 import unittest
 
-from llmsdk.criterion import SimpleCriterion, ComposedCriterion, Operator, \
-    Relation, ComposedCriterionBuilder
+from llmsdk.criterion import (
+    SimpleCriterion,
+    ComposedCriterion,
+    Operator,
+    Relation,
+    ComposedCriterionBuilder,
+)
 
 
 class TestComposedCriterionBuilder(unittest.TestCase):

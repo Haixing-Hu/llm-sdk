@@ -4,6 +4,7 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
+import copy
 import unittest
 import logging
 
@@ -73,6 +74,34 @@ class TestQdrantVectorStore(unittest.TestCase):
             expected.id = actual.id
             expected.score = actual.score
             self.assertEqual(expected, actual)
+        finally:
+            store.delete_collection(collection_name)
+            store.close()
+
+    def test_max_marginal_relevance_search(self):
+        collection_name = "test"
+        texts = ["foo", "bar", "baz"]
+        documents = [Document(t, metadata={"page": i}) for i, t in enumerate(texts)]
+        embedding = MockEmbedding()
+        points = embedding.embed_documents(documents)
+        client = QdrantClient(location=":memory:")
+        store = QdrantVectorStore(client)
+        store.open()
+        try:
+            store.create_collection(collection_name=collection_name,
+                                    vector_size=embedding.output_dimensions)
+            store.open_collection(collection_name)
+            store.add_all(points)
+            query = embedding.embed_query("foo")
+            output = store.max_marginal_relevance_search(query,
+                                                         limit=2,
+                                                         fetch_limit=3)
+            self.assertEqual(2, len(output))
+            expected = [copy.deepcopy(points[0]),
+                        copy.deepcopy(points[1])]
+            expected[0].score = output[0].score
+            expected[1].score = output[1].score
+            self.assertEqual(expected, output)
         finally:
             store.delete_collection(collection_name)
             store.close()

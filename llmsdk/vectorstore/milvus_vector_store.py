@@ -194,10 +194,11 @@ class MilvusVectorStore(VectorStore):
                 points[i].id = value
         return [p.id for p in points]
 
-    def search(self,
-               vector: Vector,
-               limit: int,
-               criterion: Optional[Criterion] = None) -> List[Point]:
+    def similarity_search(self,
+                          query_vector: Vector,
+                          limit: int,
+                          criterion: Optional[Criterion] = None,
+                          **kwargs: Any) -> List[Point]:
         self._ensure_collection_opened()
         params = {"metric_type": self._vector_index.params["metric_type"]}
         index_type = self._vector_index.params["index_type"]
@@ -207,23 +208,24 @@ class MilvusVectorStore(VectorStore):
             params["params"] = self._vector_index.params["params"]
         expr = criterion_to_expr(criterion)
         payload_field_names = [f.name for f in self._payload_schemas]
-        results = self._collection.search(data=[vector],
+        results = self._collection.search(data=[query_vector],
                                           anns_field=self._vector_field.name,
                                           param=params,
                                           limit=limit,
                                           expr=expr,
-                                          output_fields=payload_field_names)
+                                          output_fields=payload_field_names,
+                                          **kwargs)
         points = []
         for r in results[0]:
             # FIXME: can we get the vector field directly?
-            vector = r.entity.get(self._vector_field.name)
+            query_vector = r.entity.get(self._vector_field.name)
             metadata = {}
             for f in payload_field_names:
                 v = r.entity.get(f)
                 if v is not None:
                     metadata[f] = v
             point = Point(id=r.id,
-                          vector=vector,
+                          vector=query_vector,
                           metadata=metadata,
                           score=r.distance)
             points.append(point)

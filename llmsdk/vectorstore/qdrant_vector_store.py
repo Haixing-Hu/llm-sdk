@@ -104,18 +104,20 @@ class QdrantVectorStore(VectorStore):
                             points=qdrant_points)
         return [p.id for p in points]
 
-    def search(self,
-               vector: Vector,
-               limit: int,
-               criterion: Optional[Criterion] = None) -> List[Point]:
+    def similarity_search(self,
+                          query_vector: Vector,
+                          limit: int,
+                          criterion: Optional[Criterion] = None,
+                          **kwargs: Any) -> List[Point]:
         self._ensure_collection_opened()
         query_filter = criterion_to_filter(criterion)
         self._logger.debug("Search: vector=%s, limit=%d, filter=%s",
-                           vector, limit, query_filter)
+                           query_vector, limit, query_filter)
         points = self._client.search(collection_name=self._collection_name,
+                                     query_vector=query_vector,
                                      query_filter=query_filter,
-                                     query_vector=vector,
                                      limit=limit,
-                                     with_vectors=True)
+                                     with_vectors=True,
+                                     **kwargs)
         self._logger.debug("Search result: %s", points)
         return [to_local_point(p) for p in points]

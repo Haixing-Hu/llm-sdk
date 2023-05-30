@@ -4,11 +4,14 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from typing import List, Union
-import numpy as np
+from enum import Enum
 
-Vector = Union[List[float], np.ndarray]
-"""
-The type of vectors, representing a list of coordinates in a high dimensional 
-space.
-"""
+
+class SearchType(Enum):
+    """
+    The enumeration of searching types.
+    """
+
+    SIMILARITY = "similarity"
+
+    MAX_MARGINAL_RELEVANCE = "max_marginal_relevance"

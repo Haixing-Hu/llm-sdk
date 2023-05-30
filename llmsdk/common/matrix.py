@@ -5,10 +5,11 @@
 #                                                                              =
 # ==============================================================================
 from typing import List, Union
+
 import numpy as np
 
-Vector = Union[List[float], np.ndarray]
+
+Matrix = Union[List[List[float]], List[np.ndarray], np.ndarray]
 """
-The type of vectors, representing a list of coordinates in a high dimensional 
-space.
+The type of 2-dimensional floating point matrix.
 """
