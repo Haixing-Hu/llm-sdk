@@ -190,7 +190,7 @@ class VectorStore(ABC):
                                       query_vector: Vector,
                                       limit: int,
                                       criterion: Optional[Criterion] = None,
-                                      fetch_limit: int = 20,
+                                      fetch_limit: int = None,
                                       lambda_multiply: float = 0.5,
                                       **kwargs: Any) -> List[Point]:
         """
@@ -202,7 +202,8 @@ class VectorStore(ABC):
         :param limit: the number of the most similar results to return.
         :param criterion: the criterion used to filter attributes of points.
         :param fetch_limit: the number of documents to fetch to pass to MMR
-            algorithm.
+            algorithm. If this argument is set to None, the function will use
+            5 times of limit for the fetch limit.
         :param lambda_multiply: a number between 0 and 1 that determines the
             degree of diversity among the result, with 0 corresponding to the
             maximum diversity and 1 to minimum diversity. Defaults to 0.5.
@@ -210,6 +211,8 @@ class VectorStore(ABC):
         :return: the list of points as the searching result.
         """
         self._ensure_collection_opened()
+        if fetch_limit is None:
+            fetch_limit = 5 * limit
         result = self.similarity_search(query_vector=query_vector,
                                         limit=fetch_limit,
                                         criterion=criterion,

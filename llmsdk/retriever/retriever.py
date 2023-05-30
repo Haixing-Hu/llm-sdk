@@ -5,7 +5,7 @@
 #                                                                              =
 # ==============================================================================
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Any, List
 
 from ..common import Document
 
@@ -16,10 +16,13 @@ class Retriever(ABC):
     """
 
     @abstractmethod
-    def get_relevant_documents(self, query: str) -> List[Document]:
+    def retrieve(self,
+                 query: str,
+                 **kwargs: Any) -> List[Document]:
         """
-        Gets documents relevant to a query.
+        Retrieves documents relevant to a query.
 
-        :param query: the specified query.
+        :param query: the specified query string.
+        :param kwargs: other arguments.
         :return: the list of documents relevant to the query.
         """

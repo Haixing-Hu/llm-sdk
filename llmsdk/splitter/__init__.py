@@ -6,6 +6,7 @@
 # ==============================================================================
 from .text_splitter import TextSplitter
 from .token_text_splitter import TokenTextSplitter
+from .openai_token_text_splitter import OpenAiTokenTextSplitter
 from .character_text_splitter import CharacterTextSplitter
 from .recursive_character_text_splitter import RecursiveCharacterTextSplitter
 from .latex_code_text_splitter import LatexCodeTextSplitter

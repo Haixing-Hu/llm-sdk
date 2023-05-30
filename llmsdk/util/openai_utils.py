@@ -23,7 +23,7 @@ from .common_utils import (
     is_website_accessible,
 )
 from ..common import Role
-from ..llm.tokenizer import OpenAiTokenizer
+from ..llm.tokenizer import Tokenizer
 
 MODEL_TOKEN_MAPPING = {
     # GPT-4 models: https://platform.openai.com/docs/models/gpt-4
@@ -125,13 +125,13 @@ def get_embedding_output_dimensions(model: str) -> int:
     Gets the number of dimensions of the output vectors of the specified model.
 
     :param model: the name of the OpenAI's model.
-    :return: the number of dimensions of the output vectors of the specified model.
-    :raise ValueError: if the specified model is not supported
+    :return: the number of dimensions of the output vectors of the specified model,
+        or 0 if unknown.
     """
-    result = EMBEDDING_OUTPUT_DIMENSIONS[model]
-    if result is None:
-        raise ValueError(f"The embedding model '{model}' is not supported.")
-    return result
+    if model in EMBEDDING_OUTPUT_DIMENSIONS:
+        return EMBEDDING_OUTPUT_DIMENSIONS[model]
+    else:
+        return 0
 
 
 def check_model_compatibility(model: str, endpoint: str) -> None:
@@ -201,18 +201,19 @@ def check_model_compatibility(model: str, endpoint: str) -> None:
 
 
 def get_chunked_tokens(model: str,
+                       tokenizer: Tokenizer,
                        text: str) -> List[List[int]]:
     """
     Split a long text into chunks according to the maximum number of tokens of
     the model, and returns the list of chunked token list.
 
     :param model: the name of the specified model.
+    :param tokenizer: the tokenizer to use.
     :param text: the long text to be split.
     :return: a list of token list, each token list has the length not exceed the
         maximum number of tokens of the model.
     """
     # encode the text to list of tokens
-    tokenizer = OpenAiTokenizer(model)
     tokens = tokenizer.encode(text)
     # Here we simply divide the input text into chunks by their maximum allowed
     # length.

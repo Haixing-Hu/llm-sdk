@@ -1,7 +1,7 @@
 # ==============================================================================
 #                                                                              =
-#      Copyright (c) 2023. Haixing Hu                                          =
-#      All rights reserved.                                                    =
+#    Copyright (c) 2023. Haixing Hu                                            =
+#    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
 import unittest
@@ -12,6 +12,7 @@ from llmsdk.util.openai_utils import (
     set_proxy,
 )
 from llmsdk.embedding.openai_embedding import DEFAULT_MODEL as DEFAULT_EMBEDDING_MODEL
+from llmsdk.llm.tokenizer import OpenAiTokenizer
 
 
 class TestOpenAiUtil(unittest.TestCase):
@@ -23,15 +24,16 @@ class TestOpenAiUtil(unittest.TestCase):
 
     def test_get_chunked_tokens(self):
         model = DEFAULT_EMBEDDING_MODEL
+        tokenizer = OpenAiTokenizer(model)
         text = "The food was delicious and the waiter..."
-        result = get_chunked_tokens(model, text)
+        result = get_chunked_tokens(model, tokenizer, text)
         expected = [[791, 3691, 574, 18406, 323, 279, 68269, 1131]]
         self.assertEqual(result, expected)
 
         text = "The food was delicious and the waiter..." * 3000
         tokens = [791, 3691, 574, 18406, 323, 279, 68269, 1131] * 3000
         chunk_size = 8191
-        result = get_chunked_tokens(model, text)
+        result = get_chunked_tokens(model, tokenizer, text)
         expected = [tokens[i:i + chunk_size] for i in range(0, len(tokens), chunk_size)]
         self.assertEqual(result, expected)
 

@@ -9,15 +9,16 @@ from typing import List, Optional
 import numpy as np
 import openai
 
-from .embedding import Embedding
 from ..common import Vector
-from llmsdk.util.openai_utils import (
+from ..llm.tokenizer import Tokenizer, OpenAiTokenizer
+from ..util.openai_utils import (
     get_embedding_output_dimensions,
     check_model_compatibility,
     call_with_retries,
     get_chunked_tokens,
     init_openai,
 )
+from .embedding import Embedding
 
 DEFAULT_MODEL = "text-embedding-ada-002"
 DEFAULT_BATCH_SIZE = 1000
@@ -33,17 +34,22 @@ class OpenAiEmbedding(Embedding):
                  api_key: Optional[str] = None,
                  use_proxy: Optional[bool] = None) -> None:
         super().__init__(output_dimensions=get_embedding_output_dimensions(model))
+        check_model_compatibility(model=model, endpoint="embeddings")
         self._model = model
         self._batch_size = batch_size
-        check_model_compatibility(model=model, endpoint="embeddings")
+        self._tokenizer = OpenAiTokenizer(model)
         init_openai(api_key=api_key, use_proxy=use_proxy)
+
+    @property
+    def tokenizer(self) -> Tokenizer:
+        return self._tokenizer
 
     def embed_texts(self, texts: List[str]) -> List[Vector]:
         # split all documents into list of chunked token lists
         all_token_lists = []
         indices = []
         for i, text in enumerate(texts):
-            token_list = get_chunked_tokens(self._model, text)
+            token_list = get_chunked_tokens(self._model, self._tokenizer, text)
             # append the token list to the end of all_token_lists
             all_token_lists += token_list
             # remember the document index of each token list
