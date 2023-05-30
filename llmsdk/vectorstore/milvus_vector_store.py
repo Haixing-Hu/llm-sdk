@@ -26,7 +26,7 @@ from .milvus_utils import (
     DEFAULT_VECTOR_INDEX_TYPE,
     DEFAULT_INDEX_PARAMS,
 )
-from ..common import Vector, Point
+from ..common import Vector, Point, Metadata
 from ..criterion import Criterion
 from ..generator import IdGenerator
 
@@ -219,7 +219,7 @@ class MilvusVectorStore(VectorStore):
         for r in results[0]:
             # FIXME: can we get the vector field directly?
             query_vector = r.entity.get(self._vector_field.name)
-            metadata = {}
+            metadata = Metadata()
             for f in payload_field_names:
                 v = r.entity.get(f)
                 if v is not None:

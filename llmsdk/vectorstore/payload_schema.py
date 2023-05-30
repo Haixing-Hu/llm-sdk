@@ -6,7 +6,7 @@
 # ==============================================================================
 from dataclasses import dataclass
 
-from .data_type import DataType
+from ..common import DataType
 
 
 @dataclass(frozen=True, order=True)

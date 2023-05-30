@@ -8,11 +8,17 @@ from typing import Optional
 
 from qdrant_client.http import models
 
-from .data_type import DataType
-from .distance import Distance
-from ..common import Point
-from ..criterion import Relation, Operator, Criterion, SimpleCriterion, ComposedCriterion
+from ..common import Point, DataType
 from ..generator import IdGenerator
+from ..criterion import (
+    Relation,
+    Operator,
+    Criterion,
+    SimpleCriterion,
+    ComposedCriterion,
+)
+from .distance import Distance
+
 
 def to_qdrant_distance(distance: Distance) -> models.Distance:
     """

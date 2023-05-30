@@ -4,7 +4,6 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from .data_type import DataType
 from .distance import Distance
 from .payload_schema import PayloadSchema
 from .collection_info import CollectionInfo

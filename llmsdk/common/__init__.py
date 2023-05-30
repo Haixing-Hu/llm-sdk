@@ -4,6 +4,7 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
+from .data_type import DataType
 from .metadata import Metadata
 from .vector import Vector
 from .matrix import Matrix

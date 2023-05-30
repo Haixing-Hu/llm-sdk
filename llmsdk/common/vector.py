@@ -4,10 +4,11 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from typing import List, Union
+from typing import List, Union, TypeAlias
 import numpy as np
 
-Vector = Union[List[float], np.ndarray]
+
+Vector: TypeAlias = Union[List[float], np.ndarray]
 """
 The type of vectors, representing a list of coordinates in a high dimensional 
 space.

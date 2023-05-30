@@ -75,7 +75,7 @@ class TextSplitter(ABC):
         else:
             result = []
             for index, text in enumerate(texts):
-                doc = Document.create_splitted_document(text, index, document)
+                doc = document.create_splitted_document(text, index)
                 result.append(doc)
             return result
 

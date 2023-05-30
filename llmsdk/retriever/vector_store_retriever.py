@@ -75,7 +75,7 @@ class VectorStoreRetriever(Retriever):
                 )
             case _:
                 raise ValueError(f"Unsupported searching type: {self._search_type}")
-        return [p.to_document() for p in points]
+        return Document.from_points(points)
 
     def add(self, document: Document) -> List[Document]:
         """

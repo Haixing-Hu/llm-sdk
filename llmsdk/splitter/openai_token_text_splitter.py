@@ -8,6 +8,7 @@ from typing import Any
 
 from .token_text_splitter import TokenTextSplitter
 from ..llm.tokenizer import SpecialTokenSet, OpenAiTokenizer
+from ..embedding import OpenAiEmbedding
 
 
 class OpenAiTokenTextSplitter(TokenTextSplitter):
@@ -16,7 +17,7 @@ class OpenAiTokenTextSplitter(TokenTextSplitter):
     """
 
     def __init__(self,
-                 model: str,
+                 model: str = OpenAiEmbedding.DEFAULT_MODEL,
                  allowed_special: SpecialTokenSet = None,
                  disallowed_special: SpecialTokenSet = "all",
                  **kwargs: Any) -> None:

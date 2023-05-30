@@ -8,7 +8,7 @@ from typing import Optional, List
 
 import pymilvus
 
-from .data_type import DataType
+from ..common import DataType
 from .distance import Distance
 from .payload_schema import PayloadSchema
 from ..criterion import Criterion, SimpleCriterion, ComposedCriterion, Operator, Relation

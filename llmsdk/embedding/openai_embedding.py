@@ -20,14 +20,16 @@ from ..util.openai_utils import (
 )
 from .embedding import Embedding
 
-DEFAULT_MODEL = "text-embedding-ada-002"
-DEFAULT_BATCH_SIZE = 1000
-
 
 class OpenAiEmbedding(Embedding):
     """
     The embedding model using the OpenAI API.
     """
+
+    DEFAULT_MODEL = "text-embedding-ada-002"
+
+    DEFAULT_BATCH_SIZE = 1000
+
     def __init__(self,
                  model: str = DEFAULT_MODEL,
                  batch_size: int = DEFAULT_BATCH_SIZE,
