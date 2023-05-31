@@ -136,6 +136,56 @@ class TestQdrantVectorStore(unittest.TestCase):
             store.delete_collection(collection_name)
             store.close()
 
+    def test_has_collection__non_exist_collection_localhost(self):
+        collection_name = "test"
+        client = QdrantClient(location="127.0.0.1")
+        store = QdrantVectorStore(client)
+        store.open()
+        try:
+            result = store.has_collection(collection_name)
+            self.assertEqual(False, result)
+        finally:
+            store.close()
+
+    def test_has_collection__non_exist_collection_memory(self):
+        collection_name = "test"
+        client = QdrantClient(location=":memory:")
+        store = QdrantVectorStore(client)
+        store.open()
+        try:
+            result = store.has_collection(collection_name)
+            self.assertEqual(False, result)
+        finally:
+            store.close()
+
+    def test_has_collection__exist_collection_localhost(self):
+        collection_name = "test"
+        client = QdrantClient(location="127.0.0.1")
+        store = QdrantVectorStore(client)
+        store.open()
+        try:
+            store.create_collection(collection_name=collection_name,
+                                    vector_size=10)
+            result = store.has_collection(collection_name)
+            self.assertEqual(True, result)
+        finally:
+            store.delete_collection(collection_name)
+            store.close()
+
+    def test_has_collection__exist_collection_memory(self):
+        collection_name = "test"
+        client = QdrantClient(location=":memory:")
+        store = QdrantVectorStore(client)
+        store.open()
+        try:
+            store.create_collection(collection_name=collection_name,
+                                    vector_size=10)
+            result = store.has_collection(collection_name)
+            self.assertEqual(True, result)
+        finally:
+            store.delete_collection(collection_name)
+            store.close()
+
 
 if __name__ == '__main__':
     unittest.main()

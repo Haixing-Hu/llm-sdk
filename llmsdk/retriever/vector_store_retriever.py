@@ -8,7 +8,7 @@ from typing import Any, List
 
 from .retriever import Retriever
 from ..common import Document, SearchType
-from ..vectorstore import VectorStore
+from ..vectorstore import VectorStore, Distance
 from ..embedding import Embedding
 from ..splitter import TextSplitter
 
@@ -22,6 +22,7 @@ class VectorStoreRetriever(Retriever):
 
     def __init__(self,
                  vector_store: VectorStore,
+                 collection_name: str,
                  embedding: Embedding,
                  splitter: TextSplitter,
                  search_type: SearchType = SearchType.SIMILARITY,
@@ -30,6 +31,7 @@ class VectorStoreRetriever(Retriever):
         Creates a VectorStoreRetriever.
 
         :param vector_store: the underlying vector store.
+        :param collection_name: name of the vector collection to use.
         :param embedding: the underlying embedding model.
         :param splitter: the text splitter used to split documents.
         :param search_type: the searching type.
@@ -37,6 +39,7 @@ class VectorStoreRetriever(Retriever):
         """
         super().__init__(**kwargs)
         self._vector_store = vector_store
+        self._collection_name = collection_name
         self._embedding = embedding
         self._splitter = splitter
         self._search_type = search_type
@@ -46,12 +49,54 @@ class VectorStoreRetriever(Retriever):
         return self._vector_store
 
     @property
+    def collection_name(self) -> str:
+        return self._collection_name
+
+    @property
     def embedding(self) -> Embedding:
         return self._embedding
 
     @property
     def search_type(self) -> SearchType:
         return self._search_type
+
+    @property
+    def is_opened(self) -> bool:
+        """
+        Tests whether the underlying vector store of this retriever is opened.
+
+        :return: True if the underlying vector store of this retriever is opened;
+            False otherwise.
+        """
+        return self._vector_store.is_opened
+
+    def open(self) -> None:
+        """
+        Opens this vector store retriever.
+
+        This function will open the underlying vector store of this retriever, and
+        open the specified collection in the vector store.
+        """
+        store = self._vector_store
+        store.open()
+        if store.has_collection(self._collection_name):
+            store.open_collection(self._collection_name)
+        else:
+            store.create_collection(collection_name=self._collection_name,
+                                    vector_size=self._embedding.output_dimensions,
+                                    distance=Distance.COSINE)
+            store.open_collection(self._collection_name)
+
+    def close(self) -> None:
+        """
+        Closes this vector store retriever.
+
+        This function will close the specified collection in the underlying vector
+        store, and close the vector store.
+        """
+        store = self._vector_store
+        store.close_collection()
+        store.close()
 
     def retrieve(self, query: str, **kwargs: Any) -> List[Document]:
         query_vector = self._embedding.embed_query(query)
