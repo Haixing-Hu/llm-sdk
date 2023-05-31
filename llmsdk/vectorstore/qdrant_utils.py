@@ -8,7 +8,7 @@ from typing import Optional
 
 from qdrant_client.http import models
 
-from ..common import Point, DataType
+from ..common import Point, DataType, Metadata
 from ..generator import IdGenerator
 from ..criterion import (
     Relation,
@@ -111,7 +111,7 @@ def to_qdrant_point(point: Point,
         point.id = id_generator.generate()
     return models.PointStruct(id=point.id,
                               vector=point.vector,
-                              payload=point.metadata)
+                              payload=point.metadata.data)
 
 
 def to_local_point(scored_point: models.ScoredPoint) -> Point:
@@ -123,12 +123,13 @@ def to_local_point(scored_point: models.ScoredPoint) -> Point:
     """
     return Point(id=scored_point.id,
                  vector=scored_point.vector,
-                 metadata=scored_point.payload,
+                 metadata=Metadata(scored_point.payload),
                  score=scored_point.score)
 
 
-def criterion_to_filter(criterion: Optional[Criterion])\
-        -> Optional[models.Filter]:
+def criterion_to_filter(
+        criterion: Optional[Criterion]
+) -> Optional[models.Filter]:
     if criterion is None:
         return None
     cond = criterion_to_condition(criterion)
@@ -138,7 +139,9 @@ def criterion_to_filter(criterion: Optional[Criterion])\
         return models.Filter(must=[cond])
 
 
-def criterion_to_condition(criterion: Optional[Criterion]) -> Optional[models.Condition]:
+def criterion_to_condition(
+        criterion: Optional[Criterion]
+) -> Optional[models.Condition]:
     if criterion is None:
         return None
     if isinstance(criterion, SimpleCriterion):
@@ -149,8 +152,9 @@ def criterion_to_condition(criterion: Optional[Criterion]) -> Optional[models.Co
         raise ValueError("The criterion must be either a SimpleCriterion or a ComposedCriterion.")
 
 
-def simple_criterion_to_condition(criterion: Optional[SimpleCriterion]) \
-        -> Optional[models.Condition]:
+def simple_criterion_to_condition(
+        criterion: Optional[SimpleCriterion]
+) -> Optional[models.Condition]:
     if criterion is None:
         return None
     match criterion.operator:
