@@ -233,4 +233,4 @@ class Document:
         })
         if self.metadata is not None:
             metadata.update(self.metadata)
-        return Point(id=self.id, vector=vector, metadata=metadata)
+        return Point(vector=vector, metadata=metadata)

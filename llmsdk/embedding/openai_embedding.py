@@ -61,6 +61,7 @@ class OpenAiEmbedding(Embedding):
         embeddings = []
         for i in range(0, len(all_token_lists), self._batch_size):
             input = all_token_lists[i:i+self._batch_size]
+            self._logger.debug("Embed with OpenAI: %s", input)
             response = call_with_retries(openai_api=openai.Embedding.create,
                                          model=self._model,
                                          input=input)
