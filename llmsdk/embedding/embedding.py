@@ -91,3 +91,13 @@ class Embedding(ABC):
         :param texts: the list of texts.
         :return: the list of embedded vectors of each text.
         """
+
+    def embed_text(self, text: str) -> Vector:
+        """
+        Embeds a piece of text.
+
+        :param text: the specified text.
+        :return: the embedded vector of the text.
+        """
+        vectors = self.embed_texts([text])
+        return vectors[0]

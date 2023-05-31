@@ -11,7 +11,23 @@ import numpy as np
 from ..common import Vector, Matrix
 
 
-def cosine_similarity(x: Matrix, y: Matrix) -> np.ndarray:
+def vector_cosine_similarity(v1: Vector, v2: Vector) -> float:
+    """
+    Calculates the cosine similarity of two vectors.
+
+    :param v1: the first vector.
+    :param v2: the second vector.
+    :return: the cosine similarity of two vectors.
+    """
+    v1 = np.array(v1)
+    v2 = np.array(v2)
+    dot_product = np.dot(v1, v2)
+    v1_length = np.linalg.norm(v1)
+    v2_length = np.linalg.norm(v2)
+    return dot_product / (v1_length * v2_length)
+
+
+def matrix_cosine_similarity(x: Matrix, y: Matrix) -> np.ndarray:
     """
     Calculates the row-wise cosine similarity between two equal-width matrices.
 
@@ -35,7 +51,7 @@ def cosine_similarity(x: Matrix, y: Matrix) -> np.ndarray:
     return similarity
 
 
-def cosine_similarity_top_k(
+def matrix_cosine_similarity_top_k(
     x: Matrix,
     y: Matrix,
     top_k: Optional[int] = 5,
@@ -54,7 +70,7 @@ def cosine_similarity_top_k(
     """
     if len(x) == 0 or len(y) == 0:
         return [], []
-    score_array = cosine_similarity(x, y)
+    score_array = matrix_cosine_similarity(x, y)
     sorted_indices = score_array.flatten().argsort()[::-1]
     top_k = top_k or len(sorted_indices)
     top_indices = sorted_indices[:top_k]
@@ -84,14 +100,14 @@ def maximal_marginal_relevance(query_vector: Vector,
     query_vector = np.array(query_vector)
     if query_vector.ndim == 1:
         query_vector = np.expand_dims(query_vector, axis=0)
-    similarity_to_query = cosine_similarity(query_vector, similarity_vectors)[0]
+    similarity_to_query = matrix_cosine_similarity(query_vector, similarity_vectors)[0]
     most_similar = int(np.argmax(similarity_to_query))
     indices = [most_similar]
     selected = np.array([similarity_vectors[most_similar]])
     while len(indices) < min(limit, len(similarity_vectors)):
         best_score = -np.inf
         index_to_add = -1
-        similarity_to_selected = cosine_similarity(similarity_vectors, selected)
+        similarity_to_selected = matrix_cosine_similarity(similarity_vectors, selected)
         for i, query_score in enumerate(similarity_to_query):
             if i in indices:
                 continue

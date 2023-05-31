@@ -100,6 +100,7 @@ class VectorStoreRetriever(Retriever):
 
     def retrieve(self, query: str, **kwargs: Any) -> List[Document]:
         query_vector = self._embedding.embed_query(query)
+        self._logger.debug("Query the vector store with: %s", query_vector)
         if "limit" in kwargs:
             limit = kwargs["limit"]
             kwargs.pop("limit")
@@ -120,6 +121,7 @@ class VectorStoreRetriever(Retriever):
                 )
             case _:
                 raise ValueError(f"Unsupported searching type: {self._search_type}")
+        self._logger.debug("Gets the query result: %s", points)
         return Document.from_points(points)
 
     def add(self, document: Document) -> List[Document]:

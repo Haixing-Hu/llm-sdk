@@ -54,7 +54,10 @@ class QdrantVectorStore(VectorStore):
         self._is_opened = False
 
     def open_collection(self, collection_name: str) -> None:
+        info = self._client.get_collection(collection_name)
         self._collection_name = collection_name
+        self._logger.info(f"Successfully opened collection '{collection_name}', "
+                          f"which has {info.points_count} points.")
 
     def close_collection(self) -> None:
         self._collection_name = None
@@ -127,9 +130,10 @@ class QdrantVectorStore(VectorStore):
     def add_all(self, points: List[Point]) -> List[str]:
         self._ensure_collection_opened()
         qdrant_points = [to_qdrant_point(pt, self._id_generator) for pt in points]
-        self._logger.debug("Add points: %s", qdrant_points)
+        self._logger.debug("Add %d points: %s", len(qdrant_points), qdrant_points)
         self._client.upsert(collection_name=self._collection_name,
                             points=qdrant_points)
+        self._logger.debug("Totally %d points added.", len(qdrant_points))
         return [p.id for p in points]
 
     def similarity_search(self,

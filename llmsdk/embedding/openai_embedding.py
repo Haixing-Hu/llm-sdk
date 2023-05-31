@@ -48,6 +48,7 @@ class OpenAiEmbedding(Embedding):
 
     def embed_texts(self, texts: List[str]) -> List[Vector]:
         # split all documents into list of chunked token lists
+        self._logger.debug("Embedding texts: %s", texts)
         all_token_lists = []
         indices = []
         for i, text in enumerate(texts):
@@ -61,11 +62,13 @@ class OpenAiEmbedding(Embedding):
         embeddings = []
         for i in range(0, len(all_token_lists), self._batch_size):
             input = all_token_lists[i:i+self._batch_size]
-            self._logger.debug("Embed with OpenAI: %s", input)
+            self._logger.debug("Embed %d chunks with OpenAI: %s", len(input), input)
             response = call_with_retries(openai_api=openai.Embedding.create,
                                          model=self._model,
                                          input=input)
-            embeddings += [r["embedding"] for r in response["data"]]
+            embedding = [r["embedding"] for r in response["data"]]
+            self._logger.debug("Gets the embedded vectors of the chunks: %s", embedding)
+            embeddings += embedding
 
         # collect the embedding vectors of each document
         n = len(texts)

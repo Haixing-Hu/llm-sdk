@@ -6,6 +6,7 @@
 # ==============================================================================
 from abc import ABC, abstractmethod
 from typing import Any, List
+import logging
 
 from ..common import Document
 
@@ -14,6 +15,9 @@ class Retriever(ABC):
     """
     The interface of document retrievers.
     """
+
+    def __init__(self):
+        self._logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
     def retrieve(self,
