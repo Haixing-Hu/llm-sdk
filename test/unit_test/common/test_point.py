@@ -43,6 +43,15 @@ class TestPoint(unittest.TestCase):
         self.assertEqual("p5.id", p5.id)
         self.assertEqual(1.1, p5.score)
 
+    def test_metadata_has(self):
+        p1 = Point()
+        self.assertEqual(False, p1.metadata.has("a", int))
+
+        p2 = Point([1.1, 2.2, 3.3], Metadata({"name": "p2"}))
+        self.assertEqual(True, p2.metadata.has("name", str))
+        self.assertEqual(False, p2.metadata.has("name", int))
+        self.assertEqual(False, p2.metadata.has("name", float))
+
 
 if __name__ == '__main__':
     unittest.main()
