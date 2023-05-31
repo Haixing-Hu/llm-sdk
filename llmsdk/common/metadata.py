@@ -17,12 +17,13 @@ class Metadata(UserDict):
         super().__init__(data, **kwargs)
 
     def __setitem__(self, key: str, value: Union[int, float, str]) -> None:
-        if ((not isinstance(value, int))
-                and (not isinstance(value, float)
-                and (not isinstance(value, str)))):
+        if ((type(value) == int)
+                or (type(value) == float)
+                or (type(value) == str)):
+            super().__setitem__(key, value)
+        else:
             raise ValueError("The value of metadata only support int, float, "
                              "and str types.")
-        super().__setitem__(key, value)
 
     def has(self, key: str, data_type: Type) -> bool:
         """
@@ -34,4 +35,4 @@ class Metadata(UserDict):
         :return: True if the metadata of this document has the specified attribute
             with the specified type；False otherwise.
         """
-        return (key in self.data) and (isinstance(self.data[key], data_type))
+        return (key in self.data) and (type(self.data[key]) == data_type)
