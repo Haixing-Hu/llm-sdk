@@ -8,6 +8,7 @@ from typing import Optional, Any, List
 
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
+from qdrant_client.http.exceptions import ApiException, UnexpectedResponse
 
 from .payload_schema import PayloadSchema
 from .distance import Distance
@@ -45,6 +46,33 @@ class QdrantVectorStore(VectorStore):
         """
         super().__init__(id_generator=id_generator)
         self._client = client
+
+    def open(self) -> None:
+        self._is_opened = True
+
+    def close(self) -> None:
+        self._is_opened = False
+
+    def open_collection(self, collection_name: str) -> None:
+        self._collection_name = collection_name
+
+    def close_collection(self) -> None:
+        self._collection_name = None
+
+    def has_collection(self, collection_name: str) -> bool:
+        try:
+            self._client.get_collection(collection_name)
+            return True
+        except ValueError as e:
+            if str(e) == f"Collection {collection_name} not found":
+                return False
+            raise e
+        except UnexpectedResponse as e:
+            if e.status_code == 404:
+                return False
+            raise e
+        except ApiException as e:
+            raise e
 
     def create_collection(self,
                           collection_name: str,

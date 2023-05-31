@@ -32,6 +32,7 @@ class VectorStore(ABC):
         self._collection_name = None
         self._auto_close_connection = False
         self._id_generator = id_generator or DefaultIdGenerator()
+        self._is_opened = False
 
     @property
     def logger(self) -> Logger:
@@ -45,32 +46,60 @@ class VectorStore(ABC):
     def id_generator(self) -> IdGenerator:
         return self._id_generator
 
+    @property
+    def is_opened(self) -> bool:
+        """
+        Tests whether this vector store is opened.
+
+        :return: True if this vector store is opened; False otherwise.
+        """
+        return self._is_opened
+
+    @abstractmethod
     def open(self) -> None:
         """
         Opens this vector store.
         """
-        pass
 
+    @abstractmethod
     def close(self) -> None:
         """
         Closes this vector store.
         """
-        pass
 
+    @property
+    def is_collection_opened(self) -> bool:
+        """
+        Tests whether a collection of this vector store is opened.
+
+        :return: True if a collection of this vector store is opened; False
+            otherwise.
+        """
+        return self._collection_name is not None
+
+    @abstractmethod
     def open_collection(self, collection_name: str) -> None:
         """
         Opens the specified collection, and sets it as the current collection.
 
         :param collection_name: the name of the specified collection.
         """
-        self.close_collection()
-        self._collection_name = collection_name
 
+    @abstractmethod
     def close_collection(self) -> None:
         """
         close the current collection.
         """
-        self._collection_name = None
+
+    @abstractmethod
+    def has_collection(self, collection_name: str) -> bool:
+        """
+        Tests whether this vector store has a collection with the specified name.
+
+        :param collection_name: the specified collection name.
+        :return: True if this vector store has a collection with the specified
+            name; False otherwise.
+        """
 
     @abstractmethod
     def create_collection(self,
@@ -228,8 +257,12 @@ class VectorStore(ABC):
 
     def _ensure_collection_opened(self):
         """
-        Ensure that this store has opened a collection.
-        :raise RuntimeError: if no collection was opened for this vector store.
+        Ensure this store is opened and a collection of this store is opened.
+
+        :raise RuntimeError: if this vector store is not opened, or no
+            collection was opened for this vector store.
         """
+        if not self._is_opened:
+            raise RuntimeError("This vector store is not opened.")
         if self._collection_name is None:
             raise RuntimeError("No collection was opened for this vector store.")

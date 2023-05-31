@@ -64,11 +64,13 @@ class MilvusVectorStore(VectorStore):
         # Connecting to Milvus instance
         if not pymilvus.connections.has_connection(self._connection_alias):
             pymilvus.connections.connect(**self._connection_args)
+            self._is_opened = True
 
     def close(self) -> None:
         if self._collection is not None:
             self.close_collection()
         pymilvus.connections.disconnect(self._connection_alias)
+        self._is_opened = False
 
     def open_collection(self,
                         collection_name: str,
@@ -81,7 +83,6 @@ class MilvusVectorStore(VectorStore):
         :param id_field_name: the name of ID field in the collection.
         :param vector_field_name: the name of vector field in the collection.
         """
-        super().open_collection(collection_name)
         self._collection = pymilvus.Collection(name=collection_name,
                                                using=self._connection_alias)
         self._auto_id = self._collection.schema.auto_id
@@ -92,9 +93,9 @@ class MilvusVectorStore(VectorStore):
                                                     id_field=self._id_field,
                                                     vector_field=self._vector_field)
         self._collection.load()
+        self._collection_name = collection_name
 
     def close_collection(self) -> None:
-        super().close_collection()
         if self._collection is not None:
             self._collection.release()
             self._collection = None
@@ -103,6 +104,7 @@ class MilvusVectorStore(VectorStore):
             self._vector_field = None
             self._vector_index = None
             self._payload_schemas = None
+            self._collection_name = None
 
     def create_collection(self,
                           collection_name: str,
@@ -161,6 +163,9 @@ class MilvusVectorStore(VectorStore):
                               vector_size=vector_field.params.get("dim"),
                               distance=distance,
                               payload_schemas=payload_schemas)
+
+    def has_collection(self, collection_name: str) -> bool:
+        return pymilvus.utility.has_collection(collection_name)
 
     def add(self, point: Point) -> str:
         self._ensure_collection_opened()
