@@ -5,6 +5,7 @@
 #                                                                              =
 # ==============================================================================
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
@@ -27,3 +28,6 @@ class Example:
 
     id: str = None
     """The ID of the example."""
+
+    score: Optional[float] = None
+    """The score of this example relevant to the query."""

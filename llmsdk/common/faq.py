@@ -4,16 +4,23 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from .data_type import DataType
-from .metadata import Metadata
-from .vector import Vector
-from .matrix import Matrix
-from .point import Point
-from .document import Document
-from .example import Example
-from .faq import Faq
-from .role import Role
-from .message import Message, MessageList
-from .prompt_type import PromptType
-from .prompt import Prompt
-from .search_type import SearchType
+from dataclasses import dataclass
+from typing import Optional
+
+@dataclass
+class Faq:
+    """
+    The class of question/answer pairs.
+    """
+
+    question: str
+    """The question."""
+
+    answer: str
+    """The answer."""
+
+    id: str = None
+    """The ID of this object."""
+
+    score: Optional[float] = None
+    """The score of this FAQ relevant to the query."""

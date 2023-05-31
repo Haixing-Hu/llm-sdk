@@ -6,7 +6,7 @@
 # ==============================================================================
 import unittest
 
-from llmsdk.common import Document, Metadata
+from llmsdk.common import Document, Metadata, Example, Faq
 from llmsdk.embedding import MockEmbedding
 
 
@@ -38,7 +38,7 @@ class TestDocument(unittest.TestCase):
                       content=texts[0],
                       metadata=Metadata({"f1": "v1", "f2": "v2"}))
 
-        p0 = d0.to_point(vectors[0])
+        p0 = Document.to_point(d0, vectors[0])
         self.assertEqual(d0.id, p0.id)
         self.assertEqual(vectors[0], p0.vector)
         m0 = Metadata({
@@ -54,7 +54,7 @@ class TestDocument(unittest.TestCase):
                       content=texts[1],
                       metadata=Metadata({"f1": "v1", "f2": "v2", "f3": "v3"}))
 
-        p1 = d1.to_point(vectors[1])
+        p1 = Document.to_point(d1, vectors[1])
         self.assertEqual(d1.id, p1.id)
         self.assertEqual(vectors[1], p1.vector)
         m1 = Metadata({
@@ -75,16 +75,118 @@ class TestDocument(unittest.TestCase):
         d0 = Document(id="001",
                       content=texts[0],
                       metadata=Metadata({"f1": "v1", "f2": "v2"}))
-        p0 = d0.to_point(vectors[0])
+        p0 = Document.to_point(d0, vectors[0])
         a0 = Document.from_point(p0)
         self.assertEqual(d0, a0)
 
         d1 = Document(id="001",
                       content=texts[1],
                       metadata=Metadata({"f1": "v1", "f2": "v2", "f3": "v3"}))
-        p1 = d1.to_point(vectors[1])
+        p1 = Document.to_point(d1, vectors[1])
         a1 = Document.from_point(p1)
         self.assertEqual(d1, a1)
+
+    def test_from_example(self):
+        e1 = Example("input1", "output1", id="example-1")
+        self.assertEqual("example-1", e1.id)
+        self.assertEqual("input1", e1.input)
+        self.assertEqual("output1", e1.output)
+        d1 = Document.from_example(e1)
+        self.assertEqual(2, len(d1))
+        self.assertEqual("example-1-input", d1[0].id)
+        self.assertEqual("input1", d1[0].content)
+        self.assertEqual(Metadata({
+            "__example_id__": "example-1",
+            "__example_input__": "input1",
+            "__example_output__": "output1",
+            "__example_property__": "input",
+        }), d1[0].metadata)
+        self.assertIsNone(d1[0].score)
+        self.assertEqual("example-1-output", d1[1].id)
+        self.assertEqual("output1", d1[1].content)
+        self.assertEqual(Metadata({
+            "__example_id__": "example-1",
+            "__example_input__": "input1",
+            "__example_output__": "output1",
+            "__example_property__": "output",
+        }), d1[1].metadata)
+        self.assertIsNone(d1[1].score)
+
+        e2 = Example("input2", "output2", id="example-2", score=0.7)
+        self.assertEqual("example-2", e2.id)
+        self.assertEqual("input2", e2.input)
+        self.assertEqual("output2", e2.output)
+        d2 = Document.from_example(e2)
+        self.assertEqual(2, len(d2))
+        self.assertEqual("example-2-input", d2[0].id)
+        self.assertEqual("input2", d2[0].content)
+        self.assertEqual(Metadata({
+            "__example_id__": "example-2",
+            "__example_input__": "input2",
+            "__example_output__": "output2",
+            "__example_property__": "input",
+        }), d2[0].metadata)
+        self.assertEqual(0.7, d2[0].score)
+        self.assertEqual("example-2-output", d2[1].id)
+        self.assertEqual("output2", d2[1].content)
+        self.assertEqual(Metadata({
+            "__example_id__": "example-2",
+            "__example_input__": "input2",
+            "__example_output__": "output2",
+            "__example_property__": "output",
+        }), d2[1].metadata)
+        self.assertEqual(0.7, d2[1].score)
+
+    def test_from_faq(self):
+        e1 = Faq("question1", "answer1", id="faq-1")
+        self.assertEqual("faq-1", e1.id)
+        self.assertEqual("question1", e1.question)
+        self.assertEqual("answer1", e1.answer)
+        d1 = Document.from_faq(e1)
+        self.assertEqual(2, len(d1))
+        self.assertEqual("faq-1-question", d1[0].id)
+        self.assertEqual("question1", d1[0].content)
+        self.assertEqual(Metadata({
+            "__faq_id__": "faq-1",
+            "__faq_question__": "question1",
+            "__faq_answer__": "answer1",
+            "__faq_property__": "question",
+        }), d1[0].metadata)
+        self.assertIsNone(d1[0].score)
+        self.assertEqual("faq-1-answer", d1[1].id)
+        self.assertEqual("answer1", d1[1].content)
+        self.assertEqual(Metadata({
+            "__faq_id__": "faq-1",
+            "__faq_question__": "question1",
+            "__faq_answer__": "answer1",
+            "__faq_property__": "answer",
+        }), d1[1].metadata)
+        self.assertIsNone(d1[1].score)
+
+        e2 = Faq("question2", "answer2", id="faq-2", score=0.7)
+        self.assertEqual("faq-2", e2.id)
+        self.assertEqual("question2", e2.question)
+        self.assertEqual("answer2", e2.answer)
+        d2 = Document.from_faq(e2)
+        self.assertEqual(2, len(d2))
+        self.assertEqual("faq-2-question", d2[0].id)
+        self.assertEqual("question2", d2[0].content)
+        self.assertEqual(Metadata({
+            "__faq_id__": "faq-2",
+            "__faq_question__": "question2",
+            "__faq_answer__": "answer2",
+            "__faq_property__": "question",
+        }), d2[0].metadata)
+        self.assertEqual(0.7, d2[0].score)
+        self.assertEqual("faq-2-answer", d2[1].id)
+        self.assertEqual("answer2", d2[1].content)
+        self.assertEqual(Metadata({
+            "__faq_id__": "faq-2",
+            "__faq_question__": "question2",
+            "__faq_answer__": "answer2",
+            "__faq_property__": "answer",
+        }), d2[1].metadata)
+        self.assertEqual(0.7, d2[1].score)
 
 
 if __name__ == '__main__':

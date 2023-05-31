@@ -7,11 +7,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, ClassVar
+from typing import List, ClassVar, Optional
 import copy
 
 from .metadata import Metadata
 from .example import Example
+from .faq import Faq
 from .vector import Vector
 from .point import Point
 
@@ -36,6 +37,14 @@ class Document:
 
     EXAMPLE_PROPERTY_ATTRIBUTE: ClassVar[str] = "__example_property__"
 
+    FAQ_ID_ATTRIBUTE: ClassVar[str] = "__faq_id__"
+
+    FAQ_QUESTION_ATTRIBUTE: ClassVar[str] = "__faq_question__"
+
+    FAQ_ANSWER_ATTRIBUTE: ClassVar[str] = "__faq_answer__"
+
+    FAQ_PROPERTY_ATTRIBUTE: ClassVar[str] = "__faq_property__"
+
     DOCUMENT_ID_ATTRIBUTE: ClassVar[str] = "__document_id__"
     """The name of the metadata attribute storing the ID of the document."""
 
@@ -45,11 +54,14 @@ class Document:
     content: str
     """The content of the document."""
 
+    metadata: Metadata = field(default_factory=Metadata)
+    """The metadata of the document, or {} if no metadata."""
+
     id: str = None
     """The ID of the document."""
 
-    metadata: Metadata = field(default_factory=Metadata)
-    """The metadata of the document, or {} if no metadata."""
+    score: Optional[float] = None
+    """The score of this document relevant to the query."""
 
     def is_splitted(self) -> bool:
         """
@@ -133,7 +145,8 @@ class Document:
                                  Document.EXAMPLE_PROPERTY_ATTRIBUTE: "input",
                                  Document.EXAMPLE_INPUT_ATTRIBUTE: example.input,
                                  Document.EXAMPLE_OUTPUT_ATTRIBUTE: example.output,
-                             }))
+                             }),
+                             score=example.score)
         output_doc = Document(id=example.id + "-output",
                               content=example.output,
                               metadata=Metadata({
@@ -141,7 +154,8 @@ class Document:
                                   Document.EXAMPLE_PROPERTY_ATTRIBUTE: "output",
                                   Document.EXAMPLE_INPUT_ATTRIBUTE: example.input,
                                   Document.EXAMPLE_OUTPUT_ATTRIBUTE: example.output,
-                              }))
+                              }),
+                              score=example.score)
         return [input_doc, output_doc]
 
     @classmethod
@@ -172,19 +186,123 @@ class Document:
                 and (self.metadata[Document.EXAMPLE_PROPERTY_ATTRIBUTE] != "input"
                      or self.metadata[Document.EXAMPLE_PROPERTY_ATTRIBUTE] != "output"))
 
-    def to_example(self) -> Example:
+    @classmethod
+    def to_example(cls, document: Document) -> Example:
         """
-        Converts this document to an example.
+        Converts the specified document to an example.
 
-        :return: the example this document is converted from.
-        :raise ValueError: if this document is not converted from an example.
+        :param document: the specified document.
+        :return: the example the specified document is converted from.
+        :raise ValueError: if the specified document is not converted from an
+            example.
         """
-        if not self.is_converted_from_example():
-            raise ValueError(f"The document is not converted from an example: {self}")
-        example_id = self.metadata[Document.EXAMPLE_ID_ATTRIBUTE]
-        example_input = self.metadata[Document.EXAMPLE_INPUT_ATTRIBUTE]
-        example_output = self.metadata[Document.EXAMPLE_OUTPUT_ATTRIBUTE]
-        return Example(id=example_id, input=example_input, output=example_output)
+        if not document.is_converted_from_example():
+            raise ValueError(f"The document is not converted from an example: {document}")
+        example_id = document.metadata[Document.EXAMPLE_ID_ATTRIBUTE]
+        example_input = document.metadata[Document.EXAMPLE_INPUT_ATTRIBUTE]
+        example_output = document.metadata[Document.EXAMPLE_OUTPUT_ATTRIBUTE]
+        return Example(id=example_id,
+                       input=example_input,
+                       output=example_output,
+                       score=document.score)
+
+    @classmethod
+    def to_examples(cls, documents: List[Document]) -> List[Example]:
+        """
+        Converts the specified list of documents to a list of examples.
+
+        :param documents: the specified list of documents.
+        :return: the list of examples the specified documents are converted from.
+        :raise ValueError: if any document is not converted from an example.
+        """
+        return [Document.to_example(doc) for doc in documents]
+
+    @classmethod
+    def from_faq(cls, faq: Faq) -> List[Document]:
+        """
+        Converts a FAQ to a list of documents.
+
+        :return: the list of documents converted from the FAQ.
+        """
+        if faq.id is None or len(faq.id) == 0:
+            raise ValueError(f"The FAQ must have a non-empty ID: {faq}")
+        question_doc = Document(id=faq.id + "-question",
+                                content=faq.question,
+                                metadata=Metadata({
+                                    Document.FAQ_ID_ATTRIBUTE: faq.id,
+                                    Document.FAQ_PROPERTY_ATTRIBUTE: "question",
+                                    Document.FAQ_QUESTION_ATTRIBUTE: faq.question,
+                                    Document.FAQ_ANSWER_ATTRIBUTE: faq.answer,
+                                }),
+                                score=faq.score)
+        answer_doc = Document(id=faq.id + "-answer",
+                              content=faq.answer,
+                              metadata=Metadata({
+                                  Document.FAQ_ID_ATTRIBUTE: faq.id,
+                                  Document.FAQ_PROPERTY_ATTRIBUTE: "answer",
+                                  Document.FAQ_QUESTION_ATTRIBUTE: faq.question,
+                                  Document.FAQ_ANSWER_ATTRIBUTE: faq.answer,
+                              }),
+                              score=faq.score)
+        return [question_doc, answer_doc]
+
+    @classmethod
+    def from_faqs(cls, faqs: List[Faq]) -> List[Document]:
+        """
+        Converts a list of FAQs to a list of documents.
+
+        :param faqs: the specified list of FAQs.
+        :return: the list of documents converted from the specified list of
+            FAQs.
+        """
+        result = []
+        for faq in faqs:
+            result.extend(Document.from_faq(faq))
+        return result
+
+    def is_converted_from_faq(self) -> bool:
+        """
+        Tests whether this document is converted from a FAQ.
+
+        :return: True if this document is converted from a FAQ; False otherwise.
+        """
+        return (self.metadata.has(Document.FAQ_ID_ATTRIBUTE, str)
+                and self.metadata.has(Document.FAQ_PROPERTY_ATTRIBUTE, str)
+                and self.metadata.has(Document.FAQ_QUESTION_ATTRIBUTE, str)
+                and self.metadata.has(Document.FAQ_ANSWER_ATTRIBUTE, str)
+                and (self.metadata[Document.FAQ_PROPERTY_ATTRIBUTE] != "question"
+                     or self.metadata[Document.FAQ_PROPERTY_ATTRIBUTE] != "answer"))
+
+    @classmethod
+    def to_faq(cls, document: Document) -> Faq:
+        """
+        Converts the specified document to a Faq.
+
+        :param document: the specified document.
+        :return: the Faq the specified document is converted from.
+        :raise ValueError: if the specified document is not converted from a Faq.
+        """
+        if not document.is_converted_from_faq():
+            raise ValueError(f"The document is not converted from a Faq: {document}")
+        faq_id = document.metadata[Document.FAQ_ID_ATTRIBUTE]
+        faq_question = document.metadata[Document.FAQ_QUESTION_ATTRIBUTE]
+        faq_answer = document.metadata[Document.FAQ_ANSWER_ATTRIBUTE]
+        faq_score = document.score
+        return Faq(id=faq_id,
+                   question=faq_question,
+                   answer=faq_answer,
+                   score=faq_score)
+
+    @classmethod
+    def to_faqs(cls, documents: List[Document]) -> List[Faq]:
+        """
+        Converts the specified list of documents to a list of FAQs.
+
+        :param documents: the specified list of documents.
+        :return: the list of FAQs the specified documents are converted from.
+        :raise ValueError: if any document is not converted from a FAQ.
+        """
+        return [Document.to_faq(doc) for doc in documents]
 
     @classmethod
     def from_point(cls, point: Point) -> Document:
@@ -205,7 +323,7 @@ class Document:
         metadata = copy.deepcopy(point.metadata)
         metadata.pop(Document.DOCUMENT_ID_ATTRIBUTE)
         metadata.pop(Document.DOCUMENT_CONTENT_ATTRIBUTE)
-        return Document(id=id, content=content, metadata=metadata)
+        return Document(id=id, content=content, metadata=metadata, score=point.score)
 
     @classmethod
     def from_points(cls, points: List[Point]) -> List[Document]:
@@ -217,20 +335,47 @@ class Document:
         """
         return [Document.from_point(p) for p in points]
 
-    def to_point(self, vector: Vector) -> Point:
+    @classmethod
+    def to_point(cls, document: Document, vector: Vector) -> Point:
         """
-        Constructs a Point from a document and its embedded vector.
+        Constructs a point from the specified document and its embedded vector.
 
+        :param document: the specified document.
         :param vector: the embedded vector of the content of the specified
             document.
         :return: the constructed Point.
         """
-        if self.id is None or len(self.id) == 0:
-            raise ValueError(f"The document must have a non-empty ID: {self}")
+        if document.id is None or len(document.id) == 0:
+            raise ValueError(f"The document must have a non-empty ID: {document}")
         metadata = Metadata({
-            Document.DOCUMENT_ID_ATTRIBUTE: self.id,
-            Document.DOCUMENT_CONTENT_ATTRIBUTE: self.content,
+            Document.DOCUMENT_ID_ATTRIBUTE: document.id,
+            Document.DOCUMENT_CONTENT_ATTRIBUTE: document.content,
         })
-        if self.metadata is not None:
-            metadata.update(self.metadata)
-        return Point(vector=vector, metadata=metadata)
+        if document.metadata is not None:
+            metadata.update(document.metadata)
+        # NOTE: should NOT set the ID of the point to the ID of the document,
+        #   since the vector store may have its requirement on the format of
+        #   the IDs of points.
+        return Point(vector=vector, metadata=metadata, score=document.score)
+
+    @classmethod
+    def to_points(cls, documents: List[Document], vectors: List[Vector]) -> List[Point]:
+        """
+        Constructs a list of points from a list of documents and their embedded
+        vectors.
+
+        :param documents: the specified list of documents.
+        :param vectors: the embedded vectors of the contents of the specified
+            list of documents.
+        :return: the constructed list of points.
+        :raise ValueError: if the length of the list of documents does not equal
+            the length of the list of vectors.
+        """
+        if len(documents) != len(vectors):
+            raise ValueError("The length of the list of documents must equal to "
+                             "the length of the list of vectors.")
+        result = []
+        for i, doc in enumerate(documents):
+            point = Document.to_point(doc, vectors[i])
+            result.append(point)
+        return result
