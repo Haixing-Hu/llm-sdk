@@ -129,49 +129,83 @@ class TestQdrantVectorStore(unittest.TestCase):
             store.close()
 
     def test_has_collection__non_exist_collection_localhost(self):
-        collection_name = "test"
         store = QdrantVectorStore(host="127.0.0.1")
         store.open()
         try:
-            result = store.has_collection(collection_name)
+            result = store.has_collection(COLLECTION_NAME)
             self.assertEqual(False, result)
         finally:
             store.close()
 
     def test_has_collection__non_exist_collection_memory(self):
-        collection_name = "test"
         store = QdrantVectorStore(in_memory=True)
         store.open()
         try:
-            result = store.has_collection(collection_name)
+            result = store.has_collection(COLLECTION_NAME)
             self.assertEqual(False, result)
         finally:
             store.close()
 
     def test_has_collection__exist_collection_localhost(self):
-        collection_name = "test"
         store = QdrantVectorStore(host="127.0.0.1")
         store.open()
         try:
-            store.create_collection(collection_name=collection_name,
+            store.create_collection(collection_name=COLLECTION_NAME,
                                     vector_size=10)
-            result = store.has_collection(collection_name)
+            result = store.has_collection(COLLECTION_NAME)
             self.assertEqual(True, result)
         finally:
-            store.delete_collection(collection_name)
+            store.delete_collection(COLLECTION_NAME)
             store.close()
 
     def test_has_collection__exist_collection_memory(self):
-        collection_name = "test"
         store = QdrantVectorStore(in_memory=True)
         store.open()
         try:
-            store.create_collection(collection_name=collection_name,
+            store.create_collection(collection_name=COLLECTION_NAME,
                                     vector_size=10)
-            result = store.has_collection(collection_name)
+            result = store.has_collection(COLLECTION_NAME)
             self.assertEqual(True, result)
         finally:
-            store.delete_collection(collection_name)
+            store.delete_collection(COLLECTION_NAME)
+            store.close()
+
+    def test_collection_size__in_memory(self):
+        store = QdrantVectorStore(in_memory=True)
+        self._test_collection_size(store)
+
+    def test_collection_size__localhost(self):
+        store = QdrantVectorStore(host="127.0.0.1")
+        self._test_collection_size(store)
+
+    def test_collection_size__file(self):
+        store = QdrantVectorStore(path="/tmp/test_qdrant")
+        self._test_collection_size(store)
+
+    def _test_collection_size(self, store: QdrantVectorStore):
+        texts = ["foo", "bar", "baz"]
+        documents = [Document(content=t, metadata=Metadata({"page": i}))
+                     for i, t in enumerate(texts)]
+        embedding = MockEmbedding()
+        points = embedding.embed_documents(documents)
+        store.open()
+        try:
+            store.create_collection(collection_name=COLLECTION_NAME,
+                                    vector_size=10)
+            result = store.has_collection(COLLECTION_NAME)
+            self.assertEqual(True, result)
+            store.open_collection(COLLECTION_NAME)
+            store.add(points[0])
+            info = store.get_collection_info(COLLECTION_NAME)
+            self.assertEqual(1, info.size)
+            store.add(points[1])
+            info = store.get_collection_info(COLLECTION_NAME)
+            self.assertEqual(2, info.size)
+            store.add(points[2])
+            info = store.get_collection_info(COLLECTION_NAME)
+            self.assertEqual(3, info.size)
+        finally:
+            store.delete_collection(COLLECTION_NAME)
             store.close()
 
 
