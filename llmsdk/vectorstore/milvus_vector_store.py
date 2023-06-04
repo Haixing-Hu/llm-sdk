@@ -6,8 +6,6 @@
 # ==============================================================================
 from typing import Dict, Optional, Any, List
 
-import pymilvus
-
 from .distance import Distance
 from .payload_schema import PayloadSchema
 from .collection_info import CollectionInfo
@@ -30,6 +28,9 @@ from ..common import Vector, Point, Metadata
 from ..criterion import Criterion
 from ..generator import IdGenerator
 
+IMPORT_MILVUS_ERROR_MESSAGE = """Milvus is not installed, 
+please install it with `pip install pymilvus`."""
+
 
 class MilvusVectorStore(VectorStore):
     """
@@ -47,6 +48,10 @@ class MilvusVectorStore(VectorStore):
         :param id_generator: the ID generator used to generate ID of documents.
         """
         super().__init__(id_generator=id_generator)
+        try:
+            import pymilvus
+        except ImportError:
+            raise ImportError(IMPORT_MILVUS_ERROR_MESSAGE)
         if connection_args is None:
             self._connection_args = {}
             self._connection_alias = "default"
@@ -62,11 +67,19 @@ class MilvusVectorStore(VectorStore):
 
     def open(self) -> None:
         # Connecting to Milvus instance
+        try:
+            import pymilvus
+        except ImportError:
+            raise ImportError(IMPORT_MILVUS_ERROR_MESSAGE)
         if not pymilvus.connections.has_connection(self._connection_alias):
             pymilvus.connections.connect(**self._connection_args)
             self._is_opened = True
 
     def close(self) -> None:
+        try:
+            import pymilvus
+        except ImportError:
+            raise ImportError(IMPORT_MILVUS_ERROR_MESSAGE)
         if self._collection is not None:
             self.close_collection()
         pymilvus.connections.disconnect(self._connection_alias)
@@ -83,6 +96,10 @@ class MilvusVectorStore(VectorStore):
         :param id_field_name: the name of ID field in the collection.
         :param vector_field_name: the name of vector field in the collection.
         """
+        try:
+            import pymilvus
+        except ImportError:
+            raise ImportError(IMPORT_MILVUS_ERROR_MESSAGE)
         self._collection = pymilvus.Collection(name=collection_name,
                                                using=self._connection_alias)
         self._auto_id = self._collection.schema.auto_id
@@ -111,6 +128,10 @@ class MilvusVectorStore(VectorStore):
                           vector_size: int,
                           distance: Distance = Distance.COSINE,
                           payload_schemas: List[PayloadSchema] = None) -> None:
+        try:
+            import pymilvus
+        except ImportError:
+            raise ImportError(IMPORT_MILVUS_ERROR_MESSAGE)
         # prepare the collection schema
         id_field_name = DEFAULT_ID_FIELD_NAME
         vector_field_name = DEFAULT_VECTOR_FIELD_NAME
@@ -147,9 +168,17 @@ class MilvusVectorStore(VectorStore):
                                         index_name=schema.name + "_index")
 
     def delete_collection(self, collection_name: str) -> None:
+        try:
+            import pymilvus
+        except ImportError:
+            raise ImportError(IMPORT_MILVUS_ERROR_MESSAGE)
         pymilvus.utility.drop_collection(collection_name)
 
     def get_collection_info(self, collection_name: str) -> CollectionInfo:
+        try:
+            import pymilvus
+        except ImportError:
+            raise ImportError(IMPORT_MILVUS_ERROR_MESSAGE)
         collection = pymilvus.Collection(name=collection_name,
                                          using=self._connection_alias)
         id_field = get_id_field(collection)
@@ -165,6 +194,10 @@ class MilvusVectorStore(VectorStore):
                               payload_schemas=payload_schemas)
 
     def has_collection(self, collection_name: str) -> bool:
+        try:
+            import pymilvus
+        except ImportError:
+            raise ImportError(IMPORT_MILVUS_ERROR_MESSAGE)
         return pymilvus.utility.has_collection(collection_name)
 
     def add(self, point: Point) -> str:

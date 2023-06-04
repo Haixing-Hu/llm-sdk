@@ -8,8 +8,6 @@ import copy
 import unittest
 import logging
 
-from qdrant_client import QdrantClient
-
 from llmsdk.vectorstore import (
     QdrantVectorStore,
     PayloadSchema,
@@ -20,6 +18,8 @@ from llmsdk.embedding import MockEmbedding
 from llmsdk.common import Document, DataType, Metadata
 from llmsdk.criterion import equal
 
+COLLECTION_NAME: str = "test"
+
 
 class TestQdrantVectorStore(unittest.TestCase):
 
@@ -27,19 +27,17 @@ class TestQdrantVectorStore(unittest.TestCase):
         logging.basicConfig(level=logging.DEBUG)
 
     def test_search(self):
-        collection_name = "test"
         texts = ["foo", "bar", "baz"]
         documents = [Document(content=t, metadata=Metadata({"page": i}))
                      for i, t in enumerate(texts)]
         embedding = MockEmbedding()
         points = embedding.embed_documents(documents)
-        client = QdrantClient(location=":memory:")
-        store = QdrantVectorStore(client)
+        store = QdrantVectorStore(in_memory=True)
         store.open()
         try:
-            store.create_collection(collection_name=collection_name,
+            store.create_collection(collection_name=COLLECTION_NAME,
                                     vector_size=embedding.output_dimensions)
-            store.open_collection(collection_name)
+            store.open_collection(COLLECTION_NAME)
             store.add_all(points)
             query = embedding.embed_query("foo")
             output = store.search(query, limit=1)
@@ -47,23 +45,21 @@ class TestQdrantVectorStore(unittest.TestCase):
             actual = output[0]
             self.assertEqual(query, actual.vector)
         finally:
-            store.delete_collection(collection_name)
+            store.delete_collection(COLLECTION_NAME)
             store.close()
 
     def test_search_with_filter(self):
-        collection_name = "test"
         texts = ["foo", "bar", "baz"]
         documents = [Document(content=t, metadata=Metadata({"page": i}))
                      for i, t in enumerate(texts)]
         embedding = MockEmbedding()
         points = embedding.embed_documents(documents)
-        client = QdrantClient(location=":memory:")
-        store = QdrantVectorStore(client)
+        store = QdrantVectorStore(in_memory=True)
         store.open()
         try:
-            store.create_collection(collection_name=collection_name,
+            store.create_collection(collection_name=COLLECTION_NAME,
                                     vector_size=embedding.output_dimensions)
-            store.open_collection(collection_name)
+            store.open_collection(COLLECTION_NAME)
             store.add_all(points)
             query = embedding.embed_query("foo")
             criterion = equal("page", 1)
@@ -76,23 +72,21 @@ class TestQdrantVectorStore(unittest.TestCase):
             expected.score = actual.score
             self.assertEqual(expected, actual)
         finally:
-            store.delete_collection(collection_name)
+            store.delete_collection(COLLECTION_NAME)
             store.close()
 
     def test_max_marginal_relevance_search(self):
-        collection_name = "test"
         texts = ["foo", "bar", "baz"]
         documents = [Document(content=t, metadata=Metadata({"page": i}))
                      for i, t in enumerate(texts)]
         embedding = MockEmbedding()
         points = embedding.embed_documents(documents)
-        client = QdrantClient(location=":memory:")
-        store = QdrantVectorStore(client)
+        store = QdrantVectorStore(in_memory=True)
         store.open()
         try:
-            store.create_collection(collection_name=collection_name,
+            store.create_collection(collection_name=COLLECTION_NAME,
                                     vector_size=embedding.output_dimensions)
-            store.open_collection(collection_name)
+            store.open_collection(COLLECTION_NAME)
             store.add_all(points)
             query = embedding.embed_query("foo")
             output = store.max_marginal_relevance_search(query,
@@ -105,13 +99,11 @@ class TestQdrantVectorStore(unittest.TestCase):
             expected[1].score = output[1].score
             self.assertEqual(expected, output)
         finally:
-            store.delete_collection(collection_name)
+            store.delete_collection(COLLECTION_NAME)
             store.close()
 
     def test_create_collection(self):
-        collection_name = "test"
-        client = QdrantClient(location="127.0.0.1")
-        store = QdrantVectorStore(client)
+        store = QdrantVectorStore(host="127.0.0.1")
         store.open()
         try:
             payload_schemas = [
@@ -120,26 +112,25 @@ class TestQdrantVectorStore(unittest.TestCase):
                 PayloadSchema(name="f3", type=DataType.STRING),
                 PayloadSchema(name="f4", type=DataType.STRING),
             ]
-            store.create_collection(collection_name=collection_name,
+            store.create_collection(collection_name=COLLECTION_NAME,
                                     vector_size=10,
                                     payload_schemas=payload_schemas)
-            info = store.get_collection_info(collection_name)
+            info = store.get_collection_info(COLLECTION_NAME)
             info.payload_schemas.sort()
             print(info)
-            expected = CollectionInfo(name=collection_name,
+            expected = CollectionInfo(name=COLLECTION_NAME,
                                       size=0,
                                       vector_size=10,
                                       distance=Distance.COSINE,
                                       payload_schemas=payload_schemas)
             self.assertEqual(expected, info)
         finally:
-            store.delete_collection(collection_name)
+            store.delete_collection(COLLECTION_NAME)
             store.close()
 
     def test_has_collection__non_exist_collection_localhost(self):
         collection_name = "test"
-        client = QdrantClient(location="127.0.0.1")
-        store = QdrantVectorStore(client)
+        store = QdrantVectorStore(host="127.0.0.1")
         store.open()
         try:
             result = store.has_collection(collection_name)
@@ -149,8 +140,7 @@ class TestQdrantVectorStore(unittest.TestCase):
 
     def test_has_collection__non_exist_collection_memory(self):
         collection_name = "test"
-        client = QdrantClient(location=":memory:")
-        store = QdrantVectorStore(client)
+        store = QdrantVectorStore(in_memory=True)
         store.open()
         try:
             result = store.has_collection(collection_name)
@@ -160,8 +150,7 @@ class TestQdrantVectorStore(unittest.TestCase):
 
     def test_has_collection__exist_collection_localhost(self):
         collection_name = "test"
-        client = QdrantClient(location="127.0.0.1")
-        store = QdrantVectorStore(client)
+        store = QdrantVectorStore(host="127.0.0.1")
         store.open()
         try:
             store.create_collection(collection_name=collection_name,
@@ -174,8 +163,7 @@ class TestQdrantVectorStore(unittest.TestCase):
 
     def test_has_collection__exist_collection_memory(self):
         collection_name = "test"
-        client = QdrantClient(location=":memory:")
-        store = QdrantVectorStore(client)
+        store = QdrantVectorStore(in_memory=True)
         store.open()
         try:
             store.create_collection(collection_name=collection_name,

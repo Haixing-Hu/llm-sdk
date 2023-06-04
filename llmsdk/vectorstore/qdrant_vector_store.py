@@ -6,10 +6,6 @@
 # ==============================================================================
 from typing import Optional, Any, List
 
-from qdrant_client import QdrantClient
-from qdrant_client.http import models
-from qdrant_client.http.exceptions import ApiException, UnexpectedResponse
-
 from .payload_schema import PayloadSchema
 from .distance import Distance
 from .collection_info import CollectionInfo
@@ -23,9 +19,12 @@ from .qdrant_utils import (
     to_local_point,
     criterion_to_filter,
 )
-from ..common import Vector, Point
+from ..common import Vector, Point, Protocol
 from ..criterion import Criterion
 from ..generator import IdGenerator
+
+IMPORT_QDRANT_ERROR_MESSAGE = """Qdrant is not installed, 
+please install it with `pip install qdrant_client`."""
 
 
 class QdrantVectorStore(VectorStore):
@@ -34,18 +33,87 @@ class QdrantVectorStore(VectorStore):
     """
 
     def __init__(self,
-                 client: QdrantClient,
-                 id_generator: Optional[IdGenerator] = None) -> None:
+                 in_memory: Optional[bool] = False,
+                 path: Optional[str] = None,
+                 url: Optional[str] = None,
+                 host: Optional[str] = None,
+                 port: Optional[int] = None,
+                 protocol: Protocol = Protocol.HTTP,
+                 prefix: Optional[str] = None,
+                 timeout: Optional[float] = None,
+                 id_generator: Optional[IdGenerator] = None,
+                 **kwargs: Any) -> None:
         """
         Construct a QdrantVectorStore object.
 
         To use you should have the ``qdrant-client`` package installed.
 
-        :param client: the qdrant client object.
+        :param in_memory: indicates whether to use the in-memory Qdrant instance.
+            Default value is `False`.
+        :param path: if not `None`, indicates the local file path of the storage
+            file of the Qdrant database. Default value is `None`.
+        :param url: if not `None`, indicates the URL of the endpoint of the
+            Qdrant service. It must have the form `[scheme] host [port] [prefix]`.
+        :param host: Host name of Qdrant service. If url and host are None, set
+            to 'localhost'. Default value is `None`.
+        :param port: Port number of the Qdrant service. If the protocol is `HTTP`
+            or `HTTPS`, i.e., use the RESTful interface, the default port number
+            is 6333; if the protocol is `gRPC`, i.e., use the gRPC interface,
+            the default port number is 6334. Default value is `None`, i.e., use
+            the default port number for the specified protocol.
+        :param protocol: the communication protocol used by the Qdrant service.
+            Default value is `Protocol.HTTP`, indicates the use of RESTful
+            interface through the HTTP protocol.
+        :param prefix: If not `None` - add `prefix` to the REST URL path.
+            For example: `service/v1` will result in
+            `http://localhost:6333/service/v1/{qdrant-endpoint}` for REST API.
+            Default value is `None`.
+        :param timeout: Timeout for REST and gRPC API requests. If it is `None`,
+            use the 5.0 seconds for REST and unlimited for gRPC. Default value
+            is `None`.
         :param id_generator: the ID generator used to generate ID of documents.
+        :param **kwargs: Additional arguments passed directly into REST client
+            initialization
         """
         super().__init__(id_generator=id_generator)
-        self._client = client
+        try:
+            from qdrant_client import QdrantClient
+        except ImportError:
+            raise ImportError(IMPORT_QDRANT_ERROR_MESSAGE)
+        if in_memory:
+            self._client = QdrantClient(location=":memory:",
+                                        **kwargs)
+        elif path is not None:
+            self._client = QdrantClient(path=path,
+                                        **kwargs)
+        elif url is not None:
+            self._client = QdrantClient(url=url,
+                                        prefix=prefix,
+                                        timeout=timeout,
+                                        **kwargs)
+        else:
+            match protocol:
+                case Protocol.HTTP:
+                    self._client = QdrantClient(host=(host or "127.0.0.1"),
+                                                port=(port or 6333),
+                                                prefix=prefix,
+                                                timeout=timeout,
+                                                **kwargs)
+                case Protocol.HTTPS:
+                    self._client = QdrantClient(host=(host or "127.0.0.1"),
+                                                port=(port or 6333),
+                                                https=True,
+                                                prefix=prefix,
+                                                timeout=timeout,
+                                                **kwargs)
+                case Protocol.GRPC:
+                    self._client = QdrantClient(host=(host or "127.0.0.1"),
+                                                grpc_port=(port or 6334),
+                                                prefer_grpc=True,
+                                                timeout=timeout,
+                                                **kwargs)
+                case _:
+                    raise ValueError(f"Unsupported communication protocol: {protocol}")
 
     def open(self) -> None:
         self._is_opened = True
@@ -63,6 +131,10 @@ class QdrantVectorStore(VectorStore):
         self._collection_name = None
 
     def has_collection(self, collection_name: str) -> bool:
+        try:
+            from qdrant_client.http.exceptions import ApiException, UnexpectedResponse
+        except ImportError:
+            raise ImportError(IMPORT_QDRANT_ERROR_MESSAGE)
         try:
             self._client.get_collection(collection_name)
             return True
@@ -82,6 +154,10 @@ class QdrantVectorStore(VectorStore):
                           vector_size: int,
                           distance: Distance = Distance.COSINE,
                           payload_schemas: List[PayloadSchema] = None) -> None:
+        try:
+            from qdrant_client.http import models
+        except ImportError:
+            raise ImportError(IMPORT_QDRANT_ERROR_MESSAGE)
         config = models.VectorParams(size=vector_size,
                                      distance=to_qdrant_distance(distance))
         self._logger.debug("Create a collection: name=%s, config={%s}",

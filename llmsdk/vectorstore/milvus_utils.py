@@ -6,8 +6,6 @@
 # ==============================================================================
 from typing import Optional, List
 
-import pymilvus
-
 from ..common import DataType
 from .distance import Distance
 from .payload_schema import PayloadSchema
@@ -43,6 +41,9 @@ DEFAULT_INDEX_PARAMS = {
 """
 The default index params for different index types.
 """
+
+IMPORT_MILVUS_ERROR_MESSAGE = """Milvus is not installed, 
+please install it with `pip install pymilvus`."""
 
 
 def to_milvus_distance(distance: Distance) -> str:
@@ -81,7 +82,7 @@ def to_local_distance(distance: str) -> Distance:
             raise ValueError(f"Unsupported distance type: {distance}")
 
 
-def to_milvus_type(data_type: DataType) -> pymilvus.DataType:
+def to_milvus_type(data_type: DataType):
     """
     Converts the data type used in this library into the data type used in the
     Milvus.
@@ -89,6 +90,10 @@ def to_milvus_type(data_type: DataType) -> pymilvus.DataType:
     :param data_type: the data type used in this library.
     :return: the corresponding data type used in the Milvus.
     """
+    try:
+        import pymilvus
+    except ImportError:
+        raise ImportError(IMPORT_MILVUS_ERROR_MESSAGE)
     match data_type:
         case DataType.INT:
             return pymilvus.DataType.INT64
@@ -100,7 +105,7 @@ def to_milvus_type(data_type: DataType) -> pymilvus.DataType:
             raise ValueError(f"Unsupported data type: {data_type}")
 
 
-def to_local_type(data_type: pymilvus.DataType) -> DataType:
+def to_local_type(data_type) -> DataType:
     """
     Converts the data type used in the Milvus into the data type used in this
     library.
@@ -108,6 +113,10 @@ def to_local_type(data_type: pymilvus.DataType) -> DataType:
     :param data_type: the data type used in the Milvus.
     :return: the corresponding data type used in this library.
     """
+    try:
+        import pymilvus
+    except ImportError:
+        raise ImportError(IMPORT_MILVUS_ERROR_MESSAGE)
     match data_type:
         case pymilvus.DataType.INT8:
             return DataType.INT
@@ -129,19 +138,22 @@ def to_local_type(data_type: pymilvus.DataType) -> DataType:
             raise ValueError(f"Unsupported data type: {data_type}")
 
 
-def to_milvus_field_schema(schema: PayloadSchema) -> pymilvus.FieldSchema:
+def to_milvus_field_schema(schema: PayloadSchema):
     """
     Converts a local payload schema to a FieldSchema in pymilvus.
 
     :param schema: the local payload schema.
     :return: the corresponding FieldSchema in pymilvus.
     """
+    try:
+        import pymilvus
+    except ImportError:
+        raise ImportError(IMPORT_MILVUS_ERROR_MESSAGE)
     return pymilvus.FieldSchema(name=schema.name,
                                 dtype=to_milvus_type(schema.type))
 
 
-def get_vector_field(collection: pymilvus.Collection,
-                     field_name: Optional[str] = None) -> pymilvus.FieldSchema:
+def get_vector_field(collection, field_name: Optional[str] = None):
     """
     Gets the schema of the vector field of the specified Milvus collection.
 
@@ -149,6 +161,10 @@ def get_vector_field(collection: pymilvus.Collection,
     :param field_name: the optional name of the vector field.
     :return: the schema of the vector field of the specified Milvus collection.
     """
+    try:
+        import pymilvus
+    except ImportError:
+        raise ImportError(IMPORT_MILVUS_ERROR_MESSAGE)
     fields = {f.name: f for f in collection.schema.fields}
     # get the vector field of the specified name
     if field_name is not None:
@@ -175,8 +191,7 @@ def get_vector_field(collection: pymilvus.Collection,
     raise ValueError(f"No vector field found in the collection '{collection.name}'.")
 
 
-def get_id_field(collection: pymilvus.Collection,
-                 field_name: Optional[str] = None) -> pymilvus.FieldSchema:
+def get_id_field(collection, field_name: Optional[str] = None):
     """
     Gets the schema of the ID field of the specified Milvus collection.
 
@@ -211,8 +226,7 @@ def get_id_field(collection: pymilvus.Collection,
     raise ValueError(f"No primary ID field found in the collection '{collection.name}'.")
 
 
-def get_index(collection: pymilvus.Collection,
-              field_name: str) -> pymilvus.Index:
+def get_index(collection, field_name: str):
     """
     Gets the index of the specified field of the specified Milvus collection.
 
@@ -227,9 +241,7 @@ def get_index(collection: pymilvus.Collection,
                      f"collection '{collection.name}'")
 
 
-def get_payload_schemas(collection: pymilvus.Collection,
-                        id_field: pymilvus.FieldSchema,
-                        vector_field: pymilvus.FieldSchema) -> List[PayloadSchema]:
+def get_payload_schemas(collection, id_field, vector_field) -> List[PayloadSchema]:
     """
     Gets the list of payload schemas of the specified collection.
 
