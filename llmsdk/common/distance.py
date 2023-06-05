@@ -159,9 +159,21 @@ class Distance(Enum):
                points: List[Point],
                limit: int,
                score_threshold: Optional[float] = None) -> List[Point]:
-        points = points[:limit]
-        result = []
-        for p in points:
-            if self.accept_score(p.score, score_threshold):
-                result.append(p)
-        return result
+        """
+        Filters a list of points with respect to this distance metric.
+
+        :param points: the list of points.
+        :param limit: the maximum number of points to return.
+        :param score_threshold: the threshold of the scores, or `None` if not
+            specified.
+        :return: the filtered list of points.
+        """
+        if score_threshold is None:
+            return points[:limit]
+        else:
+            points = points[:limit]
+            result = []
+            for p in points:
+                if self.accept_score(p.score, score_threshold):
+                    result.append(p)
+            return result

@@ -11,21 +11,6 @@ import numpy as np
 from ..common import Vector, Matrix
 
 
-def vector_cosine_similarity(v1: Vector, v2: Vector) -> float:
-    """
-    Calculates the cosine similarity of two vectors.
-
-    :param v1: the first vector.
-    :param v2: the second vector.
-    :return: the cosine similarity of two vectors.
-    """
-    v1 = np.array(v1)
-    v2 = np.array(v2)
-    dot_product = np.dot(v1, v2)
-    v1_length = np.linalg.norm(v1)
-    v2_length = np.linalg.norm(v2)
-    return dot_product / (v1_length * v2_length)
-
 def matrix_cosine_similarity(x: Matrix, y: Matrix) -> np.ndarray:
     """
     Calculates the row-wise cosine similarity between two equal-width matrices.
