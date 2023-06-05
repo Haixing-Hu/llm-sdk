@@ -92,7 +92,7 @@ def is_website_accessible(url: str,
             print(f"Failed to connect to {url}")
     """
     try:
-        response = requests.get(url, timeout=timeout)
+        response = requests.get(url, timeout=timeout, proxies={"no_proxy": "*"})
         return response.status_code == 200
     except requests.exceptions.RequestException:
         return False
