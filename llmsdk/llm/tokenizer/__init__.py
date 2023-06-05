@@ -5,4 +5,4 @@
 #                                                                              =
 # ==============================================================================
 from .tokernizer import Tokenizer, SpecialTokenSet
-from .openai import OpenAiTokenizer
+from .openai_tokenizer import OpenAiTokenizer

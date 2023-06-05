@@ -17,7 +17,6 @@ setup(
         "pydantic",
         "pandas",
         "openai>=0.27.4",
-        "tiktoken",
         "tenacity",
         "parameterized",
     ],

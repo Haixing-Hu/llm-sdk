@@ -7,8 +7,6 @@
 from typing import List
 import logging
 
-import tiktoken
-
 from ...common import Role, Message
 from .tokernizer import Tokenizer, SpecialTokenSet
 
@@ -17,6 +15,9 @@ OPENAI_ROLE_NAMES_MAP = {
     Role.HUMAN: "user",
     Role.AI: "assistant"
 }
+
+IMPORT_TIKTOKEN_ERROR_MESSAGE = "Tiktoken is not installed, please install it " \
+                                "with `pip install tiktoken`."
 
 
 class OpenAiTokenizer(Tokenizer):
@@ -32,21 +33,24 @@ class OpenAiTokenizer(Tokenizer):
         """
         self._model = model
         self._logger = logging.getLogger(self.__class__.__name__)
+        try:
+            import tiktoken
+        except ImportError:
+            raise ImportError(IMPORT_TIKTOKEN_ERROR_MESSAGE)
+        self._codec = tiktoken.encoding_for_model(self._model)
 
     def encode(self,
                text: str,
                allowed_special: SpecialTokenSet = None,
                disallowed_special: SpecialTokenSet = "all") -> List[int]:
-        codec = tiktoken.encoding_for_model(self._model)
-        return codec.encode(text,
-                            allowed_special=allowed_special or set(),
-                            disallowed_special=disallowed_special or set())
+        return self._codec.encode(text,
+                                  allowed_special=allowed_special or set(),
+                                  disallowed_special=disallowed_special or set())
 
     def decode(self,
                tokens: List[int],
                errors: str = "replace") -> str:
-        codec = tiktoken.encoding_for_model(self._model)
-        return codec.decode(tokens, errors)
+        return self._codec.decode(tokens, errors)
 
     def count_message_tokens(self,
                              messages: List[Message],
@@ -101,6 +105,8 @@ class OpenAiTokenizer(Tokenizer):
                     See https://github.com/openai/openai-python/blob/main/chatml.md 
                     for information on how messages are converted to tokens.
                 """)
+
+        import tiktoken
         codec = tiktoken.encoding_for_model(model)
         num_tokens = 0
         for message in messages:
