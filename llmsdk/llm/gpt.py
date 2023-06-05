@@ -6,15 +6,13 @@
 # ==============================================================================
 from typing import Any, Dict, List, Optional
 
-import openai
-
-from .openai import OpenAiModel
 from ..common import Prompt
-from llmsdk.util.openai_utils import (
+from ..util.openai_utils import (
     check_model_compatibility,
     call_with_retries,
     get_model_tokens,
 )
+from .openai import OpenAiModel
 
 DEFAULT_MODEL = "text-davinci-003"
 
@@ -38,6 +36,12 @@ class Gpt(OpenAiModel):
                          api_key=api_key,
                          use_proxy=use_proxy)
         check_model_compatibility(model=model, endpoint="completions")
+        try:
+            import openai
+        except ImportError:
+            raise ImportError("Openai Python package is not installed, please "
+                              "install it with `pip install openai`.")
+        self._api = openai.Completion.create
 
     def _submit_request(self, prompt: Prompt, n: int) -> Dict[str, Any]:
         if not isinstance(prompt, str):
@@ -50,7 +54,7 @@ class Gpt(OpenAiModel):
         else:
             max_tokens = self._max_tokens
         self._logger.debug("Max number of generation tokens is: %d", max_tokens)
-        response = call_with_retries(openai_api=openai.Completion.create,
+        response = call_with_retries(openai_api=self._api,
                                      model=self._model,
                                      prompt=prompt,
                                      max_tokens=max_tokens,

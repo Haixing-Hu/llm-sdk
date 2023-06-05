@@ -7,16 +7,15 @@
 import unittest
 import logging
 
-import openai
 from llmsdk.llm import Gpt
+from llmsdk.util.openai_utils import set_debug_mode
 
 
 class TestGpt(unittest.TestCase):
 
     def setUp(self) -> None:
         logging.basicConfig(level=logging.DEBUG)
-        openai.debug = True
-        openai.log = "debug"
+        set_debug_mode()
 
     def test_generate(self):
         model = Gpt()

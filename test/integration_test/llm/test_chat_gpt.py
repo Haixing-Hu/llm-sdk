@@ -7,17 +7,16 @@
 import unittest
 import logging
 
-import openai
 from llmsdk.common import Role, Message
 from llmsdk.llm import ChatGpt
+from llmsdk.util.openai_utils import set_debug_mode
 
 
 class TestChatGpt(unittest.TestCase):
 
     def setUp(self) -> None:
         logging.basicConfig(level=logging.DEBUG)
-        openai.debug = True
-        openai.log = "debug"
+        set_debug_mode()
 
     def test_generate(self):
         model = ChatGpt()

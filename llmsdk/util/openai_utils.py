@@ -8,7 +8,6 @@ import logging
 import os
 from typing import Any, Callable, Dict, List, Optional
 
-import openai
 from tenacity import (
     before_sleep_log,
     retry,
@@ -88,6 +87,7 @@ def call_with_retries(openai_api: Callable[[Any], Any],
     :param kwargs: the arguments passed to the OpenAI's API.
     :return: the result of calling the OpenAI's API.
     """
+    import openai
 
     @retry(
         reraise=True,
@@ -258,6 +258,7 @@ def set_api_key(api_key: Optional[str]) -> None:
                          f"or by the environment variable '{API_KEY_ENV_NAME}', "
                          f"or in the configuration file '~/.openai/config'.")
     logger.info("Setting API key of OpenAI...")
+    import openai
     openai.api_key = api_key
 
 
@@ -279,6 +280,7 @@ def set_proxy(proxy: Optional[Dict] = None) -> dict:
     # delete all items in the dict whose value is None
     proxy = {k: v for k, v in proxy.items() if v is not None}
     logger.info("Setting proxy of OpenAI: %s", proxy)
+    import openai
     openai.proxy = proxy
     return proxy
 
@@ -308,3 +310,10 @@ def init_openai(api_key: Optional[str] = None,
     if use_proxy is True:
         set_proxy(proxy)
     logger.info("The OpenAI's API was successfully initialized.")
+
+
+def set_debug_mode():
+    logger.info("Setting debug mode of OpenAI APIs.")
+    import openai
+    openai.debug = True
+    openai.log = "debug"

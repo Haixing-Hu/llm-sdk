@@ -6,8 +6,8 @@
 # ==============================================================================
 from abc import ABC
 
+from ..util.openai_utils import init_openai
 from .llm import LargeLanguageModel
-from llmsdk.util.openai_utils import init_openai
 from .tokenizer import OpenAiTokenizer
 
 

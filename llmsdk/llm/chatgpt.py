@@ -6,16 +6,14 @@
 # ==============================================================================
 from typing import Any, Dict, List, Optional
 
-import openai
-
-from .openai import OpenAiModel
-from llmsdk.util.openai_utils import (
+from ..common import Message, Prompt
+from ..util.openai_utils import (
     check_model_compatibility,
     call_with_retries,
     get_model_tokens,
     OPENAI_ROLE_NAMES_MAP,
 )
-from ..common import Message, Prompt
+from .openai import OpenAiModel
 
 COMPATIBLE_MODELS = [
     "gpt-4",
@@ -47,6 +45,12 @@ class ChatGpt(OpenAiModel):
                          api_key=api_key,
                          use_proxy=use_proxy)
         check_model_compatibility(model=model, endpoint="chat-completions")
+        try:
+            import openai
+        except ImportError:
+            raise ImportError("Openai Python package is not installed, please "
+                              "install it with `pip install openai`.")
+        self._api = openai.ChatCompletion.create
 
     def _submit_request(self, prompt: Prompt, n: int) -> Dict[str, Any]:
         if (not isinstance(prompt, list)) \
@@ -62,7 +66,7 @@ class ChatGpt(OpenAiModel):
         else:
             max_tokens = self._max_tokens
         self._logger.debug("Max number of generation tokens is: %d", max_tokens)
-        response = call_with_retries(openai_api=openai.ChatCompletion.create,
+        response = call_with_retries(openai_api=self._api,
                                      model=self._model,
                                      messages=messages,
                                      max_tokens=max_tokens,
