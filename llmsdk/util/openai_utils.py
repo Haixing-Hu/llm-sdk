@@ -25,6 +25,9 @@ from .common_utils import (
 from ..common import Role
 from ..llm.tokenizer import Tokenizer
 
+API_KEY_ENV_NAME = "OPENAI_API_KEY"
+CONFIG_PATH_ENV_NAME = "OPENAI_CONFIG_PATH"
+
 MODEL_TOKEN_MAPPING = {
     # GPT-4 models: https://platform.openai.com/docs/models/gpt-4
     "gpt-4": 8192,
@@ -241,18 +244,19 @@ def set_api_key(api_key: Optional[str]) -> None:
     :return: the OpenAI's API key, or None if not set.
     """
     if api_key is None:
-        api_key = os.getenv("OPENAI_API_KEY")
+        api_key = os.getenv(API_KEY_ENV_NAME)
     if api_key is None:
-        config_file = os.getenv("OPENAI_CONFIG_PATH")
+        config_file = os.getenv(CONFIG_PATH_ENV_NAME)
         if config_file is None:
             config_file = os.path.join(os.path.expanduser("~"), ".openai", "config")
         config = read_config_file(config_file)
-        api_key = config["OPENAI_API_KEY"]
+        if API_KEY_ENV_NAME in config:
+            api_key = config[API_KEY_ENV_NAME]
     if api_key is None:
-        raise ValueError("The OpenAI's API key is not set. "
-                         "It should be set either by the argument 'api_key', "
-                         "or by the environment variable 'OPENAI_API_KEY', "
-                         "or in the configuration file '~/.openai/config'.")
+        raise ValueError(f"The OpenAI's API key is not set. "
+                         f"It should be set either by the argument 'api_key', "
+                         f"or by the environment variable '{API_KEY_ENV_NAME}', "
+                         f"or in the configuration file '~/.openai/config'.")
     logger.info("Setting API key of OpenAI...")
     openai.api_key = api_key
 
