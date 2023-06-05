@@ -165,6 +165,7 @@ class VectorStore(ABC):
     def search(self,
                query_vector: Vector,
                limit: int,
+               score_threshold: Optional[float] = None,
                criterion: Optional[Criterion] = None,
                search_type: SearchType = SearchType.SIMILARITY,
                **kwargs: Any) -> List[Point]:
@@ -173,6 +174,11 @@ class VectorStore(ABC):
 
         :param query_vector: the specified vector to be searched.
         :param limit: the number of the most similar results to return.
+        :param score_threshold: indicates the minimal score threshold for the
+            result. If provided, less similar results will not be returned.
+            Score of the returned result might be higher or smaller than the
+            threshold depending on the Distance function used. E.g. for cosine
+            similarity only higher scores will be returned.
         :param criterion: the criterion used to filter attributes of points.
         :param search_type: the type of searching.
         :param kwargs: other arguments.
@@ -184,6 +190,7 @@ class VectorStore(ABC):
                 return self.similarity_search(
                     query_vector=query_vector,
                     limit=limit,
+                    score_threshold=score_threshold,
                     criterion=criterion,
                     **kwargs
                 )
@@ -191,6 +198,7 @@ class VectorStore(ABC):
                 return self.max_marginal_relevance_search(
                     query_vector=query_vector,
                     limit=limit,
+                    score_threshold=score_threshold,
                     criterion=criterion,
                     **kwargs
                 )
@@ -201,6 +209,7 @@ class VectorStore(ABC):
     def similarity_search(self,
                           query_vector: Vector,
                           limit: int,
+                          score_threshold: Optional[float] = None,
                           criterion: Optional[Criterion] = None,
                           **kwargs: Any) -> List[Point]:
         """
@@ -209,6 +218,11 @@ class VectorStore(ABC):
 
         :param query_vector: the specified vector to be searched.
         :param limit: the number of the most similar results to return.
+        :param score_threshold: indicates the minimal score threshold for the
+            result. If provided, less similar results will not be returned.
+            Score of the returned result might be higher or smaller than the
+            threshold depending on the Distance function used. E.g. for cosine
+            similarity only higher scores will be returned.
         :param criterion: the criterion used to filter attributes of points.
         :param kwargs: other arguments.
         :return: the list of points as the searching result.
@@ -217,6 +231,7 @@ class VectorStore(ABC):
     def max_marginal_relevance_search(self,
                                       query_vector: Vector,
                                       limit: int,
+                                      score_threshold: Optional[float] = None,
                                       criterion: Optional[Criterion] = None,
                                       fetch_limit: int = None,
                                       lambda_multiply: float = 0.5,
@@ -228,6 +243,11 @@ class VectorStore(ABC):
 
         :param query_vector: the specified vector to be searched.
         :param limit: the number of the most similar results to return.
+        :param score_threshold: indicates the minimal score threshold for the
+            result. If provided, less similar results will not be returned.
+            Score of the returned result might be higher or smaller than the
+            threshold depending on the Distance function used. E.g. for cosine
+            similarity only higher scores will be returned.
         :param criterion: the criterion used to filter attributes of points.
         :param fetch_limit: the number of documents to fetch to pass to MMR
             algorithm. If this argument is set to None, the function will use
@@ -243,6 +263,7 @@ class VectorStore(ABC):
             fetch_limit = 5 * limit
         result = self.similarity_search(query_vector=query_vector,
                                         limit=fetch_limit,
+                                        score_threshold=score_threshold,
                                         criterion=criterion,
                                         **kwargs)
         similarity_vectors = [p.vector for p in result]

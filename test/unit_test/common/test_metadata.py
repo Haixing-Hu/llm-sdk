@@ -34,18 +34,18 @@ class TestMetadata(unittest.TestCase):
         m1["a"] = 1
         m1["b"] = "b"
         m1["c"] = 0.1
-        self.assertEqual(True, m1.has("a", int))
-        self.assertEqual(False, m1.has("a", float))
-        self.assertEqual(False, m1.has("a", str))
-        self.assertEqual(True, m1.has("b", str))
-        self.assertEqual(False, m1.has("b", int))
-        self.assertEqual(False, m1.has("b", float))
-        self.assertEqual(True, m1.has("c", float))
-        self.assertEqual(False, m1.has("c", int))
-        self.assertEqual(False, m1.has("c", str))
-        self.assertEqual(False, m1.has("d", int))
-        self.assertEqual(False, m1.has("d", float))
-        self.assertEqual(False, m1.has("d", str))
+        self.assertEqual(True, m1.has_key("a", int))
+        self.assertEqual(False, m1.has_key("a", float))
+        self.assertEqual(False, m1.has_key("a", str))
+        self.assertEqual(True, m1.has_key("b", str))
+        self.assertEqual(False, m1.has_key("b", int))
+        self.assertEqual(False, m1.has_key("b", float))
+        self.assertEqual(True, m1.has_key("c", float))
+        self.assertEqual(False, m1.has_key("c", int))
+        self.assertEqual(False, m1.has_key("c", str))
+        self.assertEqual(False, m1.has_key("d", int))
+        self.assertEqual(False, m1.has_key("d", float))
+        self.assertEqual(False, m1.has_key("d", str))
 
 
 if __name__ == '__main__':

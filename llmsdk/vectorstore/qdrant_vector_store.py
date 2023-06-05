@@ -214,6 +214,7 @@ class QdrantVectorStore(VectorStore):
     def similarity_search(self,
                           query_vector: Vector,
                           limit: int,
+                          score_threshold: Optional[float] = None,
                           criterion: Optional[Criterion] = None,
                           **kwargs: Any) -> List[Point]:
         self._ensure_collection_opened()
@@ -225,6 +226,7 @@ class QdrantVectorStore(VectorStore):
                                      query_filter=query_filter,
                                      limit=limit,
                                      with_vectors=True,
+                                     score_threshold=score_threshold,
                                      **kwargs)
         self._logger.debug("Search result: %s", points)
         return [to_local_point(p) for p in points]

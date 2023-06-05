@@ -68,8 +68,8 @@ class Document:
         Tests whether this document is a splitted document.
         :return: True if this document is a splitted document; False otherwise.
         """
-        return (self.metadata.has(Document.ORIGINAL_DOCUMENT_ID_ATTRIBUTE, str)
-                and self.metadata.has(Document.ORIGINAL_DOCUMENT_INDEX_ATTRIBUTE, int))
+        return (self.metadata.has_key(Document.ORIGINAL_DOCUMENT_ID_ATTRIBUTE, str)
+                and self.metadata.has_key(Document.ORIGINAL_DOCUMENT_INDEX_ATTRIBUTE, int))
 
     def get_original_document_id(self) -> str:
         """
@@ -179,10 +179,10 @@ class Document:
         :return: True if this document is converted from an example; False
             otherwise.
         """
-        return (self.metadata.has(Document.EXAMPLE_ID_ATTRIBUTE, str)
-                and self.metadata.has(Document.EXAMPLE_PROPERTY_ATTRIBUTE, str)
-                and self.metadata.has(Document.EXAMPLE_INPUT_ATTRIBUTE, str)
-                and self.metadata.has(Document.EXAMPLE_OUTPUT_ATTRIBUTE, str)
+        return (self.metadata.has_key(Document.EXAMPLE_ID_ATTRIBUTE, str)
+                and self.metadata.has_key(Document.EXAMPLE_PROPERTY_ATTRIBUTE, str)
+                and self.metadata.has_key(Document.EXAMPLE_INPUT_ATTRIBUTE, str)
+                and self.metadata.has_key(Document.EXAMPLE_OUTPUT_ATTRIBUTE, str)
                 and (self.metadata[Document.EXAMPLE_PROPERTY_ATTRIBUTE] != "input"
                      or self.metadata[Document.EXAMPLE_PROPERTY_ATTRIBUTE] != "output"))
 
@@ -266,10 +266,10 @@ class Document:
 
         :return: True if this document is converted from a FAQ; False otherwise.
         """
-        return (self.metadata.has(Document.FAQ_ID_ATTRIBUTE, str)
-                and self.metadata.has(Document.FAQ_PROPERTY_ATTRIBUTE, str)
-                and self.metadata.has(Document.FAQ_QUESTION_ATTRIBUTE, str)
-                and self.metadata.has(Document.FAQ_ANSWER_ATTRIBUTE, str)
+        return (self.metadata.has_key(Document.FAQ_ID_ATTRIBUTE, str)
+                and self.metadata.has_key(Document.FAQ_PROPERTY_ATTRIBUTE, str)
+                and self.metadata.has_key(Document.FAQ_QUESTION_ATTRIBUTE, str)
+                and self.metadata.has_key(Document.FAQ_ANSWER_ATTRIBUTE, str)
                 and (self.metadata[Document.FAQ_PROPERTY_ATTRIBUTE] != "question"
                      or self.metadata[Document.FAQ_PROPERTY_ATTRIBUTE] != "answer"))
 
@@ -315,8 +315,8 @@ class Document:
             attributes.
         :raise ValueError: if the specified point is not converted from a document.
         """
-        if ((not point.metadata.has(Document.DOCUMENT_ID_ATTRIBUTE, str))
-                or (not point.metadata.has(Document.DOCUMENT_CONTENT_ATTRIBUTE, str))):
+        if ((not point.metadata.has_key(Document.DOCUMENT_ID_ATTRIBUTE, str))
+                or (not point.metadata.has_key(Document.DOCUMENT_CONTENT_ATTRIBUTE, str))):
             raise ValueError(f"The point is not converted from a document: {point}")
         id = point.metadata[Document.DOCUMENT_ID_ATTRIBUTE]
         content = point.metadata[Document.DOCUMENT_CONTENT_ATTRIBUTE]

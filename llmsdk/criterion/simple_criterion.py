@@ -9,6 +9,7 @@ from typing import Any, Optional
 
 from .criterion import Criterion
 from .operator import Operator
+from ..common import Metadata
 
 
 @dataclass(frozen=True)
@@ -45,3 +46,7 @@ class SimpleCriterion(Criterion):
     """
     The value used to compare with the property value.
     """
+
+    def test(self, metadata: Metadata) -> bool:
+        lhs = metadata[self.property]
+        return self.operator.test(lhs, self.value)

@@ -9,6 +9,7 @@ from typing import List
 
 from .criterion import Criterion
 from .relation import Relation
+from ..common import Metadata
 
 
 @dataclass(frozen=True)
@@ -28,3 +29,22 @@ class ComposedCriterion(Criterion):
 
     criteria: List[Criterion]
     """The list of sub-criteria"""
+
+    def test(self, metadata: Metadata) -> bool:
+        match self.relation:
+            case Relation.AND:
+                for criterion in self.criteria:
+                    if not criterion.test(metadata):
+                        return False
+                return True
+            case Relation.OR:
+                for criterion in self.criteria:
+                    if criterion.test(metadata):
+                        return True
+                return False
+            case Relation.NOT:
+                if len(self.criteria) != 1:
+                    raise ValueError("The number of criteria for NOT relation must be 1.")
+                return not self.criteria[0].test(metadata)
+            case _:
+                raise ValueError(f"Unsupported relation: {self.relation}")

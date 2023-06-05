@@ -25,7 +25,7 @@ class Metadata(UserDict):
             raise ValueError("The value of metadata only support int, float, "
                              "and str types.")
 
-    def has(self, key: str, data_type: Type) -> bool:
+    def has_key(self, key: str, data_type: Type) -> bool:
         """
         Tests whether the metadata of this document has the specified attribute
         with the specified type.

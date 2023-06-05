@@ -91,19 +91,26 @@ class SimpleVectorStore(VectorStore):
     def similarity_search(self,
                           query_vector: Vector,
                           limit: int,
+                          score_threshold: Optional[float] = None,
                           criterion: Optional[Criterion] = None,
                           **kwargs: Any) -> List[Point]:
         self._ensure_collection_opened()
         collection = self._collections[self._collection_name]
         info = self._collections_info[self._collection_name]
+        distance = info.distance
         points = self._filter_points(collection, criterion)
-        for p in points:
-            p.score = info.distance.between(p.vector, query_vector)
-        result = sorted(points, key=lambda p: p.score, reverse=True)
-        return result[:limit]
+        points = distance.calculate_scores(query_vector, points)
+        points = distance.sort(points)
+        return distance.filter(points, limit, score_threshold)
 
     def _filter_points(self,
                        collection: List[Point],
                        criterion: Optional[Criterion]) -> List[Point]:
-        # TODO
-        return [copy.deepcopy(p) for p in collection]
+        if criterion is None:
+            return [copy.deepcopy(p) for p in collection]
+        else:
+            result = []
+            for p in collection:
+                if criterion.test(p.metadata):
+                    result.append(copy.deepcopy(p))
+            return result

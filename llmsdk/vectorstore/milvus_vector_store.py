@@ -234,6 +234,7 @@ class MilvusVectorStore(VectorStore):
     def similarity_search(self,
                           query_vector: Vector,
                           limit: int,
+                          score_threshold: Optional[float] = None,
                           criterion: Optional[Criterion] = None,
                           **kwargs: Any) -> List[Point]:
         self._ensure_collection_opened()
@@ -255,15 +256,16 @@ class MilvusVectorStore(VectorStore):
         points = []
         for r in results[0]:
             # FIXME: can we get the vector field directly?
-            query_vector = r.entity.get(self._vector_field.name)
+            vector = r.entity.get(self._vector_field.name)
             metadata = Metadata()
             for f in payload_field_names:
                 v = r.entity.get(f)
                 if v is not None:
                     metadata[f] = v
             point = Point(id=r.id,
-                          vector=query_vector,
+                          vector=vector,
                           metadata=metadata,
                           score=r.distance)
+            # FIXME: filter by score_threshold
             points.append(point)
         return points

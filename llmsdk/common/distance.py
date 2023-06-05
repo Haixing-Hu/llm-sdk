@@ -4,11 +4,14 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
+import copy
 from enum import Enum
+from typing import List, Optional
 
 import numpy as np
 
 from .vector import Vector
+from .point import Point
 
 
 class Distance(Enum):
@@ -52,7 +55,7 @@ class Distance(Enum):
 
     def between(self, v1: Vector, v2: Vector) -> float:
         """
-        Calculates the distance between two vectors.
+        Calculates the distance between two vectors with this distance metric.
 
         :param v1: the first vector.
         :param v2: the second vector.
@@ -79,3 +82,86 @@ class Distance(Enum):
                 return np.sqrt(sum_squared_diff)
             case _:
                 raise ValueError(f"Unsupported distance: {self}")
+
+    def accept_score(self, score: float, threshold: float) -> bool:
+        """
+        Tests whether the point with the specified score should be accepted
+        in this distance metric with respect to the specified threshold.
+
+        :param score: the score of the specified point.
+        :param threshold: the threshold of the scores.
+        :return: `True` if the point with the specified score should be accepted
+            in this distance metric with respect to the specified threshold;
+            `False` otherwise.
+        """
+        match self:
+            case Distance.COSINE:
+                # in the COSINE distance, the higher scores are better.
+                return score >= threshold
+            case Distance.DOT:
+                # in the DOT distance, the higher scores are better
+                return score >= threshold
+            case Distance.EUCLID:
+                # in the DOT distance, the lower scores are better
+                return score <= threshold
+            case _:
+                raise ValueError(f"Unsupported distance: {self}")
+
+    def sort(self, points: List[Point]) -> List[Point]:
+        """
+        Sorts a list of points by their scores with this distance metric.
+
+        :param points: the list of points.
+        :return: the sorted list of points.
+        """
+        match self:
+            case Distance.COSINE:
+                # in the COSINE distance, the higher scores are better.
+                return sorted(points, key=lambda p: p.score, reverse=True)
+            case Distance.DOT:
+                # in the DOT distance, the higher scores are better
+                return sorted(points, key=lambda p: p.score, reverse=True)
+            case Distance.EUCLID:
+                # in the DOT distance, the lower scores are better
+                return sorted(points, key=lambda p: p.score, reverse=False)
+            case _:
+                raise ValueError(f"Unsupported distance: {self}")
+
+    def calculate_score(self, query_vector: Vector, point: Point) -> Point:
+        """
+        Calculates the score of a point with respect to this distance metric.
+
+        :param query_vector: the query vector.
+        :param point: the specified point.
+        :return: a new point same as the argument `point`, except the `score`
+            field of the new point is set to the calculated score with respect
+            to this distance metric.
+        """
+        score = self.between(point.vector, query_vector)
+        return Point(id=point.id,
+                     vector=copy.deepcopy(point.vector),
+                     metadata=copy.deepcopy(point.metadata),
+                     score=score)
+
+    def calculate_scores(self, query_vector: Vector, points: List[Point]) -> List[Point]:
+        """
+        Calculates the score of a point with respect to this distance metric.
+
+        :param query_vector: the query vector.
+        :param points: the list of points.
+        :return: a new list of points same as the argument `points`, except the
+            `score` field of each point in the new list is set to the calculated
+            score with respect to this distance metric.
+        """
+        return [self.calculate_score(query_vector, p) for p in points]
+
+    def filter(self,
+               points: List[Point],
+               limit: int,
+               score_threshold: Optional[float] = None) -> List[Point]:
+        points = points[:limit]
+        result = []
+        for p in points:
+            if self.accept_score(p.score, score_threshold):
+                result.append(p)
+        return result

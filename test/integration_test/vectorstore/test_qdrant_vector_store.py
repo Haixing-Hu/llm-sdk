@@ -212,11 +212,11 @@ class TestQdrantVectorStore(unittest.TestCase):
             store.delete_collection(COLLECTION_NAME)
             store.close()
 
-    def test_similarity_search(self):
+    def test_similarity_search_with_score_threshold(self):
         store = QdrantVectorStore(in_memory=True)
-        self._test_similarity_search(store)
+        self._test_similarity_search_with_score_threshold(store)
 
-    def _test_similarity_search(self, store: QdrantVectorStore):
+    def _test_similarity_search_with_score_threshold(self, store: QdrantVectorStore):
         questions = [
             "什么是“南京宁慧保”？",
             "这款产品是哪个保险公司承保的？",
@@ -240,12 +240,10 @@ class TestQdrantVectorStore(unittest.TestCase):
                                     vector_size=embedding.output_dimensions)
             store.open_collection(COLLECTION_NAME)
             store.add_all(points)
-            result = Document.from_points(store.similarity_search(vector,
-                                                                  limit=len(questions),
-                                                                  search_params=models.SearchParams(
-                                                                      hnsw_ef=128,
-                                                                      exact=True
-                                                                  )))
+            result_points = store.similarity_search(vector,
+                                                    limit=len(questions),
+                                                    score_threshold=0.8)
+            result = Document.from_points(result_points)
             print(result)
         finally:
             store.delete_collection(COLLECTION_NAME)
