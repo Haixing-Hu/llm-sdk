@@ -6,10 +6,15 @@
 # ==============================================================================
 from typing import Optional, List
 
-from ..common import DataType
-from .distance import Distance
+from ..common import DataType, Distance
+from ..criterion import (
+    Criterion,
+    SimpleCriterion,
+    ComposedCriterion,
+    Operator,
+    Relation,
+)
 from .payload_schema import PayloadSchema
-from ..criterion import Criterion, SimpleCriterion, ComposedCriterion, Operator, Relation
 
 
 DEFAULT_ID_FIELD_NAME = "__id__"

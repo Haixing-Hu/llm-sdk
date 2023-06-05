@@ -8,10 +8,9 @@ from abc import ABC, abstractmethod
 from typing import Any, List, Optional
 from logging import Logger, getLogger
 
-from ..common import Point, Vector, SearchType
+from ..common import Point, Vector, SearchType, Distance
 from ..criterion import Criterion
 from ..generator import IdGenerator, DefaultIdGenerator
-from .distance import Distance
 from .payload_schema import PayloadSchema
 from .collection_info import CollectionInfo
 from .vector_store_utils import maximal_marginal_relevance
@@ -29,10 +28,10 @@ class VectorStore(ABC):
         :param id_generator: the ID generator used to generate ID of documents.
         """
         self._logger = getLogger(self.__class__.__name__)
-        self._collection_name = None
-        self._auto_close_connection = False
         self._id_generator = id_generator or DefaultIdGenerator()
         self._is_opened = False
+        self._collection_name = None
+        self._auto_close_connection = False
 
     @property
     def logger(self) -> Logger:

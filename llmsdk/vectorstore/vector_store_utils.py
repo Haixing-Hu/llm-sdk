@@ -26,7 +26,6 @@ def vector_cosine_similarity(v1: Vector, v2: Vector) -> float:
     v2_length = np.linalg.norm(v2)
     return dot_product / (v1_length * v2_length)
 
-
 def matrix_cosine_similarity(x: Matrix, y: Matrix) -> np.ndarray:
     """
     Calculates the row-wise cosine similarity between two equal-width matrices.

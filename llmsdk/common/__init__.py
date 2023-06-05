@@ -18,3 +18,4 @@ from .prompt_type import PromptType
 from .prompt import Prompt
 from .search_type import SearchType
 from .protocol import Protocol
+from .distance import Distance

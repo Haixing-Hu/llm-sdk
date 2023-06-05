@@ -7,7 +7,7 @@
 from dataclasses import dataclass, field
 from typing import List
 
-from .distance import Distance
+from ..common import Distance
 from .payload_schema import PayloadSchema
 
 

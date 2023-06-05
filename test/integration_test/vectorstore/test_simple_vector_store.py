@@ -9,7 +9,7 @@ import unittest
 import logging
 
 from llmsdk.vectorstore import (
-    QdrantVectorStore,
+    SimpleVectorStore,
     PayloadSchema,
     CollectionInfo,
 )
@@ -22,25 +22,18 @@ from qdrant_client.http import models
 COLLECTION_NAME: str = "test"
 
 
-class TestQdrantVectorStore(unittest.TestCase):
+class TestSimpleVectorStore(unittest.TestCase):
 
     def setUp(self) -> None:
         logging.basicConfig(level=logging.DEBUG)
 
     def test_search(self):
-        store = QdrantVectorStore(in_memory=True)
-        self._test_search(store)
-        store = QdrantVectorStore(host="127.0.0.1")
-        self._test_search(store)
-        store = QdrantVectorStore(path="/tmp/test_qdrant")
-        self._test_search(store)
-
-    def _test_search(self, store: QdrantVectorStore):
         texts = ["foo", "bar", "baz"]
         documents = [Document(content=t, metadata=Metadata({"page": i}))
                      for i, t in enumerate(texts)]
         embedding = MockEmbedding()
         points = embedding.embed_documents(documents)
+        store = SimpleVectorStore()
         store.open()
         try:
             store.create_collection(collection_name=COLLECTION_NAME,
@@ -57,19 +50,12 @@ class TestQdrantVectorStore(unittest.TestCase):
             store.close()
 
     def test_search_with_filter(self):
-        store = QdrantVectorStore(in_memory=True)
-        self._test_search_with_filter(store)
-        store = QdrantVectorStore(host="127.0.0.1")
-        self._test_search_with_filter(store)
-        store = QdrantVectorStore(path="/tmp/test_qdrant")
-        self._test_search_with_filter(store)
-
-    def _test_search_with_filter(self, store: QdrantVectorStore):
         texts = ["foo", "bar", "baz"]
         documents = [Document(content=t, metadata=Metadata({"page": i}))
                      for i, t in enumerate(texts)]
         embedding = MockEmbedding()
         points = embedding.embed_documents(documents)
+        store = SimpleVectorStore()
         store.open()
         try:
             store.create_collection(collection_name=COLLECTION_NAME,
@@ -91,19 +77,12 @@ class TestQdrantVectorStore(unittest.TestCase):
             store.close()
 
     def test_max_marginal_relevance_search(self):
-        store = QdrantVectorStore(in_memory=True)
-        self._test_max_marginal_relevance_search(store)
-        store = QdrantVectorStore(host="127.0.0.1")
-        self._test_max_marginal_relevance_search(store)
-        store = QdrantVectorStore(path="/tmp/test_qdrant")
-        self._test_max_marginal_relevance_search(store)
-
-    def _test_max_marginal_relevance_search(self, store: QdrantVectorStore):
         texts = ["foo", "bar", "baz"]
         documents = [Document(content=t, metadata=Metadata({"page": i}))
                      for i, t in enumerate(texts)]
         embedding = MockEmbedding()
         points = embedding.embed_documents(documents)
+        store = SimpleVectorStore()
         store.open()
         try:
             store.create_collection(collection_name=COLLECTION_NAME,
@@ -125,14 +104,7 @@ class TestQdrantVectorStore(unittest.TestCase):
             store.close()
 
     def test_create_collection(self):
-        store = QdrantVectorStore(in_memory=True)
-        self._test_create_collection(store)
-        store = QdrantVectorStore(host="127.0.0.1")
-        self._test_create_collection(store)
-        store = QdrantVectorStore(path="/tmp/test_qdrant")
-        self._test_create_collection(store)
-
-    def _test_create_collection(self, store: QdrantVectorStore):
+        store = SimpleVectorStore()
         store.open()
         try:
             payload_schemas = [
@@ -158,14 +130,7 @@ class TestQdrantVectorStore(unittest.TestCase):
             store.close()
 
     def test_has_collection__non_exist_collection_localhost(self):
-        store = QdrantVectorStore(in_memory=True)
-        self._test_has_collection(store)
-        store = QdrantVectorStore(host="127.0.0.1")
-        self._test_has_collection(store)
-        store = QdrantVectorStore(path="/tmp/test_qdrant")
-        self._test_has_collection(store)
-
-    def _test_has_collection(self, store: QdrantVectorStore):
+        store = SimpleVectorStore()
         store.open()
         try:
             result = store.has_collection(COLLECTION_NAME)
@@ -179,19 +144,12 @@ class TestQdrantVectorStore(unittest.TestCase):
             store.close()
 
     def test_collection_size(self):
-        store = QdrantVectorStore(in_memory=True)
-        self._test_collection_size(store)
-        store = QdrantVectorStore(host="127.0.0.1")
-        self._test_collection_size(store)
-        store = QdrantVectorStore(path="/tmp/test_qdrant")
-        self._test_collection_size(store)
-
-    def _test_collection_size(self, store: QdrantVectorStore):
         texts = ["foo", "bar", "baz"]
         documents = [Document(content=t, metadata=Metadata({"page": i}))
                      for i, t in enumerate(texts)]
         embedding = MockEmbedding()
         points = embedding.embed_documents(documents)
+        store = SimpleVectorStore()
         store.open()
         try:
             store.create_collection(collection_name=COLLECTION_NAME,
@@ -213,10 +171,6 @@ class TestQdrantVectorStore(unittest.TestCase):
             store.close()
 
     def test_similarity_search(self):
-        store = QdrantVectorStore(in_memory=True)
-        self._test_similarity_search(store)
-
-    def _test_similarity_search(self, store: QdrantVectorStore):
         questions = [
             "什么是“南京宁慧保”？",
             "这款产品是哪个保险公司承保的？",
@@ -234,6 +188,7 @@ class TestQdrantVectorStore(unittest.TestCase):
         embedding = OpenAiEmbedding()
         points = embedding.embed_documents(documents)
         vector = embedding.embed_text("南京宁慧保是什么")
+        store = SimpleVectorStore()
         store.open()
         try:
             store.create_collection(collection_name=COLLECTION_NAME,
@@ -241,11 +196,7 @@ class TestQdrantVectorStore(unittest.TestCase):
             store.open_collection(COLLECTION_NAME)
             store.add_all(points)
             result = Document.from_points(store.similarity_search(vector,
-                                                                  limit=len(questions),
-                                                                  search_params=models.SearchParams(
-                                                                      hnsw_ef=128,
-                                                                      exact=True
-                                                                  )))
+                                                                  limit=len(questions)))
             print(result)
         finally:
             store.delete_collection(COLLECTION_NAME)

@@ -7,7 +7,6 @@
 from typing import Optional, Any, List
 
 from .payload_schema import PayloadSchema
-from .distance import Distance
 from .collection_info import CollectionInfo
 from .vector_store import VectorStore
 from .qdrant_utils import (
@@ -19,7 +18,7 @@ from .qdrant_utils import (
     to_local_point,
     criterion_to_filter,
 )
-from ..common import Vector, Point, Protocol
+from ..common import Vector, Point, Protocol, Distance
 from ..criterion import Criterion
 from ..generator import IdGenerator
 

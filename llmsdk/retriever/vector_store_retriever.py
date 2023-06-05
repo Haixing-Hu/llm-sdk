@@ -7,8 +7,8 @@
 from typing import Any, List
 
 from .retriever import Retriever
-from ..common import Document, SearchType
-from ..vectorstore import VectorStore, Distance
+from ..common import Document, SearchType, Distance
+from ..vectorstore import VectorStore
 from ..embedding import Embedding
 from ..splitter import TextSplitter
 
@@ -25,8 +25,7 @@ class VectorStoreRetriever(Retriever):
                  collection_name: str,
                  embedding: Embedding,
                  splitter: TextSplitter,
-                 search_type: SearchType = SearchType.SIMILARITY,
-                 **kwargs: Any) -> None:
+                 search_type: SearchType = SearchType.SIMILARITY) -> None:
         """
         Creates a VectorStoreRetriever.
 
@@ -35,9 +34,8 @@ class VectorStoreRetriever(Retriever):
         :param embedding: the underlying embedding model.
         :param splitter: the text splitter used to split documents.
         :param search_type: the searching type.
-        :param kwargs: the other arguments.
         """
-        super().__init__(**kwargs)
+        super().__init__()
         self._vector_store = vector_store
         self._collection_name = collection_name
         self._embedding = embedding

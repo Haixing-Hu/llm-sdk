@@ -63,8 +63,10 @@ class Embedding(ABC):
         :param document: the document to be embedded.
         :return: the embedded points of the document.
         """
-        vectors = self.embed_texts([document.content])
-        return Document.to_point(document, vectors[0])
+        if not document.id:
+            document.id = self._id_generator.generate()
+        vector = self.embed_text(document.content)
+        return Document.to_point(document, vector)
 
     def embed_documents(self, documents: List[Document]) -> List[Point]:
         """
@@ -77,7 +79,7 @@ class Embedding(ABC):
         n = len(documents)
         result = []
         for i in range(n):
-            if documents[i].id is None or len(documents[i].id) == 0:
+            if not documents[i].id:
                 documents[i].id = self._id_generator.generate()
             point = Document.to_point(documents[i], vectors[i])
             result.append(point)

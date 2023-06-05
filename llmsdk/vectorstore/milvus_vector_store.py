@@ -6,7 +6,9 @@
 # ==============================================================================
 from typing import Dict, Optional, Any, List
 
-from .distance import Distance
+from ..common import Vector, Point, Metadata, Distance
+from ..criterion import Criterion
+from ..generator import IdGenerator
 from .payload_schema import PayloadSchema
 from .collection_info import CollectionInfo
 from .vector_store import VectorStore
@@ -24,9 +26,6 @@ from .milvus_utils import (
     DEFAULT_VECTOR_INDEX_TYPE,
     DEFAULT_INDEX_PARAMS,
 )
-from ..common import Vector, Point, Metadata
-from ..criterion import Criterion
-from ..generator import IdGenerator
 
 IMPORT_MILVUS_ERROR_MESSAGE = """Milvus is not installed, 
 please install it with `pip install pymilvus`."""
