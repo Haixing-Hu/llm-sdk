@@ -4,15 +4,15 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from typing import Any, List
+from typing import Any, List, Dict, Optional
 
 from ..common import Document, Faq, SearchType
 from ..vectorstore import VectorStore
 from ..embedding import Embedding
-from ..llm import LargeLanguageModel
+from ..llm import LargeLanguageModel, ModelType
 from ..splitter import TextSplitter
 from ..criterion import equal
-from ..prompt import StructuredPromptTemplate
+from ..prompt import StructuredPromptTemplate, TextPromptTemplate, ChatPromptTemplate
 from .retriever import Retriever
 from .vector_store_retriever import VectorStoreRetriever
 
@@ -27,13 +27,15 @@ class QuestionAnswerRetriever(Retriever):
                  embedding: Embedding,
                  splitter: TextSplitter,
                  llm: LargeLanguageModel,
-                 unknown_question_answer: str,
-                 prompt_template: StructuredPromptTemplate,
-                 direct_answer_score_threshold: float = 0.95,
-                 question_score_threshold: float = 0.85,
-                 answer_score_threshold: float = 0.85,
-                 question_limit: int = 5,
-                 answer_limit: int = 5) -> None:
+                 default_config: Optional[Dict[str, Any]] = None,
+                 language: Optional[str] = "en_US",
+                 unknown_question_answer: Optional[str] = None,
+                 prompt_template: Optional[StructuredPromptTemplate] = None,
+                 direct_answer_score_threshold: Optional[float] = None,
+                 question_score_threshold: Optional[float] = None,
+                 answer_score_threshold: Optional[float] = None,
+                 question_limit: Optional[int] = None,
+                 answer_limit: Optional[int] = None) -> None:
         """
         Constructs a LlmQuestionAnswerRetriever.
 
@@ -43,34 +45,50 @@ class QuestionAnswerRetriever(Retriever):
         :param embedding: the underlying embedding model.
         :param splitter: the text splitter used to split documents.
         :param llm: the underlying large language model.
+        :param default_config: the default configuration of this retriever. If
+            this argument is not `None`, the class will use items in this
+            configuration as default values to initialize the parameters of this
+            class; Otherwise, the class will load the predefined default
+            configuration with respect to the language specified by the
+            `language` argument.
+        :param language: the language of the predefined default configuration.
+            Default value is "en_US".
         :param unknown_question_answer: the answer to be replied when the
-            question of the user is unknown.
+            question of the user is unknown. If this argument is set to `None`,
+            the class will use the default value from the default configuration.
         :param prompt_template: the prompt template used to generate the prompt
-            send to the LLM.
+            send to the LLM. If this argument is set to `None`, the class will
+            use the default prompt template from the default configuration.
         :param direct_answer_score_threshold: the threshold of the scores of the
             direct answers. When user asks a question, the program will embed
             the question to a vector and search for the most similar question in
             the  predefined FAQs stored in the vector store. If the score of the
             question of a FAQ is greater than or equal to this threshold, the
-            answer of that FAQ will be replied to the user directly.
+            answer of that FAQ will be replied to the user directly. If this
+            argument is set to `None`, the class will use the default value from
+            the default configuration.
         :param question_score_threshold: the threshold of the scores of the
             questions. When user asks a question, the program will embed the
             question to a vector and search for the most similar question in
             the predefined FAQs stored in the vector store. If the score of the
             question of a FAQ is greater than or equal to this threshold, the
             question and the answer of that FAQ will be selected as the context
-            of the large language model.
+            of the large language model. If this argument is set to `None`, the
+            class will use the default value from the default configuration.
         :param answer_score_threshold: the threshold of the scores of the answers.
             When user asks a question, the program will embed the question to a
             vector and search for the most similar question in the predefined
             FAQs stored in the vector store. If the score of the answer of a FAQ
             is greater than or equal to this threshold, the question and the
             answer of that FAQ will be selected as the context of the large
-            language model.
+            language model. If this argument is set to `None`, the class will
+            use the default value from the default configuration.
         :param question_limit: the maximum number of the related questions to be
-            selected.
+            selected. If this argument is set to `None`, the class will use the
+            default value from the default configuration.
         :param answer_limit: the maximum number of the related answers to be
-            selected.
+            selected. If this argument is set to `None`, the class will use the
+            default value from the default configuration.
         """
         super().__init__()
         self._retriever = VectorStoreRetriever(vector_store=vector_store,
@@ -79,6 +97,8 @@ class QuestionAnswerRetriever(Retriever):
                                                splitter=splitter,
                                                search_type=SearchType.SIMILARITY)
         self._llm = llm
+        self._default_config = default_config
+        self._language = language
         self._unknown_question_answer = unknown_question_answer
         self._prompt_template = prompt_template
         self._direct_answer_score_threshold = direct_answer_score_threshold
@@ -86,6 +106,51 @@ class QuestionAnswerRetriever(Retriever):
         self._answer_score_threshold = answer_score_threshold
         self._question_limit = question_limit
         self._answer_limit = answer_limit
+        self.__init_parameters()
+
+    def __load_config(self) -> Dict[str, Any]:
+        """
+        Loads the default configuration with respect to the specified langauge.
+
+        :return: the default configuration with respect to the specified langauge.
+        """
+        match self._language:
+            case "en_US":
+                from .conf.question_answer_retriever__en_US import CONFIG
+                return CONFIG
+            case "zh_CN":
+                from .conf.question_answer_retriever__zh_CN import CONFIG
+                return CONFIG
+            case _:
+                raise ValueError(f"Unsupported language: {self._language}")
+
+    def __init_parameters(self) -> None:
+        if self._default_config is None:
+            config = self.__load_config()
+            self._default_config = config
+        else:
+            config = self._default_config
+        if not self._unknown_question_answer:
+            self._unknown_question_answer = config["unknown_question_answer"]
+        if not self._prompt_template:
+            match self._llm.model_type:
+                case ModelType.TEXT_COMPLETION:
+                    self._prompt_template = TextPromptTemplate()
+                case ModelType.CHAT_COMPLETION:
+                    self._prompt_template = ChatPromptTemplate()
+                case _:
+                    raise ValueError(f"Unsupported LLM model type: {self._llm.model_type}")
+            self._prompt_template.load(config["prompt_template"])
+        if not self._direct_answer_score_threshold:
+            self._direct_answer_score_threshold = config["direct_answer_score_threshold"]
+        if not self._question_score_threshold:
+            self._question_score_threshold = config["question_score_threshold"]
+        if not self._answer_score_threshold:
+            self._answer_score_threshold = config["answer_score_threshold"]
+        if not self._question_limit:
+            self._question_limit = config["question_limit"]
+        if not self._answer_limit:
+            self._answer_limit = config["answer_limit"]
 
     def open(self) -> None:
         self._retriever.open()
