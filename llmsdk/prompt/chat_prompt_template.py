@@ -5,7 +5,7 @@
 #                                                                              =
 # ==============================================================================
 from dataclasses import dataclass
-from typing import Any, List
+from typing import Any, List, Dict
 
 from ..common import Role, Message
 from .structured_prompt_template import StructuredPromptTemplate

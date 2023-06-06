@@ -5,7 +5,7 @@
 #                                                                              =
 # ==============================================================================
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Dict, ClassVar
 
 from ..common import Example
 from .structured_prompt_template import StructuredPromptTemplate
@@ -66,27 +66,62 @@ class TextPromptTemplate(StructuredPromptTemplate):
 
     """
 
-    instruction_suffix: str = "\n\n"
+    DEFAULT_INSTRUCTION_SUFFIX: ClassVar[str] = "\n"
+    """
+    The default suffix for the instruction.
+    """
+
+    DEFAULT_EXAMPLE_LIST_PREFIX = "\n"
+    """
+    The default prefix for the list of examples.
+    """
+
+    DEFAULT_EXAMPLE_INPUT_PREFIX: ClassVar[str] = "input: "
+    """
+    The default prefix for the input of an example.
+    """
+
+    DEFAULT_EXAMPLE_INPUT_SUFFIX: ClassVar[str] = "\n"
+    """
+    The default suffix for the input of an example.
+    """
+
+    DEFAULT_EXAMPLE_OUTPUT_PREFIX: ClassVar[str] = "output: "
+    """
+    The default prefix for the output of an example.
+    """
+
+    DEFAULT_EXAMPLE_OUTPUT_SUFFIX: ClassVar[str] = "\n\n"
+    """
+    The default suffix for the input of an example.
+    """
+
+    instruction_suffix: str = DEFAULT_INSTRUCTION_SUFFIX
     """
     The suffix for the instruction.
     """
 
-    example_input_prefix: str = "input: "
+    example_list_prefix: str = DEFAULT_EXAMPLE_LIST_PREFIX
+    """
+    The prefix for the list of examples.
+    """
+
+    example_input_prefix: str = DEFAULT_EXAMPLE_INPUT_PREFIX
     """
     The prefix for the input of an example.
     """
 
-    example_input_suffix: str = "\n"
+    example_input_suffix: str = DEFAULT_EXAMPLE_INPUT_SUFFIX
     """
     The suffix for the input of an example.
     """
 
-    example_output_prefix: str = "output: "
+    example_output_prefix: str = DEFAULT_EXAMPLE_OUTPUT_PREFIX
     """
     The prefix for the output of an example.
     """
 
-    example_output_suffix: str = "\n\n"
+    example_output_suffix: str = DEFAULT_EXAMPLE_OUTPUT_SUFFIX
     """
     The suffix for the input of an example.
     """
@@ -95,8 +130,13 @@ class TextPromptTemplate(StructuredPromptTemplate):
         instruction = self.instruction_template.format(**kwargs)
         examples = [self._format_example(e) for e in self.examples]
         prompt = self.prompt_template.format(**kwargs)
-        if (len(instruction) > 0) and (len(examples) > 0 or len(prompt) > 0):
+        if ((len(instruction) > 0)
+                and (len(examples) > 0 or len(prompt) > 0)):
             instruction += self.instruction_suffix
+        if ((len(examples) > 0)
+                and (len(instruction.strip()) > 0
+                     or len(self.example_list_prefix.strip()) > 0)):
+            instruction += self.example_list_prefix
         if len(examples) > 0 and len(prompt) > 0:
             prompt = self.example_input_prefix + prompt + self.example_input_suffix \
                 + self.example_output_prefix
@@ -108,3 +148,30 @@ class TextPromptTemplate(StructuredPromptTemplate):
         """
         return self.example_input_prefix + example.input + self.example_input_suffix \
             + self.example_output_prefix + example.output + self.example_output_suffix
+
+    def load(self, conf: Dict[str, str]) -> None:
+        super().load(conf)
+        self.instruction_suffix = conf.get(
+            "instruction_suffix",
+            TextPromptTemplate.DEFAULT_INSTRUCTION_SUFFIX
+        )
+        self.example_list_prefix = conf.get(
+            "example_list_prefix",
+            TextPromptTemplate.DEFAULT_EXAMPLE_LIST_PREFIX
+        )
+        self.example_input_prefix = conf.get(
+            "example_input_prefix",
+            TextPromptTemplate.DEFAULT_EXAMPLE_INPUT_PREFIX
+        )
+        self.example_input_suffix = conf.get(
+            "example_input_suffix",
+            TextPromptTemplate.DEFAULT_EXAMPLE_INPUT_SUFFIX
+        )
+        self.example_output_prefix = conf.get(
+            "example_output_prefix",
+            TextPromptTemplate.DEFAULT_EXAMPLE_OUTPUT_PREFIX
+        )
+        self.example_output_suffix = conf.get(
+            "example_output_suffix",
+            TextPromptTemplate.DEFAULT_EXAMPLE_OUTPUT_SUFFIX
+        )

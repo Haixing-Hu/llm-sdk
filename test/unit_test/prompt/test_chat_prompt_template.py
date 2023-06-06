@@ -5,9 +5,41 @@
 #                                                                              =
 # ==============================================================================
 import unittest
+from unittest.mock import patch, mock_open
+from typing import Dict, Any
+import json
 
 from llmsdk.common import Example, Role, Message
-from llmsdk.prompt import ChatPromptTemplate
+from llmsdk.prompt import StructuredPromptTemplate, ChatPromptTemplate
+
+TEST_CONFIGURATIONS = [{
+    "instruction_template": "Template instruction",
+    "prompt_template": "Template prompt",
+    "examples": [
+        {
+            "id": "1",
+            "input": "Input 1",
+            "output": "Output 1"
+        },
+        {
+            "id": "2",
+            "input": "Input 2",
+            "output": "Output 2"
+        },
+        {
+            "input": "Input 3",
+            "output": "Output 3"
+        }
+    ],
+    "instruction_suffix": "\n",
+}, {
+    "instruction_template": "Template instruction",
+    "prompt_template": "Template prompt",
+    "example_input_prefix": "question: ",
+    "example_output_prefix": "answer: ",
+}, {
+    # empty
+}]
 
 
 class TestChatPromptTemplate(unittest.TestCase):
@@ -85,6 +117,42 @@ class TestChatPromptTemplate(unittest.TestCase):
             Message(Role.AI, "你叫什么名字？"),
             Message(Role.HUMAN, "Today is Sunday."),
         ], v3)
+
+    def _check_load_result(self,
+                           template: ChatPromptTemplate,
+                           conf: Dict[str, Any]):
+        self.assertEqual(conf.get("instruction_template",
+                                  StructuredPromptTemplate.DEFAULT_INSTRUCTION_TEMPLATE),
+                         template.instruction_template)
+        self.assertEqual(conf.get("prompt_template",
+                                  StructuredPromptTemplate.DEFAULT_PROMPT_TEMPLATE),
+                         template.prompt_template)
+        if "examples" in conf:
+            self.assertEqual(len(conf["examples"]),
+                             len(template.examples))
+            for c_example, t_example in zip(conf["examples"], template.examples):
+                self.assertEqual(c_example.get("id", None), t_example.id)
+                self.assertEqual(c_example.get("input"), t_example.input)
+                self.assertEqual(c_example.get("output"), t_example.output)
+
+    def _test_load_from_file(self,
+                             template: ChatPromptTemplate,
+                             conf: Dict[str, Any]):
+        text = json.dumps(conf)
+        with patch('builtins.open', mock_open(read_data=text)):
+            template.load_from_file('config.json')
+        self._check_load_result(template, conf)
+
+    def test_load(self):
+        template = ChatPromptTemplate()
+        for conf in TEST_CONFIGURATIONS:
+            template.load(conf)
+            self._check_load_result(template, conf)
+
+    def test_load_from_file(self):
+        template = ChatPromptTemplate()
+        for conf in TEST_CONFIGURATIONS:
+            self._test_load_from_file(template, conf)
 
 
 if __name__ == '__main__':
