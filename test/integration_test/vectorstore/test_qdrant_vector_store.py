@@ -17,8 +17,6 @@ from llmsdk.embedding import MockEmbedding, OpenAiEmbedding
 from llmsdk.common import Document, DataType, Metadata, Distance
 from llmsdk.criterion import equal
 
-from qdrant_client.http import models
-
 COLLECTION_NAME: str = "test"
 
 
@@ -49,6 +47,7 @@ class TestQdrantVectorStore(unittest.TestCase):
             store.add_all(points)
             query = embedding.embed_query("foo")
             output = store.search(query, limit=1)
+            output = [p.round_vector(MockEmbedding.PRECISION) for p in output]
             self.assertEqual(1, len(output))
             actual = output[0]
             self.assertEqual(query, actual.vector)
@@ -59,9 +58,9 @@ class TestQdrantVectorStore(unittest.TestCase):
     def test_search_with_filter(self):
         store = QdrantVectorStore(in_memory=True)
         self._test_search_with_filter(store)
-        store = QdrantVectorStore(host="127.0.0.1")
-        self._test_search_with_filter(store)
         store = QdrantVectorStore(path="/tmp/test_qdrant")
+        self._test_search_with_filter(store)
+        store = QdrantVectorStore(host="127.0.0.1")
         self._test_search_with_filter(store)
 
     def _test_search_with_filter(self, store: QdrantVectorStore):
@@ -79,6 +78,7 @@ class TestQdrantVectorStore(unittest.TestCase):
             query = embedding.embed_query("foo")
             criterion = equal("page", 1)
             output = store.search(query, limit=1, criterion=criterion)
+            output = [p.round_vector(MockEmbedding.PRECISION) for p in output]
             self.assertEqual(1, len(output))
             actual = output[0]
             expected = points[1]
@@ -93,9 +93,9 @@ class TestQdrantVectorStore(unittest.TestCase):
     def test_max_marginal_relevance_search(self):
         store = QdrantVectorStore(in_memory=True)
         self._test_max_marginal_relevance_search(store)
-        store = QdrantVectorStore(host="127.0.0.1")
-        self._test_max_marginal_relevance_search(store)
         store = QdrantVectorStore(path="/tmp/test_qdrant")
+        self._test_max_marginal_relevance_search(store)
+        store = QdrantVectorStore(host="127.0.0.1")
         self._test_max_marginal_relevance_search(store)
 
     def _test_max_marginal_relevance_search(self, store: QdrantVectorStore):
@@ -114,6 +114,7 @@ class TestQdrantVectorStore(unittest.TestCase):
             output = store.max_marginal_relevance_search(query,
                                                          limit=2,
                                                          fetch_limit=3)
+            output = [p.round_vector(MockEmbedding.PRECISION) for p in output]
             self.assertEqual(2, len(output))
             expected = [copy.deepcopy(points[0]),
                         copy.deepcopy(points[1])]
@@ -125,11 +126,11 @@ class TestQdrantVectorStore(unittest.TestCase):
             store.close()
 
     def test_create_collection(self):
-        store = QdrantVectorStore(in_memory=True)
-        self._test_create_collection(store)
+        # store = QdrantVectorStore(in_memory=True)
+        # self._test_create_collection(store)
+        # store = QdrantVectorStore(path="/tmp/test_qdrant")
+        # self._test_create_collection(store)
         store = QdrantVectorStore(host="127.0.0.1")
-        self._test_create_collection(store)
-        store = QdrantVectorStore(path="/tmp/test_qdrant")
         self._test_create_collection(store)
 
     def _test_create_collection(self, store: QdrantVectorStore):

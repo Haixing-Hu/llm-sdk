@@ -34,3 +34,13 @@ class Point:
 
     score: Optional[float] = None
     """The score of this point, which is set for searching result."""
+
+    def round_vector(self, digits: int) -> Point:
+        """
+        Rounds the coordinates of the vector of this point.
+
+        :param digits: the number of digits to round.
+        :return: this point itself.
+        """
+        self.vector = [round(x, digits) for x in self.vector]
+        return self

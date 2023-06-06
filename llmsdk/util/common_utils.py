@@ -4,9 +4,12 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import threading
 import requests
+import math
+
+from ..common import Vector
 
 
 def singleton(func):
@@ -117,3 +120,21 @@ def extract_argument(kwargs: Dict[str, Any], name: str, default_value: Any) -> A
         return value
     else:
         return default_value
+
+
+def normalize_vector(vector: Vector,
+                     digits: Optional[int] = None) -> Vector:
+    """
+    Normalize a vector.
+
+    :param vector: the vector to be normalized.
+    :param digits: the number of digits to keep after the decimal point of each
+        floating points in the normalized vector.
+    :return: the normalized vector.
+    """
+    vector_length = math.sqrt(sum(x**2 for x in vector))
+    normalized_vector = [x / vector_length for x in vector]
+    if digits is None:
+        return normalized_vector
+    else:
+        return [round(x, digits) for x in normalized_vector]
