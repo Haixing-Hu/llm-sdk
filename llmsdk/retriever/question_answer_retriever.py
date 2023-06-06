@@ -17,7 +17,7 @@ from .retriever import Retriever
 from .vector_store_retriever import VectorStoreRetriever
 
 
-class LlmQuestionAnswerRetriever(Retriever):
+class QuestionAnswerRetriever(Retriever):
     """
     A Question/Answer retriever based on a vector store and a LLM.
     """
