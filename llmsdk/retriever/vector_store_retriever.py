@@ -11,6 +11,7 @@ from ..common import Document, SearchType, Distance
 from ..vectorstore import VectorStore
 from ..embedding import Embedding
 from ..splitter import TextSplitter
+from ..util.common_utils import extract_argument
 
 
 class VectorStoreRetriever(Retriever):
@@ -41,6 +42,7 @@ class VectorStoreRetriever(Retriever):
         self._embedding = embedding
         self._splitter = splitter
         self._search_type = search_type
+        self._query_vector_cache = {}
 
     @property
     def vector_store(self) -> VectorStore:
@@ -58,16 +60,6 @@ class VectorStoreRetriever(Retriever):
     def search_type(self) -> SearchType:
         return self._search_type
 
-    @property
-    def is_opened(self) -> bool:
-        """
-        Tests whether the underlying vector store of this retriever is opened.
-
-        :return: True if the underlying vector store of this retriever is opened;
-            False otherwise.
-        """
-        return self._vector_store.is_opened
-
     def open(self) -> None:
         """
         Opens this vector store retriever.
@@ -84,6 +76,8 @@ class VectorStoreRetriever(Retriever):
                                     vector_size=self._embedding.output_dimensions,
                                     distance=Distance.COSINE)
             store.open_collection(self._collection_name)
+        self._query_vector_cache = {}
+        super().open()
 
     def close(self) -> None:
         """
@@ -95,27 +89,37 @@ class VectorStoreRetriever(Retriever):
         store = self._vector_store
         store.close_collection()
         store.close()
+        self._query_vector_cache = {}
+        super().close()
 
     def retrieve(self, query: str, **kwargs: Any) -> List[Document]:
-        query_vector = self._embedding.embed_query(query)
-        self._logger.debug("Query the vector store with: %s", query_vector)
-        if "limit" in kwargs:
-            limit = kwargs["limit"]
-            kwargs.pop("limit")
+        self._ensure_opened()
+        self._logger.debug("Retrieve with query: %s", query)
+        if query in self._query_vector_cache:
+            query_vector = self._query_vector_cache[query]
         else:
-            limit = VectorStoreRetriever.DEFAULT_LIMIT
+            query_vector = self._embedding.embed_query(query)
+            self._query_vector_cache[query] = query_vector
+        self._logger.debug("Query the vector store with: %s", query_vector)
+        limit = extract_argument(kwargs, "limit", VectorStoreRetriever.DEFAULT_LIMIT)
+        score_threshold = extract_argument(kwargs, "score_threshold", None)
+        criterion = extract_argument(kwargs, "criterion", None)
         match self._search_type:
             case SearchType.SIMILARITY:
                 points = self._vector_store.similarity_search(
                     query_vector=query_vector,
                     limit=limit,
-                    **kwargs
+                    score_threshold=score_threshold,
+                    criterion=criterion,
+                    **kwargs,
                 )
             case SearchType.MAX_MARGINAL_RELEVANCE:
                 points = self._vector_store.max_marginal_relevance_search(
                     query_vector=query_vector,
                     limit=limit,
-                    **kwargs
+                    score_threshold=score_threshold,
+                    criterion=criterion,
+                    **kwargs,
                 )
             case _:
                 raise ValueError(f"Unsupported searching type: {self._search_type}")
@@ -130,6 +134,7 @@ class VectorStoreRetriever(Retriever):
         :return: the list of actual documents added to this retriever, which may
             be the sub-documents splitted from the original document.
         """
+        self._ensure_opened()
         docs = self._splitter.split_document(document)
         points = self._embedding.embed_documents(docs)
         self._vector_store.add_all(points)
@@ -143,6 +148,7 @@ class VectorStoreRetriever(Retriever):
         :return: the list of actual documents added to this retriever, which may
             be the sub-documents splitted from the original document.
         """
+        self._ensure_opened()
         docs = self._splitter.split_documents(documents)
         points = self._embedding.embed_documents(docs)
         self._vector_store.add_all(points)
