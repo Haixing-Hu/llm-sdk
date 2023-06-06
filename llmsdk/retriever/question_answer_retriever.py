@@ -148,6 +148,30 @@ class QuestionAnswerRetriever(Retriever):
         answer = self._llm.generate(prompt)
         return answer
 
+    def add(self, faq: Faq) -> List[Document]:
+        """
+        Adds a FAQ to this retriever.
+
+        :param faq: the FAQ to add.
+        :return: the list of actual documents added to this retriever, which may
+            be the sub-documents splitted from the original document.
+        """
+        self._ensure_opened()
+        docs = Document.from_faq(faq)
+        return self._retriever.add_all(docs)
+
+    def add_all(self, faqs: List[Faq]) -> List[Document]:
+        """
+        Adds a list of FAQs to this retriever.
+
+        :param faqs: the list of FAQs to add.3
+        :return: the list of actual documents added to this retriever, which may
+            be the sub-documents splitted from the original document.
+        """
+        self._ensure_opened()
+        docs = Document.from_faqs(faqs)
+        return self._retriever.add_all(docs)
+
     def retrieve(self, query: str, **kwargs: Any) -> List[Document]:
         answer = self.ask(query)
         return [Document(content=answer)]
