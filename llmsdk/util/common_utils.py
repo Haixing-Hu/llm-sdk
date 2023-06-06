@@ -4,7 +4,7 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from typing import Dict
+from typing import Dict, Any
 import threading
 import requests
 
@@ -97,3 +97,23 @@ def is_website_accessible(url: str,
         return response.status_code == 200
     except requests.exceptions.RequestException:
         return False
+
+
+def extract_argument(kwargs: Dict[str, Any], name: str, default_value: Any) -> Any:
+    """
+    Extract an argument from a dictionary.
+
+    :param kwargs: the dictionary to be extracted. If the specified argument is
+        found in this dictionary, after calling this function, the argument will
+        be removed from this dictionary.
+    :param name: the name of the argument to be extracted.
+    :param default_value: the default value of the argument.
+    :return: the value of the argument, or the default value if the argument is
+        not found.
+    """
+    if name in kwargs:
+        value = kwargs[name]
+        del kwargs[name]
+        return value
+    else:
+        return default_value
