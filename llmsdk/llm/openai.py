@@ -7,6 +7,7 @@
 from abc import ABC
 
 from ..util.openai_utils import init_openai
+from .model_type import ModelType
 from .llm import LargeLanguageModel
 from .tokenizer import OpenAiTokenizer
 
@@ -18,6 +19,7 @@ class OpenAiModel(LargeLanguageModel, ABC):
 
     def __init__(self,
                  model: str,
+                 model_type: ModelType,
                  max_tokens: int,
                  temperature: float,
                  top_p: int,
@@ -27,6 +29,7 @@ class OpenAiModel(LargeLanguageModel, ABC):
         Create a OpenAiModel.
 
         :param model: the name of the OpenAI model.
+        :param model_type: the type of this LLM.
         :param max_tokens: the maximum number of tokens in the reply of the
             OpenAI's model. If it is None, the value will be calculated
             automatically.
@@ -42,7 +45,8 @@ class OpenAiModel(LargeLanguageModel, ABC):
         :param api_key: the OpenAI API key.
         :param use_proxy: whether to use the proxy.
         """
-        super().__init__(tokenizer=OpenAiTokenizer(model),
+        super().__init__(model_type=model_type,
+                         tokenizer=OpenAiTokenizer(model),
                          max_tokens=max_tokens,
                          temperature=temperature,
                          top_p=top_p)

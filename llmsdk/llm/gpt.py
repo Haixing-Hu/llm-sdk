@@ -13,6 +13,7 @@ from ..util.openai_utils import (
     get_model_tokens,
 )
 from .openai import OpenAiModel
+from .model_type import ModelType
 
 DEFAULT_MODEL = "text-davinci-003"
 
@@ -30,6 +31,7 @@ class Gpt(OpenAiModel):
                  api_key: Optional[str] = None,
                  use_proxy: Optional[bool] = None) -> None:
         super().__init__(model=model,
+                         model_type=ModelType.TEXT_COMPLETION,
                          max_tokens=max_tokens,
                          temperature=temperature,
                          top_p=top_p,

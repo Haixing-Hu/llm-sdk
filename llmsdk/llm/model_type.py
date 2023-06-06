@@ -4,8 +4,20 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from .model_type import ModelType
-from .llm import LargeLanguageModel
-from .openai import OpenAiModel
-from .gpt import Gpt
-from .chatgpt import ChatGpt
+from enum import Enum
+
+
+class ModelType(Enum):
+    """
+    The enumeration of types of large language models.
+    """
+
+    TEXT_COMPLETION = "text-completion"
+    """
+    The type of text completion models.
+    """
+
+    CHAT_COMPLETION = "chat-completion"
+    """
+    The type of chat completion models.
+    """

@@ -14,6 +14,7 @@ from ..util.openai_utils import (
     OPENAI_ROLE_NAMES_MAP,
 )
 from .openai import OpenAiModel
+from .model_type import ModelType
 
 COMPATIBLE_MODELS = [
     "gpt-4",
@@ -39,6 +40,7 @@ class ChatGpt(OpenAiModel):
                  api_key: Optional[str] = None,
                  use_proxy: Optional[bool] = None) -> None:
         super().__init__(model=model,
+                         model_type=ModelType.CHAT_COMPLETION,
                          max_tokens=max_tokens,
                          temperature=temperature,
                          top_p=top_p,

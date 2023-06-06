@@ -8,8 +8,9 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
+from ..common import Prompt, Message
+from .model_type import ModelType
 from .tokenizer import Tokenizer
-from ..common import Prompt
 
 
 class LargeLanguageModel(ABC):
@@ -17,6 +18,7 @@ class LargeLanguageModel(ABC):
     The abstract base class for large language models.
     """
     def __init__(self,
+                 model_type: ModelType,
                  tokenizer: Tokenizer,
                  max_tokens: Optional[int] = None,
                  temperature: float = 1.0,
@@ -24,6 +26,7 @@ class LargeLanguageModel(ABC):
         """
         Constructs a LargeLanguageModel.
 
+        :param model_type: the type of this LLM.
         :param tokenizer: the tokenizer used by this LLM.
         :param max_tokens: the maximum number of tokens of the generated message.
             If it is None, the value will be calculated automatically.
@@ -37,11 +40,16 @@ class LargeLanguageModel(ABC):
             comprising the top 10% probability mass are considered. We generally
             recommend altering this or temperature but not both.
         """
+        self._model_type = model_type
         self._tokenizer = tokenizer
         self._max_tokens = max_tokens
         self._temperature = temperature
         self._top_p = top_p
         self._logger = logging.getLogger(self.__class__.__name__)
+
+    @property
+    def model_type(self) -> ModelType:
+        return self._model_type
 
     @property
     def tokenizer(self) -> Tokenizer:
@@ -98,8 +106,24 @@ class LargeLanguageModel(ABC):
         :param n: the number of replies to be obtained.
         :return: the list of replies.
         """
+        self._check_prompt_type(prompt)
         response = self._submit_request(prompt, n)
         return self._parse_response(response)
+
+    def _check_prompt_type(self, prompt: Prompt) -> None:
+        match self._model_type:
+            case ModelType.TEXT_COMPLETION:
+                if not isinstance(prompt, str):
+                    raise ValueError(f"The {self._model_type} model only support "
+                                     f"text prompt.")
+            case ModelType.CHAT_COMPLETION:
+                if ((not isinstance(prompt, list))
+                        or (len(prompt) == 0)
+                        or (not isinstance(prompt[0], Message))):
+                    raise ValueError(f"The {self._model_type} model only support "
+                                     f"message list prompt.")
+            case _:
+                raise ValueError(f"Unsupported model type: {self._model_type}")
 
     @abstractmethod
     def _submit_request(self, prompt: Prompt, n: int) -> Dict[str, Any]:
