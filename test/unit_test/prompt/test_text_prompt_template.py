@@ -35,6 +35,27 @@ TEST_CONFIGURATIONS = [{
 }, {
     "instruction_template": "Template instruction",
     "prompt_template": "Template prompt",
+    "examples": [
+        {
+            "id": "1",
+            "input": "Input 1",
+            "output": "Output 1"
+        },
+        {
+            "id": "2",
+            "input": "Input 2",
+            "output": "Output 2"
+        }
+    ],
+    "instruction_suffix": "<br/>",
+    "example_list_prefix": "<ul>",
+    "example_input_prefix": "<li>Input: ",
+    "example_input_suffix": "</li>",
+    "example_output_prefix": "<li>Output: ",
+    "example_output_suffix": "</li></ul>",
+}, {
+    "instruction_template": "Template instruction",
+    "prompt_template": "Template prompt",
     "example_input_prefix": "question: ",
     "example_output_prefix": "answer: ",
 }, {
