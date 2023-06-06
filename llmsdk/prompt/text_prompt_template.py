@@ -4,15 +4,15 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from dataclasses import dataclass, field
-from typing import Any, List
+from dataclasses import dataclass
+from typing import Any
 
-from .prompt_template import PromptTemplate
 from ..common import Example
+from .structured_prompt_template import StructuredPromptTemplate
 
 
 @dataclass
-class TextPromptTemplate(PromptTemplate):
+class TextPromptTemplate(StructuredPromptTemplate):
     """
     The prompt template used to format the few-shot prompts.
 
@@ -66,30 +66,9 @@ class TextPromptTemplate(PromptTemplate):
 
     """
 
-    prompt_template: str = ""
-    """
-    The template of the prompt of the final input.
-    
-    The template of prompt may contain formatting placeholders.
-    """
-
-    instruction_template: str = ""
-    """
-    The template of the instruction of the prompt.
-    
-    The template of instruction may contain formatting placeholders.
-    """
-
     instruction_suffix: str = "\n\n"
     """
     The suffix for the instruction.
-    """
-
-    examples: List[Example] = field(default_factory=list)
-    """
-    The list of examples.
-    
-    Note that the examples should not contain formatting placeholders.
     """
 
     example_input_prefix: str = "input: "

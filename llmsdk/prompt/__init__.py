@@ -7,5 +7,6 @@
 from .reply_parser import ReplyParser
 from .dummy_reply_parser import DummyReplyParser
 from .prompt_template import PromptTemplate
+from .structured_prompt_template import StructuredPromptTemplate
 from .text_prompt_template import TextPromptTemplate
 from .chat_prompt_template import ChatPromptTemplate

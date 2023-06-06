@@ -4,15 +4,15 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, List
 
-from .prompt_template import PromptTemplate
-from ..common import Example, Role, Message
+from ..common import Role, Message
+from .structured_prompt_template import StructuredPromptTemplate
 
 
 @dataclass
-class ChatPromptTemplate(PromptTemplate):
+class ChatPromptTemplate(StructuredPromptTemplate):
     """
     The prompt template used to format the few-shot prompts.
 
@@ -67,27 +67,6 @@ class ChatPromptTemplate(PromptTemplate):
         ], v2)
     ```
 
-    """
-
-    prompt_template: str = ""
-    """
-    The template of the prompt of the final input.
-
-    The template of prompt may contain formatting placeholders.
-    """
-
-    instruction_template: str = ""
-    """
-    The template of the instruction of the prompt.
-    
-    The template of instruction may contain formatting placeholders.
-    """
-
-    examples: List[Example] = field(default_factory=list)
-    """
-    The list of examples.
-    
-    Note that the examples should not contain formatting placeholders.
     """
 
     def format(self, **kwargs: Any) -> List[Message]:
