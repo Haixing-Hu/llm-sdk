@@ -39,7 +39,7 @@ class TestDocument(unittest.TestCase):
                       metadata=Metadata({"f1": "v1", "f2": "v2"}))
 
         p0 = Document.to_point(d0, vectors[0])
-        self.assertEqual(d0.id, p0.id)
+        self.assertIsNone(p0.id)
         self.assertEqual(vectors[0], p0.vector)
         m0 = Metadata({
             "f1": "v1",
@@ -55,7 +55,7 @@ class TestDocument(unittest.TestCase):
                       metadata=Metadata({"f1": "v1", "f2": "v2", "f3": "v3"}))
 
         p1 = Document.to_point(d1, vectors[1])
-        self.assertEqual(d1.id, p1.id)
+        self.assertIsNone(p1.id)
         self.assertEqual(vectors[1], p1.vector)
         m1 = Metadata({
             "f1": "v1",
