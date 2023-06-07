@@ -227,7 +227,7 @@ def get_chunked_tokens(model: str,
     return [tokens[i:i + chunk_size] for i in range(0, len(tokens), chunk_size)]
 
 
-def set_api_key(api_key: Optional[str]) -> None:
+def set_openai_api_key(api_key: Optional[str]) -> None:
     """
     Sets the API key of OpenAI.
 
@@ -262,7 +262,7 @@ def set_api_key(api_key: Optional[str]) -> None:
     openai.api_key = api_key
 
 
-def set_proxy(proxy: Optional[Dict] = None) -> dict:
+def set_openai_proxy(proxy: Optional[Dict] = None) -> dict:
     """
     Sets the proxy used by the OpenAI's API.
 
@@ -300,19 +300,30 @@ def init_openai(api_key: Optional[str] = None,
     :param proxy: the proxy setting of the OpenAI.
     """
     logger.info("Initializing the OpenAI's API ...")
-    set_api_key(api_key)
-    if use_proxy is None:
+
+    import openai
+    if openai.api_key is None:
+        set_openai_api_key(api_key)
+    elif api_key is not None and api_key != openai.api_key:
+        logger.warning("The OpenAI's API key has been set, but the provided API "
+                       "key is different from the current one. "
+                       "Reset it to the new one.")
+        set_openai_api_key(api_key)
+
+    if use_proxy is None and openai.proxy is None:
         # Use proxy to bypass the China Greate Firewall
         logger.info("Testing the accessibility of https://www.google.com ...")
         accessible = is_website_accessible("https://www.google.com")
         logger.info("The website %s accessible.", "is" if accessible else "is NOT")
         use_proxy = not accessible
+
     if use_proxy is True:
-        set_proxy(proxy)
+        if openai.proxy is None or openai.proxy != proxy:
+            set_openai_proxy(proxy)
     logger.info("The OpenAI's API was successfully initialized.")
 
 
-def set_debug_mode():
+def set_openai_debug_mode():
     logger.info("Setting debug mode of OpenAI APIs.")
     import openai
     openai.debug = True

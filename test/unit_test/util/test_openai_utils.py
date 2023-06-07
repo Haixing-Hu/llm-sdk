@@ -9,7 +9,7 @@ import unittest
 from llmsdk.util.openai_utils import (
     get_model_tokens,
     get_chunked_tokens,
-    set_proxy,
+    set_openai_proxy,
 )
 from llmsdk.embedding.openai_embedding import OpenAiEmbedding
 from llmsdk.llm.tokenizer import OpenAiTokenizer
@@ -38,7 +38,7 @@ class TestOpenAiUtil(unittest.TestCase):
         self.assertEqual(result, expected)
 
     def test_set_proxy(self):
-        result = set_proxy(None)
+        result = set_openai_proxy(None)
         print(result)
         # self.assertIsNotNone(result)
         # self.assertNotEqual({}, result)

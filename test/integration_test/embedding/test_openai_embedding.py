@@ -10,7 +10,7 @@ from typing import List, Optional
 
 from llmsdk.embedding import OpenAiEmbedding
 from llmsdk.common import Document, Distance
-from llmsdk.util.openai_utils import set_debug_mode
+from llmsdk.util.openai_utils import set_openai_debug_mode
 
 
 class TestOpenAiEmbedding(unittest.TestCase):
@@ -26,7 +26,7 @@ class TestOpenAiEmbedding(unittest.TestCase):
 
     def setUp(self) -> None:
         logging.basicConfig(level=logging.DEBUG)
-        set_debug_mode()
+        set_openai_debug_mode()
 
     def test_embed_query(self) -> None:
         embedding = OpenAiEmbedding()
