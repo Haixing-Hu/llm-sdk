@@ -136,12 +136,11 @@ class VectorStore(ABC):
         Closes a closed collection have no effect.
         """
         if self.is_collection_opened:
-            self._logger.info("Closing the collection '%s'...",
-                              self._collection_name)
+            collection_name = self._collection_name
+            self._logger.info("Closing the collection '%s'...", collection_name)
             self._ensure_store_opened()
             self._close_collection()
-            self._logger.info("Successfully closed collection '%s'.",
-                              self._collection_name)
+            self._logger.info("Successfully closed collection '%s'.", collection_name)
 
     @abstractmethod
     def _close_collection(self) -> None:
