@@ -11,7 +11,7 @@ from typing import Optional, List
 from .example import Example
 
 
-@dataclass
+@dataclass(frozen=True)
 class Faq:
     """
     The class of question/answer pairs.

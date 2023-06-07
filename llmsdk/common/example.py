@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 
-@dataclass
+@dataclass(frozen=True)
 class Example:
     """
     Examples are input/output pairs that represent inputs to a function and then
