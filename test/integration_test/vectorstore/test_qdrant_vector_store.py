@@ -52,6 +52,7 @@ class TestQdrantVectorStore(unittest.TestCase):
             actual = output[0]
             self.assertEqual(query, actual.vector)
         finally:
+            store.close_collection()
             store.delete_collection(COLLECTION_NAME)
             store.close()
 
@@ -87,6 +88,7 @@ class TestQdrantVectorStore(unittest.TestCase):
             expected.score = actual.score
             self.assertEqual(expected, actual)
         finally:
+            store.close_collection()
             store.delete_collection(COLLECTION_NAME)
             store.close()
 
@@ -122,6 +124,7 @@ class TestQdrantVectorStore(unittest.TestCase):
             expected[1].score = output[1].score
             self.assertEqual(expected, output)
         finally:
+            store.close_collection()
             store.delete_collection(COLLECTION_NAME)
             store.close()
 
@@ -210,6 +213,7 @@ class TestQdrantVectorStore(unittest.TestCase):
             info = store.get_collection_info(COLLECTION_NAME)
             self.assertEqual(3, info.size)
         finally:
+            store.close_collection()
             store.delete_collection(COLLECTION_NAME)
             store.close()
 
@@ -247,6 +251,7 @@ class TestQdrantVectorStore(unittest.TestCase):
             result = Document.from_points(result_points)
             print(result)
         finally:
+            store.close_collection()
             store.delete_collection(COLLECTION_NAME)
             store.close()
 

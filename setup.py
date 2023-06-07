@@ -8,16 +8,12 @@ from setuptools import setup, find_packages
 
 setup(
     name="llmsdk",
-    version="0.1",
+    version="0.2.0",
     packages=find_packages(),
     install_requires=[
-        "numpy",
+        "numpy~=1.23.0",
         "frozendict",
         "requests",
-        "pydantic",
-        "pandas",
-        "openai>=0.27.4",
         "tenacity",
-        "parameterized",
     ],
 )

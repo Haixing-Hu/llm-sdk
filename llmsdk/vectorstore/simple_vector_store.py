@@ -23,31 +23,31 @@ class SimpleVectorStore(VectorStore):
         self._collections: Dict[str, List[Point]] = {}
         self._collections_info: Dict[str, CollectionInfo] = {}
 
-    def open(self) -> None:
+    def _open(self) -> None:
         self._is_opened = True
 
-    def close(self) -> None:
+    def _close(self) -> None:
         self._collection_name = None
-        self._is_opened = False
         self._collections = {}
         self._collections_info = {}
+        self._is_opened = False
 
-    def open_collection(self, collection_name: str) -> None:
+    def _open_collection(self, collection_name: str) -> None:
         if collection_name in self._collections:
             self._collection_name = collection_name
         else:
             raise ValueError(f"No such collection '{collection_name}'.")
 
-    def close_collection(self) -> None:
+    def _close_collection(self) -> None:
         self._collection_name = None
 
-    def has_collection(self, collection_name: str) -> bool:
+    def _has_collection(self, collection_name: str) -> bool:
         return collection_name in self._collections
 
-    def create_collection(self, collection_name: str,
-                          vector_size: int,
-                          distance: Distance = Distance.COSINE,
-                          payload_schemas: List[PayloadSchema] = None) -> None:
+    def _create_collection(self, collection_name: str,
+                           vector_size: int,
+                           distance: Distance = Distance.COSINE,
+                           payload_schemas: List[PayloadSchema] = None) -> None:
         if collection_name in self._collections_info:
             raise ValueError(f"The collection '{collection_name}' already exist.")
         info = CollectionInfo(name=collection_name,
@@ -58,23 +58,20 @@ class SimpleVectorStore(VectorStore):
         self._collections_info[collection_name] = info
         self._collections[collection_name] = []
 
-    def delete_collection(self, collection_name: str) -> None:
+    def _delete_collection(self, collection_name: str) -> None:
         if collection_name in self._collections_info:
             self._collections.pop(collection_name)
             self._collections_info.pop(collection_name)
-            if self._collection_name == collection_name:
-                self._collection_name = None
         else:
             raise ValueError(f"No such collection '{collection_name}'.")
 
-    def get_collection_info(self, collection_name: str) -> CollectionInfo:
+    def _get_collection_info(self, collection_name: str) -> CollectionInfo:
         if collection_name in self._collections_info:
             return self._collections_info[collection_name]
         else:
             raise ValueError(f"No such collection '{collection_name}'.")
 
-    def add(self, point: Point) -> str:
-        self._ensure_collection_opened()
+    def _add(self, point: Point) -> str:
         collection = self._collections[self._collection_name]
         info = self._collections_info[self._collection_name]
         if not point.id:
@@ -88,29 +85,22 @@ class SimpleVectorStore(VectorStore):
         self._collections_info[self._collection_name] = new_info
         return point.id
 
-    def similarity_search(self,
-                          query_vector: Vector,
-                          limit: int,
-                          score_threshold: Optional[float] = None,
-                          criterion: Optional[Criterion] = None,
-                          **kwargs: Any) -> List[Point]:
-        self._ensure_collection_opened()
+    def _similarity_search(self,
+                           query_vector: Vector,
+                           limit: int,
+                           score_threshold: Optional[float] = None,
+                           criterion: Optional[Criterion] = None,
+                           **kwargs: Any) -> List[Point]:
         collection = self._collections[self._collection_name]
+        if criterion is None:
+            points = [copy.deepcopy(p) for p in collection]
+        else:
+            points = []
+            for p in collection:
+                if criterion.test(p.metadata):
+                    points.append(copy.deepcopy(p))
         info = self._collections_info[self._collection_name]
         distance = info.distance
-        points = self._filter_points(collection, criterion)
         points = distance.calculate_scores(query_vector, points)
         points = distance.sort(points)
         return distance.filter(points, limit, score_threshold)
-
-    def _filter_points(self,
-                       collection: List[Point],
-                       criterion: Optional[Criterion]) -> List[Point]:
-        if criterion is None:
-            return [copy.deepcopy(p) for p in collection]
-        else:
-            result = []
-            for p in collection:
-                if criterion.test(p.metadata):
-                    result.append(copy.deepcopy(p))
-            return result

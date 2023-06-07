@@ -17,8 +17,6 @@ from llmsdk.embedding import MockEmbedding, OpenAiEmbedding
 from llmsdk.common import Document, DataType, Metadata, Distance
 from llmsdk.criterion import equal
 
-from qdrant_client.http import models
-
 COLLECTION_NAME: str = "test"
 
 
@@ -46,6 +44,7 @@ class TestSimpleVectorStore(unittest.TestCase):
             actual = output[0]
             self.assertEqual(query, actual.vector)
         finally:
+            store.close_collection()
             store.delete_collection(COLLECTION_NAME)
             store.close()
 
@@ -73,6 +72,7 @@ class TestSimpleVectorStore(unittest.TestCase):
             expected.score = actual.score
             self.assertEqual(expected, actual)
         finally:
+            store.close_collection()
             store.delete_collection(COLLECTION_NAME)
             store.close()
 
@@ -100,6 +100,7 @@ class TestSimpleVectorStore(unittest.TestCase):
             expected[1].score = output[1].score
             self.assertEqual(expected, output)
         finally:
+            store.close_collection()
             store.delete_collection(COLLECTION_NAME)
             store.close()
 
@@ -167,6 +168,7 @@ class TestSimpleVectorStore(unittest.TestCase):
             info = store.get_collection_info(COLLECTION_NAME)
             self.assertEqual(3, info.size)
         finally:
+            store.close_collection()
             store.delete_collection(COLLECTION_NAME)
             store.close()
 
@@ -199,6 +201,7 @@ class TestSimpleVectorStore(unittest.TestCase):
                                                                   limit=len(questions)))
             print(result)
         finally:
+            store.close_collection()
             store.delete_collection(COLLECTION_NAME)
             store.close()
 
