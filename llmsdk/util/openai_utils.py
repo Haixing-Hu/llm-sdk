@@ -300,7 +300,6 @@ def init_openai(api_key: Optional[str] = None,
     :param proxy: the proxy setting of the OpenAI.
     """
     logger.info("Initializing the OpenAI's API ...")
-
     import openai
     if openai.api_key is None:
         set_openai_api_key(api_key)
