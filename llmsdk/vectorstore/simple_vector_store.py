@@ -52,7 +52,7 @@ class SimpleVectorStore(VectorStore):
             raise ValueError(f"The collection '{collection_name}' already exist.")
         info = CollectionInfo(name=collection_name,
                               size=0,
-                              vector_size=vector_size,
+                              vector_dimension=vector_size,
                               distance=distance,
                               payload_schemas=payload_schemas)
         self._collections_info[collection_name] = info
@@ -82,7 +82,7 @@ class SimpleVectorStore(VectorStore):
         collection.append(copy.deepcopy(point))
         new_info = CollectionInfo(name=info.name,
                                   size=info.size + 1,
-                                  vector_size=info.vector_size,
+                                  vector_dimension=info.vector_dimension,
                                   distance=info.distance,
                                   payload_schemas=info.payload_schemas)
         self._collections_info[self._collection_name] = new_info

@@ -150,7 +150,7 @@ class TestQdrantVectorStore(unittest.TestCase):
             print(info)
             expected = CollectionInfo(name=COLLECTION_NAME,
                                       size=0,
-                                      vector_size=10,
+                                      vector_dimension=10,
                                       distance=Distance.COSINE,
                                       payload_schemas=payload_schemas)
             self.assertEqual(expected, info)

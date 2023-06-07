@@ -27,9 +27,9 @@ class CollectionInfo:
     The number of points stored in the collection.
     """
 
-    vector_size: int
+    vector_dimension: int
     """
-    The size (the dimension) of vectors stored in the collection.
+    The the dimension of vectors stored in the collection.
     """
 
     distance: Distance = Distance.COSINE

@@ -7,7 +7,7 @@
 from typing import Any, List, Dict, Optional
 
 from ..common import Document, Faq, SearchType
-from ..vectorstore import VectorStore
+from ..vectorstore import VectorStore, CollectionInfo
 from ..embedding import Embedding
 from ..llm import LargeLanguageModel, ModelType
 from ..splitter import TextSplitter
@@ -154,9 +154,11 @@ class QuestionAnswerRetriever(Retriever):
 
     def open(self) -> None:
         self._retriever.open()
+        super().open()
 
     def close(self) -> None:
         self._retriever.close()
+        super().close()
 
     def ask(self, query: str) -> str:
         """
@@ -240,3 +242,11 @@ class QuestionAnswerRetriever(Retriever):
     def retrieve(self, query: str, **kwargs: Any) -> List[Document]:
         answer = self.ask(query)
         return [Document(content=answer)]
+
+    def get_store_info(self) -> CollectionInfo:
+        """
+        Gets the information of the collection of underlying vector store.
+
+        :return: the information of the collection of underlying vector store.
+        """
+        return self._retriever.get_store_info()

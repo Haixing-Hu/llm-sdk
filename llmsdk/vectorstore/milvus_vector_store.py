@@ -188,7 +188,7 @@ class MilvusVectorStore(VectorStore):
         payload_schemas = get_payload_schemas(collection, id_field, vector_field)
         return CollectionInfo(name=collection_name,
                               size=collection.num_entities,
-                              vector_size=vector_field.params.get("dim"),
+                              vector_dimension=vector_field.params.get("dim"),
                               distance=distance,
                               payload_schemas=payload_schemas)
 

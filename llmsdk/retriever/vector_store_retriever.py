@@ -8,7 +8,7 @@ from typing import Any, List
 
 from .retriever import Retriever
 from ..common import Document, SearchType, Distance
-from ..vectorstore import VectorStore
+from ..vectorstore import VectorStore, CollectionInfo
 from ..embedding import Embedding
 from ..splitter import TextSplitter
 from ..util.common_utils import extract_argument
@@ -153,3 +153,11 @@ class VectorStoreRetriever(Retriever):
         points = self._embedding.embed_documents(docs)
         self._vector_store.add_all(points)
         return docs
+
+    def get_store_info(self) -> CollectionInfo:
+        """
+        Gets the information of the collection of underlying vector store.
+
+        :return: the information of the collection of underlying vector store.
+        """
+        return self._vector_store.get_collection_info(self._collection_name)

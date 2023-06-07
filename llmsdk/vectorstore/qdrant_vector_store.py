@@ -190,7 +190,7 @@ class QdrantVectorStore(VectorStore):
         ]
         return CollectionInfo(name=collection_name,
                               size=info.points_count,
-                              vector_size=vector_size,
+                              vector_dimension=vector_size,
                               distance=distance,
                               payload_schemas=payload_schemas)
 
