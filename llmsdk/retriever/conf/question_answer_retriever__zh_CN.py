@@ -14,7 +14,7 @@ CONFIG = {
         "example_input_prefix": "问题：",
         "example_output_prefix": "回答："
     },
-    "direct_answer_score_threshold": 0.95,
+    "direct_answer_score_threshold": 0.92,
     "question_score_threshold": 0.85,
     "answer_score_threshold": 0.75,
     "question_limit": 5,

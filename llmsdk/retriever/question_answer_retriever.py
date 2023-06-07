@@ -167,12 +167,12 @@ class QuestionAnswerRetriever(Retriever):
         :param query: the question to ask.
         :return: the answer of the question.
         """
+        self._logger.info("The user asks a question: %s", query)
         self._ensure_opened()
         # criterion to filter the questions of FAQs
         question_filter = equal(Document.FAQ_PROPERTY_ATTRIBUTE, "question")
         # criterion to filter the answers of FAQs
         answer_filter = equal(Document.FAQ_PROPERTY_ATTRIBUTE, "answer")
-        self._logger.debug("Ask a question: %s", query)
         # search for the most similar questions in the FAQs
         question_docs = self._retriever.retrieve(
             query=query,
@@ -181,12 +181,13 @@ class QuestionAnswerRetriever(Retriever):
             criterion=question_filter
         )
         questions = Document.to_faqs(question_docs)
+        self._logger.info("Found %d similar questions: %s", len(questions), questions)
         if (len(questions) > 0
                 and questions[0].score > self._direct_answer_score_threshold):
             # the score of the most similar question is greater than the
             # direct answer score threshold, so we can reply the answer
             # directly
-            self._logger.debug("Direct answer: %s", questions[0].answer)
+            self._logger.info("Get the direct answer: %s", questions[0].answer)
             return questions[0].answer
         answers_docs = self._retriever.retrieve(
             query=query,
@@ -195,6 +196,7 @@ class QuestionAnswerRetriever(Retriever):
             criterion=answer_filter
         )
         answers = Document.to_faqs(answers_docs)
+        self._logger.info("Found %d related answers: %s", len(answers), answers)
         faqs = questions + answers
         if len(faqs) == 0:
             return self._unknown_question_answer
@@ -202,17 +204,19 @@ class QuestionAnswerRetriever(Retriever):
         faqs = list(set(faqs))
         # sort the faqs by their scores
         faqs.sort(key=lambda x: x.score, reverse=True)
+        self._logger.info("Now we get %d related FAQs: %s", len(faqs), faqs)
         self._prompt_template.examples.clear()
         self._prompt_template.examples.extend(Faq.to_examples(faqs))
-        self._logger.debug("Prompt template: %s", self._prompt_template)
+        self._logger.debug("The prompt template is: %s", self._prompt_template)
         # generate the prompt
         prompt = self._prompt_template.format(
             question=query,
             unknown_question_answer=self._unknown_question_answer
         )
-        self._logger.debug("Prompt: %s", prompt)
+        self._logger.info("The prompt is: %s", prompt)
         # generate the answer by the LLM
         answer = self._llm.generate(prompt)
+        self._logger.info("Get the answer: %s", answer)
         return answer
 
     def add(self, faq: Faq) -> List[Document]:
