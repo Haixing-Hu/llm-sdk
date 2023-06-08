@@ -146,6 +146,7 @@ class QdrantVectorStore(VectorStore):
         self._logger.info("Successfully created the Qdrant client.")
 
     def _close(self) -> None:
+        self._collection_name = None
         self._client = None
         self._is_opened = False
 

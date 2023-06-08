@@ -152,13 +152,13 @@ class QuestionAnswerRetriever(Retriever):
         if not self._answer_limit:
             self._answer_limit = config["answer_limit"]
 
-    def open(self) -> None:
-        self._retriever.open()
-        super().open()
+    def _open(self, **kwargs: Dict[str, Any]) -> None:
+        self._retriever.open(**kwargs)
+        self._is_opened = True
 
-    def close(self) -> None:
+    def _close(self) -> None:
         self._retriever.close()
-        super().close()
+        self._is_opened = False
 
     def ask(self, query: str) -> str:
         """
@@ -169,6 +169,17 @@ class QuestionAnswerRetriever(Retriever):
         """
         self._logger.info("The user asks a question: %s", query)
         self._ensure_opened()
+        answer = self._ask(query)
+        self._logger.info("Get the answer: %s", answer)
+        return answer
+
+    def _ask(self, query: str) -> str:
+        """
+        Asks a question and gets the answer.
+
+        :param query: the question to ask.
+        :return: the answer of the question.
+        """
         # criterion to filter the questions of FAQs
         question_filter = equal(Document.FAQ_PROPERTY_ATTRIBUTE, "question")
         # criterion to filter the answers of FAQs
@@ -181,13 +192,18 @@ class QuestionAnswerRetriever(Retriever):
             criterion=question_filter
         )
         questions = Document.to_faqs(question_docs)
-        self._logger.info("Found %d similar questions: %s", len(questions), questions)
+        self._logger.info("Found %d similar questions.", len(questions))
+        self._logger.debug("The similar questions are: %s", questions)
         if (len(questions) > 0
                 and questions[0].score > self._direct_answer_score_threshold):
             # the score of the most similar question is greater than the
             # direct answer score threshold, so we can reply the answer
             # directly
-            self._logger.info("Get the direct answer: %s", questions[0].answer)
+            self._logger.info("The score of the most similar question is "
+                              "greater than the direct answer score threshold: %f",
+                              questions[0].score)
+            self._logger.info("Directly use the answer of the most similar question: %s",
+                              questions[0].question)
             return questions[0].answer
         answers_docs = self._retriever.retrieve(
             query=query,
@@ -196,7 +212,8 @@ class QuestionAnswerRetriever(Retriever):
             criterion=answer_filter
         )
         answers = Document.to_faqs(answers_docs)
-        self._logger.info("Found %d related answers: %s", len(answers), answers)
+        self._logger.info("Found %d related answers.", len(answers))
+        self._logger.debug("The related answers are: %s", answers)
         faqs = questions + answers
         if len(faqs) == 0:
             return self._unknown_question_answer
@@ -204,7 +221,8 @@ class QuestionAnswerRetriever(Retriever):
         faqs = list(set(faqs))
         # sort the faqs by their scores
         faqs.sort(key=lambda x: x.score, reverse=True)
-        self._logger.info("Now we get %d related FAQs: %s", len(faqs), faqs)
+        self._logger.info("Get %d different related FAQs.", len(faqs))
+        self._logger.debug("Get related FAQs are: %s", faqs)
         self._prompt_template.examples.clear()
         self._prompt_template.examples.extend(Faq.to_examples(faqs))
         self._logger.debug("The prompt template is: %s", self._prompt_template)
@@ -216,8 +234,11 @@ class QuestionAnswerRetriever(Retriever):
         self._logger.info("The prompt is: %s", prompt)
         # generate the answer by the LLM
         answer = self._llm.generate(prompt)
-        self._logger.info("Get the answer: %s", answer)
         return answer
+
+    def _retrieve(self, query: str, **kwargs: Any) -> List[Document]:
+        answer = self._ask(query)
+        return [Document(content=answer)]
 
     def add(self, faq: Faq) -> List[Document]:
         """
@@ -227,8 +248,13 @@ class QuestionAnswerRetriever(Retriever):
         :return: the list of actual documents added to this retriever, which may
             be the sub-documents splitted from the original document.
         """
+        self._logger.info("Adding a FAQ to the retriever %s ...",
+                          self._retriever_name)
+        self._logger.debug("The FAQ to add is: %s", faq)
         self._ensure_opened()
         docs = Document.from_faq(faq)
+        self._logger.debug("The FAQ is converted into %d documents: %s",
+                           len(docs), docs)
         return self._retriever.add_all(docs)
 
     def add_all(self, faqs: List[Faq]) -> List[Document]:
@@ -239,13 +265,14 @@ class QuestionAnswerRetriever(Retriever):
         :return: the list of actual documents added to this retriever, which may
             be the sub-documents splitted from the original document.
         """
+        self._logger.info("Adding a list of FAQs to the retriever %s ...",
+                          self._retriever_name)
+        self._logger.debug("The FAQs to add are: %s", faqs)
         self._ensure_opened()
         docs = Document.from_faqs(faqs)
+        self._logger.debug("The FAQs are converted into %d documents: %s",
+                           len(docs), docs)
         return self._retriever.add_all(docs)
-
-    def retrieve(self, query: str, **kwargs: Any) -> List[Document]:
-        answer = self.ask(query)
-        return [Document(content=answer)]
 
     def get_store_info(self) -> CollectionInfo:
         """

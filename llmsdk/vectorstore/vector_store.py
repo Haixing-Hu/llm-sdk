@@ -38,6 +38,10 @@ class VectorStore(ABC):
         return self._logger
 
     @property
+    def store_name(self) -> str:
+        return self._store_name
+
+    @property
     def collection_name(self) -> str:
         return self._collection_name
 
@@ -90,6 +94,9 @@ class VectorStore(ABC):
         """
         Closes this vector store.
 
+        If any collection of this vector store is opened, it will be closed
+        firstly.
+
         Closes a closed vector store have no effect.
         """
         if self.is_opened:
@@ -101,6 +108,9 @@ class VectorStore(ABC):
     def _close(self) -> None:
         """
         Closes this vector store.
+
+        If any collection of this vector store is opened, it will be closed
+        firstly.
 
         This method should be implemented by the subclasses. The implementation
         do not have to check the state of this vector store.
@@ -292,6 +302,7 @@ class VectorStore(ABC):
         result = self._add(point)
         self._logger.info("Successfully added the point to the collection '%s'.",
                           self._collection_name)
+        self._logger.debug("The ID of the point added is: %s", result)
         return result
 
     @abstractmethod
@@ -326,6 +337,7 @@ class VectorStore(ABC):
         result = self._add_all(points)
         self._logger.info("Successfully added %d point to the collection '%s'.",
                           len(points), self._collection_name)
+        self._logger.debug("The IDs of the points added are: %s", result)
         return result
 
     def _add_all(self, points: List[Point]) -> List[str]:

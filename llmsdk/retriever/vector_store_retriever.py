@@ -4,7 +4,7 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from typing import Any, List
+from typing import Any, Dict, List
 
 from .retriever import Retriever
 from ..common import Document, SearchType, Distance
@@ -60,41 +60,41 @@ class VectorStoreRetriever(Retriever):
     def search_type(self) -> SearchType:
         return self._search_type
 
-    def open(self) -> None:
-        """
-        Opens this vector store retriever.
-
-        This function will open the underlying vector store of this retriever, and
-        open the specified collection in the vector store.
-        """
+    def _open(self, **kwargs: Dict[str, Any]) -> None:
         store = self._vector_store
-        store.open()
-        if store.has_collection(self._collection_name):
-            store.open_collection(self._collection_name)
-        else:
-            store.create_collection(collection_name=self._collection_name,
-                                    vector_size=self._embedding.output_dimensions,
-                                    distance=Distance.COSINE)
-            store.open_collection(self._collection_name)
-        self._query_vector_cache = {}
-        super().open()
+        store.open(**kwargs)
+        try:
+            if store.has_collection(self._collection_name):
+                store.open_collection(self._collection_name)
+            else:
+                self._logger.warn("No collection '%s' in the vector store '%s'. "
+                                  "It will be automatically created.",
+                                  self._collection_name,
+                                  self._vector_store.store_name)
+                store.create_collection(
+                    collection_name=self._collection_name,
+                    vector_size=self._embedding.output_dimensions,
+                    distance=Distance.COSINE
+                )
+                store.open_collection(self._collection_name)
+            self._query_vector_cache = {}
+        except Exception:
+            store.close()
+            raise
+        self._is_opened = True
 
-    def close(self) -> None:
+    def _close(self) -> None:
         """
         Closes this vector store retriever.
 
         This function will close the specified collection in the underlying vector
         store, and close the vector store.
         """
-        store = self._vector_store
-        store.close_collection()
-        store.close()
+        self._vector_store.close()
         self._query_vector_cache = {}
-        super().close()
+        self._is_opened = False
 
-    def retrieve(self, query: str, **kwargs: Any) -> List[Document]:
-        self._ensure_opened()
-        self._logger.debug("Retrieve with query: %s", query)
+    def _retrieve(self, query: str, **kwargs: Any) -> List[Document]:
         if query in self._query_vector_cache:
             query_vector = self._query_vector_cache[query]
         else:
@@ -134,10 +134,17 @@ class VectorStoreRetriever(Retriever):
         :return: the list of actual documents added to this retriever, which may
             be the sub-documents splitted from the original document.
         """
+        self._logger.info("Adding a document to the collection '%s%' of %s ...",
+                          self._collection_name, self._retriever_name)
+        self._logger.debug("The document to add is: %s", document)
         self._ensure_opened()
         docs = self._splitter.split_document(document)
+        self._logger.debug("The document is splitted into %d sub-documents: %s",
+                           len(docs), docs)
         points = self._embedding.embed_documents(docs)
         self._vector_store.add_all(points)
+        self._logger.info("Successfully added the document to the collection '%s' "
+                          "of %s.", self._collection_name, self._retriever_name)
         return docs
 
     def add_all(self, documents: List[Document]) -> List[Document]:
@@ -148,10 +155,18 @@ class VectorStoreRetriever(Retriever):
         :return: the list of actual documents added to this retriever, which may
             be the sub-documents splitted from the original document.
         """
+        self._logger.info("Adding %d documents to the collection '%s%' of %s ...",
+                          len(documents), self._collection_name,
+                          self._retriever_name)
+        self._logger.debug("The documents to add are: %s", documents)
         self._ensure_opened()
         docs = self._splitter.split_documents(documents)
+        self._logger.debug("The document is splitted into %d sub-documents: %s",
+                           len(docs), docs)
         points = self._embedding.embed_documents(docs)
         self._vector_store.add_all(points)
+        self._logger.info("Successfully added all documents to the collection '%s' "
+                          "of %s.", self._collection_name, self._retriever_name)
         return docs
 
     def get_store_info(self) -> CollectionInfo:

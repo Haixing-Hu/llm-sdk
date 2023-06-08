@@ -71,8 +71,7 @@ class MilvusVectorStore(VectorStore):
 
     def _close(self) -> None:
         import pymilvus
-        if self._collection is not None:
-            self.close_collection()
+        self._close_collection()
         pymilvus.connections.disconnect(self._connection_alias)
         self._is_opened = False
 
