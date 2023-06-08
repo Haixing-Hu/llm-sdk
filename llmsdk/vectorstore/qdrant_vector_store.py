@@ -40,7 +40,7 @@ class QdrantVectorStore(VectorStore):
                  prefix: Optional[str] = None,
                  timeout: Optional[float] = None,
                  id_generator: Optional[IdGenerator] = None,
-                 **kwargs: Dict[str, Any]) -> None:
+                 **kwargs: Any) -> None:
         """
         Construct a QdrantVectorStore object.
 
@@ -90,7 +90,7 @@ class QdrantVectorStore(VectorStore):
         self._kwargs = kwargs
         self._client = None
 
-    def _open(self, **kwargs: Dict[str, Any]) -> None:
+    def _open(self, **kwargs: Any) -> None:
         self._in_memory = extract_argument(kwargs, "in_memory", self._in_memory)
         self._path = extract_argument(kwargs, "path", self._path)
         self._url = extract_argument(kwargs, "url", self._url)

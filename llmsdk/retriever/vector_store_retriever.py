@@ -60,7 +60,7 @@ class VectorStoreRetriever(Retriever):
     def search_type(self) -> SearchType:
         return self._search_type
 
-    def _open(self, **kwargs: Dict[str, Any]) -> None:
+    def _open(self, **kwargs: Any) -> None:
         store = self._vector_store
         store.open(**kwargs)
         try:

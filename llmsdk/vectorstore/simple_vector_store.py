@@ -23,7 +23,7 @@ class SimpleVectorStore(VectorStore):
         self._collections: Dict[str, List[Point]] = {}
         self._collections_info: Dict[str, CollectionInfo] = {}
 
-    def _open(self) -> None:
+    def _open(self, **kwargs: Any) -> None:
         self._is_opened = True
 
     def _close(self) -> None:

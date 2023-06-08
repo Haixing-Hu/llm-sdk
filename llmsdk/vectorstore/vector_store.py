@@ -68,7 +68,7 @@ class VectorStore(ABC):
         """
         return self._collection_name is not None
 
-    def open(self, **kwargs: Dict[str, Any]) -> None:
+    def open(self, **kwargs: Any) -> None:
         """
         Opens this vector store.
 
@@ -80,7 +80,7 @@ class VectorStore(ABC):
         self._logger.info("Successfully opened the %s.", self._store_name)
 
     @abstractmethod
-    def _open(self, **kwargs: Dict[str, Any]) -> None:
+    def _open(self, **kwargs: Any) -> None:
         """
         Opens this vector store.
 

@@ -39,7 +39,7 @@ class Retriever(ABC):
         """
         return self._is_opened
 
-    def open(self, **kwargs: Dict[str, Any]) -> None:
+    def open(self, **kwargs: Any) -> None:
         """
         Opens this vector store retriever.
 
@@ -55,7 +55,7 @@ class Retriever(ABC):
         self._is_opened = True
 
     @abstractmethod
-    def _open(self, **kwargs: Dict[str, Any]) -> None:
+    def _open(self, **kwargs: Any) -> None:
         """
         Opens this vector store retriever.
 

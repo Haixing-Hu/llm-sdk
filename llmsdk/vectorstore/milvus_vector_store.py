@@ -62,7 +62,7 @@ class MilvusVectorStore(VectorStore):
         self._vector_index: Optional[pymilvus.Index] = None
         self._payload_schemas: Optional[List[PayloadSchema]] = None
 
-    def _open(self) -> None:
+    def _open(self, **kwargs: Any) -> None:
         # Connecting to Milvus instance
         import pymilvus
         if not pymilvus.connections.has_connection(self._connection_alias):

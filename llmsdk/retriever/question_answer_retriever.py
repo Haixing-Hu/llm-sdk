@@ -152,7 +152,7 @@ class QuestionAnswerRetriever(Retriever):
         if not self._answer_limit:
             self._answer_limit = config["answer_limit"]
 
-    def _open(self, **kwargs: Dict[str, Any]) -> None:
+    def _open(self, **kwargs: Any) -> None:
         self._retriever.open(**kwargs)
         self._is_opened = True
 
