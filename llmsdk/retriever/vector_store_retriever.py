@@ -67,10 +67,10 @@ class VectorStoreRetriever(Retriever):
             if store.has_collection(self._collection_name):
                 store.open_collection(self._collection_name)
             else:
-                self._logger.warn("No collection '%s' in the vector store '%s'. "
-                                  "It will be automatically created.",
-                                  self._collection_name,
-                                  self._vector_store.store_name)
+                self._logger.warning("No collection '%s' in the vector store '%s'. "
+                                     "It will be automatically created.",
+                                     self._collection_name,
+                                     self._vector_store.store_name)
                 store.create_collection(
                     collection_name=self._collection_name,
                     vector_size=self._embedding.vector_dimension,
