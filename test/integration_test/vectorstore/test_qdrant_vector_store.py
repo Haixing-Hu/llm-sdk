@@ -56,7 +56,7 @@ class TestQdrantVectorStore(unittest.TestCase):
             store.close()
 
     def test_search_with_filter(self):
-        self._test_search_with_filter(n_memory=True)
+        self._test_search_with_filter(in_memory=True)
         self._test_search_with_filter(path="/tmp/test_qdrant")
         self._test_search_with_filter(host="127.0.0.1")
 
