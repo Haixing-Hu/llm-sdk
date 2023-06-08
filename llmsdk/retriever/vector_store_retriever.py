@@ -134,7 +134,7 @@ class VectorStoreRetriever(Retriever):
         :return: the list of actual documents added to this retriever, which may
             be the sub-documents splitted from the original document.
         """
-        self._logger.info("Adding a document to the collection '%s%' of %s ...",
+        self._logger.info("Adding a document to the collection '%s' of %s ...",
                           self._collection_name, self._retriever_name)
         self._logger.debug("The document to add is: %s", document)
         self._ensure_opened()
@@ -155,7 +155,7 @@ class VectorStoreRetriever(Retriever):
         :return: the list of actual documents added to this retriever, which may
             be the sub-documents splitted from the original document.
         """
-        self._logger.info("Adding %d documents to the collection '%s%' of %s ...",
+        self._logger.info("Adding %d documents to the collection '%s' of %s ...",
                           len(documents), self._collection_name,
                           self._retriever_name)
         self._logger.debug("The documents to add are: %s", documents)
