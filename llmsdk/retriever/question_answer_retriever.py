@@ -170,7 +170,7 @@ class QuestionAnswerRetriever(Retriever):
         self._logger.info("The user asks a question: %s", query)
         self._ensure_opened()
         answer = self._ask(query)
-        self._logger.info("Get the answer: %s", answer)
+        self._logger.info("Get the following answer:\n%s", answer)
         return answer
 
     def _ask(self, query: str) -> str:

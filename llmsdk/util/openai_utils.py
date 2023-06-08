@@ -99,6 +99,7 @@ def call_with_retries(openai_api: Callable[[Any], Any],
             | retry_if_exception_type(openai.error.APIConnectionError)
             | retry_if_exception_type(openai.error.TryAgain)
             | retry_if_exception_type(openai.error.ServiceUnavailableError)
+            | retry_if_exception_type(openai.error.RateLimitError)
         ),
         before_sleep=before_sleep_log(logger, logging.WARNING),
     )
