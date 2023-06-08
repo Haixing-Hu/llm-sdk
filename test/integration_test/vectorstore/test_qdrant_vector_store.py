@@ -41,7 +41,7 @@ class TestQdrantVectorStore(unittest.TestCase):
         store.open(**kwargs)
         try:
             store.create_collection(collection_name=COLLECTION_NAME,
-                                    vector_size=embedding.output_dimensions)
+                                    vector_size=embedding.vector_dimension)
             store.open_collection(COLLECTION_NAME)
             store.add_all(points)
             query = embedding.embed_query("foo")
@@ -70,7 +70,7 @@ class TestQdrantVectorStore(unittest.TestCase):
         store.open(**kwargs)
         try:
             store.create_collection(collection_name=COLLECTION_NAME,
-                                    vector_size=embedding.output_dimensions)
+                                    vector_size=embedding.vector_dimension)
             store.open_collection(COLLECTION_NAME)
             store.add_all(points)
             query = embedding.embed_query("foo")
@@ -104,7 +104,7 @@ class TestQdrantVectorStore(unittest.TestCase):
         store.open(**kwargs)
         try:
             store.create_collection(collection_name=COLLECTION_NAME,
-                                    vector_size=embedding.output_dimensions)
+                                    vector_size=embedding.vector_dimension)
             store.open_collection(COLLECTION_NAME)
             store.add_all(points)
             query = embedding.embed_query("foo")
@@ -186,7 +186,7 @@ class TestQdrantVectorStore(unittest.TestCase):
         store.open(**kwargs)
         try:
             store.create_collection(collection_name=COLLECTION_NAME,
-                                    vector_size=embedding.output_dimensions)
+                                    vector_size=embedding.vector_dimension)
             result = store.has_collection(COLLECTION_NAME)
             self.assertEqual(True, result)
             store.open_collection(COLLECTION_NAME)
@@ -229,7 +229,7 @@ class TestQdrantVectorStore(unittest.TestCase):
         store.open(**kwargs)
         try:
             store.create_collection(collection_name=COLLECTION_NAME,
-                                    vector_size=embedding.output_dimensions)
+                                    vector_size=embedding.vector_dimension)
             store.open_collection(COLLECTION_NAME)
             store.add_all(points)
             result_points = store.similarity_search(vector,

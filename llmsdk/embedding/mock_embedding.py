@@ -19,7 +19,7 @@ class MockEmbedding(Embedding):
     PRECISION: int = 7
 
     def __init__(self) -> None:
-        super().__init__(output_dimensions=10)
+        super().__init__(vector_dimension=10)
 
     def embed_texts(self, texts: List[str]) -> List[Vector]:
         """

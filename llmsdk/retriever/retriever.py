@@ -92,24 +92,6 @@ class Retriever(ABC):
         do not have to check the state of this retriever.
         """
 
-    def _ensure_opened(self) -> None:
-        """
-        Ensures that the retriever is opened.
-
-        :raise ValueError: if the retriever is not opened yet.
-        """
-        if not self.is_opened:
-            raise ValueError("The retriever is not opened.")
-
-    def _ensure_closed(self) -> None:
-        """
-        Ensures that the retriever is closed.
-
-        :raise ValueError: if the retriever is not closed yet.
-        """
-        if self.is_opened:
-            raise ValueError("The retriever is not closed.")
-
     def retrieve(self,
                  query: str,
                  **kwargs: Any) -> List[Document]:
@@ -145,3 +127,21 @@ class Retriever(ABC):
         :param kwargs: other arguments.
         :return: the list of documents relevant to the query.
         """
+
+    def _ensure_opened(self) -> None:
+        """
+        Ensures that the retriever is opened.
+
+        :raise ValueError: if the retriever is not opened yet.
+        """
+        if not self.is_opened:
+            raise ValueError("The retriever is not opened.")
+
+    def _ensure_closed(self) -> None:
+        """
+        Ensures that the retriever is closed.
+
+        :raise ValueError: if the retriever is not closed yet.
+        """
+        if self.is_opened:
+            raise ValueError("The retriever is not closed.")

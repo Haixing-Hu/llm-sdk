@@ -9,6 +9,7 @@ from typing import List, Optional
 from ..common import Vector
 from ..llm.tokenizer import Tokenizer, OpenAiTokenizer
 from ..util.openai_utils import (
+    get_model_tokens,
     get_embedding_output_dimensions,
     check_model_compatibility,
     call_with_retries,
@@ -31,7 +32,7 @@ class OpenAiEmbedding(Embedding):
                  batch_size: int = DEFAULT_BATCH_SIZE,
                  api_key: Optional[str] = None,
                  use_proxy: Optional[bool] = None) -> None:
-        super().__init__(output_dimensions=get_embedding_output_dimensions(model))
+        super().__init__(vector_dimension=get_embedding_output_dimensions(model))
         try:
             import openai
         except ImportError:
@@ -39,6 +40,7 @@ class OpenAiEmbedding(Embedding):
                               "install it with `pip install openai`.")
         check_model_compatibility(model=model, endpoint="embeddings")
         self._model = model
+        self._model_tokens = get_model_tokens(model)
         self._batch_size = batch_size
         self._tokenizer = OpenAiTokenizer(model)
         self._api = openai.Embedding.create
@@ -95,21 +97,26 @@ class OpenAiEmbedding(Embedding):
     #         result.append(point)
     #     return result
 
-    def embed_texts(self, texts: List[str]) -> List[Vector]:
-        self._logger.debug("Embedding texts: %s", texts)
+    def _embed_texts(self, texts: List[str]) -> List[Vector]:
         tokens_list = []
         for i, text in enumerate(texts):
             tokens = self._tokenizer.encode(text)
+            if len(tokens) > self._model_tokens:
+                raise ValueError(f"The text is too long: {len(tokens)} tokens, "
+                                 f"but the OpenAI model {self._model} only "
+                                 f"supports {self._model_tokens} tokens: {text}")
             tokens_list.append(tokens)
         # batch embedding all token lists
         result = []
         for i in range(0, len(tokens_list), self._batch_size):
             input_list = tokens_list[i:i+self._batch_size]
-            self._logger.debug("Embed %d chunks with OpenAI: %s", len(input_list), input_list)
+            self._logger.debug("Embed %d chunks with OpenAI: %s",
+                               len(input_list), input_list)
             response = call_with_retries(openai_api=self._api,
                                          model=self._model,
                                          input=input_list)
             embedding_list = [r["embedding"] for r in response["data"]]
-            self._logger.debug("Gets the embedded vectors of the chunks: %s", embedding_list)
+            self._logger.debug("Gets the embedded vectors of the chunks: %s",
+                               embedding_list)
             result.extend(embedding_list)
         return result

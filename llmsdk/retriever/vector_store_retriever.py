@@ -73,7 +73,7 @@ class VectorStoreRetriever(Retriever):
                                   self._vector_store.store_name)
                 store.create_collection(
                     collection_name=self._collection_name,
-                    vector_size=self._embedding.output_dimensions,
+                    vector_size=self._embedding.vector_dimension,
                     distance=Distance.COSINE
                 )
                 store.open_collection(self._collection_name)
