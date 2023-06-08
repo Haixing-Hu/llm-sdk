@@ -7,6 +7,7 @@
 import copy
 import unittest
 import logging
+from typing import Any
 
 from llmsdk.vectorstore import (
     QdrantVectorStore,
@@ -26,20 +27,18 @@ class TestQdrantVectorStore(unittest.TestCase):
         logging.basicConfig(level=logging.DEBUG)
 
     def test_search(self):
-        store = QdrantVectorStore(in_memory=True)
-        self._test_search(store)
-        store = QdrantVectorStore(host="127.0.0.1")
-        self._test_search(store)
-        store = QdrantVectorStore(path="/tmp/test_qdrant")
-        self._test_search(store)
+        self._test_search(in_memory=True)
+        self._test_search(host="127.0.0.1")
+        self._test_search(path="/tmp/test_qdrant")
 
-    def _test_search(self, store: QdrantVectorStore):
+    def _test_search(self, **kwargs: Any):
         texts = ["foo", "bar", "baz"]
         documents = [Document(content=t, metadata=Metadata({"page": i}))
                      for i, t in enumerate(texts)]
         embedding = MockEmbedding()
         points = embedding.embed_documents(documents)
-        store.open()
+        store = QdrantVectorStore()
+        store.open(**kwargs)
         try:
             store.create_collection(collection_name=COLLECTION_NAME,
                                     vector_size=embedding.output_dimensions)
@@ -57,20 +56,18 @@ class TestQdrantVectorStore(unittest.TestCase):
             store.close()
 
     def test_search_with_filter(self):
-        store = QdrantVectorStore(in_memory=True)
-        self._test_search_with_filter(store)
-        store = QdrantVectorStore(path="/tmp/test_qdrant")
-        self._test_search_with_filter(store)
-        store = QdrantVectorStore(host="127.0.0.1")
-        self._test_search_with_filter(store)
+        self._test_search_with_filter(n_memory=True)
+        self._test_search_with_filter(path="/tmp/test_qdrant")
+        self._test_search_with_filter(host="127.0.0.1")
 
-    def _test_search_with_filter(self, store: QdrantVectorStore):
+    def _test_search_with_filter(self, **kwargs: Any):
         texts = ["foo", "bar", "baz"]
         documents = [Document(content=t, metadata=Metadata({"page": i}))
                      for i, t in enumerate(texts)]
         embedding = MockEmbedding()
         points = embedding.embed_documents(documents)
-        store.open()
+        store = QdrantVectorStore()
+        store.open(**kwargs)
         try:
             store.create_collection(collection_name=COLLECTION_NAME,
                                     vector_size=embedding.output_dimensions)
@@ -93,20 +90,18 @@ class TestQdrantVectorStore(unittest.TestCase):
             store.close()
 
     def test_max_marginal_relevance_search(self):
-        store = QdrantVectorStore(in_memory=True)
-        self._test_max_marginal_relevance_search(store)
-        store = QdrantVectorStore(path="/tmp/test_qdrant")
-        self._test_max_marginal_relevance_search(store)
-        store = QdrantVectorStore(host="127.0.0.1")
-        self._test_max_marginal_relevance_search(store)
+        self._test_max_marginal_relevance_search(in_memory=True)
+        self._test_max_marginal_relevance_search(path="/tmp/test_qdrant")
+        self._test_max_marginal_relevance_search(host="127.0.0.1")
 
-    def _test_max_marginal_relevance_search(self, store: QdrantVectorStore):
+    def _test_max_marginal_relevance_search(self, **kwargs: Any):
         texts = ["foo", "bar", "baz"]
         documents = [Document(content=t, metadata=Metadata({"page": i}))
                      for i, t in enumerate(texts)]
         embedding = MockEmbedding()
         points = embedding.embed_documents(documents)
-        store.open()
+        store = QdrantVectorStore()
+        store.open(**kwargs)
         try:
             store.create_collection(collection_name=COLLECTION_NAME,
                                     vector_size=embedding.output_dimensions)
@@ -129,15 +124,11 @@ class TestQdrantVectorStore(unittest.TestCase):
             store.close()
 
     def test_create_collection(self):
-        # store = QdrantVectorStore(in_memory=True)
-        # self._test_create_collection(store)
-        # store = QdrantVectorStore(path="/tmp/test_qdrant")
-        # self._test_create_collection(store)
-        store = QdrantVectorStore(host="127.0.0.1")
-        self._test_create_collection(store)
+        self._test_create_collection(host="127.0.0.1")
 
-    def _test_create_collection(self, store: QdrantVectorStore):
-        store.open()
+    def _test_create_collection(self, **kwargs: Any):
+        store = QdrantVectorStore()
+        store.open(**kwargs)
         try:
             payload_schemas = [
                 PayloadSchema(name="f1", type=DataType.INT),
@@ -162,15 +153,13 @@ class TestQdrantVectorStore(unittest.TestCase):
             store.close()
 
     def test_has_collection__non_exist_collection_localhost(self):
-        store = QdrantVectorStore(in_memory=True)
-        self._test_has_collection(store)
-        store = QdrantVectorStore(host="127.0.0.1")
-        self._test_has_collection(store)
-        store = QdrantVectorStore(path="/tmp/test_qdrant")
-        self._test_has_collection(store)
+        self._test_has_collection(in_memory=True)
+        self._test_has_collection(host="127.0.0.1")
+        self._test_has_collection(path="/tmp/test_qdrant")
 
-    def _test_has_collection(self, store: QdrantVectorStore):
-        store.open()
+    def _test_has_collection(self, **kwargs: Any):
+        store = QdrantVectorStore()
+        store.open(**kwargs)
         try:
             result = store.has_collection(COLLECTION_NAME)
             self.assertEqual(False, result)
@@ -183,20 +172,18 @@ class TestQdrantVectorStore(unittest.TestCase):
             store.close()
 
     def test_collection_size(self):
-        store = QdrantVectorStore(in_memory=True)
-        self._test_collection_size(store)
-        store = QdrantVectorStore(host="127.0.0.1")
-        self._test_collection_size(store)
-        store = QdrantVectorStore(path="/tmp/test_qdrant")
-        self._test_collection_size(store)
+        self._test_collection_size(in_memory=True)
+        self._test_collection_size(host="127.0.0.1")
+        self._test_collection_size(path="/tmp/test_qdrant")
 
-    def _test_collection_size(self, store: QdrantVectorStore):
+    def _test_collection_size(self, **kwargs: Any):
         texts = ["foo", "bar", "baz"]
         documents = [Document(content=t, metadata=Metadata({"page": i}))
                      for i, t in enumerate(texts)]
         embedding = MockEmbedding()
         points = embedding.embed_documents(documents)
-        store.open()
+        store = QdrantVectorStore()
+        store.open(**kwargs)
         try:
             store.create_collection(collection_name=COLLECTION_NAME,
                                     vector_size=embedding.output_dimensions)
@@ -218,10 +205,9 @@ class TestQdrantVectorStore(unittest.TestCase):
             store.close()
 
     def test_similarity_search_with_score_threshold(self):
-        store = QdrantVectorStore(in_memory=True)
-        self._test_similarity_search_with_score_threshold(store)
+        self._test_similarity_search_with_score_threshold(in_memory=True)
 
-    def _test_similarity_search_with_score_threshold(self, store: QdrantVectorStore):
+    def _test_similarity_search_with_score_threshold(self, **kwargs: Any):
         questions = [
             "什么是“南京宁慧保”？",
             "这款产品是哪个保险公司承保的？",
@@ -239,7 +225,8 @@ class TestQdrantVectorStore(unittest.TestCase):
         embedding = OpenAiEmbedding()
         points = embedding.embed_documents(documents)
         vector = embedding.embed_text("南京宁慧保是什么")
-        store.open()
+        store = QdrantVectorStore()
+        store.open(**kwargs)
         try:
             store.create_collection(collection_name=COLLECTION_NAME,
                                     vector_size=embedding.output_dimensions)
