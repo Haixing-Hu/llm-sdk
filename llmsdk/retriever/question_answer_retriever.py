@@ -167,10 +167,10 @@ class QuestionAnswerRetriever(Retriever):
         :param query: the question to ask.
         :return: the answer of the question.
         """
-        self._logger.info("The user asks a question: %s", query)
+        self._logger.info("The user asks a question: '%s'", query)
         self._ensure_opened()
         answer = self._ask(query)
-        self._logger.info("Get the following answer:\n%s", answer)
+        self._logger.info("Get the following answer: '%s'", answer)
         return answer
 
     def _ask(self, query: str) -> str:
@@ -192,18 +192,18 @@ class QuestionAnswerRetriever(Retriever):
             criterion=question_filter
         )
         questions = Document.to_faqs(question_docs)
-        self._logger.info("Found %d similar questions.", len(questions))
-        self._logger.debug("The similar questions are: %s", questions)
+        self._logger.info("Found %d similar questions: %s", len(questions), questions)
         if (len(questions) > 0
                 and questions[0].score > self._direct_answer_score_threshold):
             # the score of the most similar question is greater than the
             # direct answer score threshold, so we can reply the answer
             # directly
-            self._logger.info("The score of the most similar question is "
-                              "greater than the direct answer score threshold: %f",
-                              questions[0].score)
-            self._logger.info("Directly use the answer of the most similar question: %s",
-                              questions[0].question)
+            self._logger.info("The score of the most similar question is %f,"
+                              "which is greater than the direct answer score "
+                              "threshold %f: %s",
+                              questions[0].score,
+                              self._direct_answer_score_threshold,
+                              questions[0].answer)
             return questions[0].answer
         answers_docs = self._retriever.retrieve(
             query=query,
@@ -212,8 +212,7 @@ class QuestionAnswerRetriever(Retriever):
             criterion=answer_filter
         )
         answers = Document.to_faqs(answers_docs)
-        self._logger.info("Found %d related answers.", len(answers))
-        self._logger.debug("The related answers are: %s", answers)
+        self._logger.info("Found %d related answers: %s", len(answers), answers)
         faqs = questions + answers
         if len(faqs) == 0:
             return self._unknown_question_answer
@@ -221,8 +220,7 @@ class QuestionAnswerRetriever(Retriever):
         faqs = list(set(faqs))
         # sort the faqs by their scores
         faqs.sort(key=lambda x: x.score, reverse=True)
-        self._logger.info("Get %d different related FAQs.", len(faqs))
-        self._logger.debug("Get related FAQs are: %s", faqs)
+        self._logger.info("Get %d different related FAQs: %s", len(faqs), faqs)
         self._prompt_template.examples.clear()
         self._prompt_template.examples.extend(Faq.to_examples(faqs))
         self._logger.debug("The prompt template is: %s", self._prompt_template)
