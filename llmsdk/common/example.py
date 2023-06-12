@@ -31,3 +31,20 @@ class Example:
 
     score: Optional[float] = None
     """The score of this example relevant to the query."""
+
+    def __eq__(self, other):
+        """
+        Tests whether this object is equal to another object.
+
+        Two examples are equal if and only if all their fields except the score
+        field are equal.
+
+        :param other: the other object.
+        :return; true if this object is equal to the other object; false otherwise.
+        """
+        if isinstance(other, Example):
+            return (self.id == other.id
+                    and self.input == other.input
+                    and self.output == other.output)
+        else:
+            return False

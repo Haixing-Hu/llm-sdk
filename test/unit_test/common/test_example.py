@@ -22,6 +22,15 @@ class TestExample(unittest.TestCase):
         self.assertEqual("input2", ex2.input)
         self.assertEqual("output2", ex2.output)
 
+    def test_eq(self):
+        # two examples are equal if their IDs are equal
+        f1 = Example(id="faq-1", input="input1", output="output1", score=0.1)
+        f2 = Example(id="faq-1", input="input1", output="output1", score=0.2)
+        self.assertEqual(f1, f2)
+
+        f3 = Example(id="faq-1", input="input1", output="output2", score=0.2)
+        self.assertNotEqual(f1, f3)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -22,6 +22,12 @@ class TestFaq(unittest.TestCase):
         self.assertEqual("question2", f2.question)
         self.assertEqual("answer2", f2.answer)
 
+    def test_eq(self):
+        # two FAQs are equal if their IDs are equal
+        f1 = Faq(id="faq-1", question="question", answer="answer", score=0.1)
+        f2 = Faq(id="faq-1", question="question", answer="answer", score=0.2)
+        self.assertEqual(f1, f2)
+
 
 if __name__ == '__main__':
     unittest.main()

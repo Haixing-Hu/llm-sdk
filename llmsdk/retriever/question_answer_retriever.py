@@ -259,7 +259,7 @@ class QuestionAnswerRetriever(Retriever):
         """
         Adds a list of FAQs to this retriever.
 
-        :param faqs: the list of FAQs to add.3
+        :param faqs: the list of FAQs to add.
         :return: the list of actual documents added to this retriever, which may
             be the sub-documents splitted from the original document.
         """

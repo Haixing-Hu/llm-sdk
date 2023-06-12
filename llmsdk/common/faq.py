@@ -42,3 +42,20 @@ class Faq:
     @classmethod
     def to_examples(cls, faqs: List[Faq]) -> List[Example]:
         return [Faq.to_example(f) for f in faqs]
+
+    def __eq__(self, other):
+        """
+        Tests whether this object is equal to another object.
+
+        Two FAQs are equal if and only if all their fields except the score
+        field are equal.
+
+        :param other: the other object.
+        :return; true if this object is equal to the other object; false otherwise.
+        """
+        if isinstance(other, Faq):
+            return (self.id == other.id
+                    and self.question == other.question
+                    and self.answer == other.answer)
+        else:
+            return False
