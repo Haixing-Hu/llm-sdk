@@ -4,29 +4,32 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
+from __future__ import annotations
+
 from abc import ABC
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, ClassVar
+from typing import Any, Dict, List
 import json
 
-from ..common import Example
+from ..common import Example, Message, Role
 from .prompt_template import PromptTemplate
+
+
+DEFAULT_PROMPT_TEMPLATE: str = "{prompt}"
+"""
+The default template of the prompt of the final input.
+"""
+
+DEFAULT_INSTRUCTION_TEMPLATE: str = "{instruction}"
+"""
+The default template of the instruction of the prompt.
+"""
 
 
 @dataclass
 class StructuredPromptTemplate(PromptTemplate, ABC):
     """
     The interface of a structured prompt templates.
-    """
-
-    DEFAULT_PROMPT_TEMPLATE: ClassVar[str] = ""
-    """
-    The default template of the prompt of the final input.
-    """
-
-    DEFAULT_INSTRUCTION_TEMPLATE: ClassVar[str] = ""
-    """
-    The default template of the instruction of the prompt.
     """
 
     prompt_template: str = DEFAULT_PROMPT_TEMPLATE
@@ -50,6 +53,13 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
     Note that the examples should not contain formatting placeholders.
     """
 
+    histories: List[Message] = field(default_factory=list)
+    """
+    The list of conversation histories.
+    
+    Note that the histories should not contain formatting placeholders.
+    """
+
     def load_from_file(self, file_path: str) -> None:
         """
         Loads the configuration of this prompt template from a file in the JSON
@@ -68,19 +78,107 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
 
         :param conf: the dictionary of the configuration.
         """
-        self.instruction_template = conf.get(
-            "instruction_template",
-            StructuredPromptTemplate.DEFAULT_INSTRUCTION_TEMPLATE
-        )
-        self.prompt_template = conf.get(
-            "prompt_template",
-            StructuredPromptTemplate.DEFAULT_PROMPT_TEMPLATE
-        )
-        self.examples.clear()
+        instruction_template = conf.get("instruction_template",
+                                        DEFAULT_INSTRUCTION_TEMPLATE)
+        prompt_template = conf.get("prompt_template",
+                                   DEFAULT_PROMPT_TEMPLATE)
+        examples = []
         if "examples" in conf:
             for e in conf["examples"]:
                 id = e.get("id", None)
                 input = e.get("input")
                 output = e.get("output")
                 example = Example(id=id, input=input, output=output)
-                self.examples.append(example)
+                examples.append(example)
+        histories = []
+        if "histories" in conf:
+            data = conf["histories"]
+            if len(data) % 2 != 0:
+                raise ValueError("The number of conversation histories must be even.")
+            for i in range(0, len(data), 2):
+                if data[i]["role"] != Role.HUMAN.value:
+                    raise ValueError("The message at index {} is not a human "
+                                     "message.".format(i))
+                if data[i + 1]["role"] != Role.AI.value:
+                    raise ValueError("The message at index {} is not an AI "
+                                     "message.".format(i + 1))
+                histories.append(Message(Role.HUMAN, data[i]["content"]))
+                histories.append(Message(Role.AI, data[i + 1]["content"]))
+        # Avoid destroy the content of this object if the above statements raise
+        #   any exception.
+        self.instruction_template = instruction_template
+        self.prompt_template = prompt_template
+        self.examples = examples
+        self.histories = histories
+
+    def clear_examples(self) -> None:
+        """
+        Clears all examples.
+        """
+        self.examples.clear()
+
+    def add_example(self, input: str, output: str) -> None:
+        """
+        Adds an example.
+
+        :param input: the input of the added example.
+        :param output: the output of the added example.
+        """
+        self.examples.append(Example(input=input, output=output))
+
+    def add_examples(self, examples: List[Example]) -> None:
+        """
+        Adds a list of examples.
+
+        :param examples: the list of examples to be added.
+        """
+        self.examples.extend(examples)
+
+    def clear_histories(self) -> None:
+        """
+        Clears all histories.
+        """
+        self.histories.clear()
+
+    def add_history(self, human_message: str, ai_message: str) -> None:
+        """
+        Adds a piece of conversation history.
+
+        :param human_message: the message said by the human.
+        :param ai_message: the message replied by the AI.
+        """
+        self.histories.append(Message(role=Role.HUMAN, content=human_message))
+        self.histories.append(Message(role=Role.AI, content=ai_message))
+
+    def add_histories(self, histories: List[Message]) -> None:
+        """
+        Adds a list of histories.
+
+        :param histories: the list of conversation histories to be added, which
+        must alternat human and AI messages.
+        """
+        if len(histories) % 2 != 0:
+            raise ValueError("The number of conversation histories must be even.")
+        for i in range(0, len(histories), 2):
+            if histories[i].role != Role.HUMAN:
+                raise ValueError("The message at index {} is not a human "
+                                 "message.".format(i))
+            if histories[i + 1].role != Role.AI:
+                raise ValueError("The message at index {} is not an AI "
+                                 "message.".format(i + 1))
+            self.histories.append(histories[i])
+            self.histories.append(histories[i + 1])
+
+    def _format_instruction(self, **kwargs: Any) -> str:
+        if (self.instruction_template == DEFAULT_INSTRUCTION_TEMPLATE
+                and ("instruction" not in kwargs)):
+            return ""
+        else:
+            return self.instruction_template.format(**kwargs)
+
+    def _format_prompt(self, **kwargs: Any) -> str:
+        if (self.prompt_template == DEFAULT_PROMPT_TEMPLATE
+                and ("prompt" not in kwargs)):
+            return ""
+        else:
+            return self.prompt_template.format(**kwargs)

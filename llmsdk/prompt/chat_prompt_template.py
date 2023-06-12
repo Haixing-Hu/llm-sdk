@@ -5,7 +5,7 @@
 #                                                                              =
 # ==============================================================================
 from dataclasses import dataclass
-from typing import Any, List, Dict
+from typing import Any, List
 
 from ..common import Role, Message
 from .structured_prompt_template import StructuredPromptTemplate
@@ -16,7 +16,7 @@ class ChatPromptTemplate(StructuredPromptTemplate):
     """
     The prompt template used to format the few-shot prompts.
 
-    The formatted text prompt has the following form:
+    The formatted prompt has the following form:
 
     ```
     [
@@ -36,9 +36,9 @@ class ChatPromptTemplate(StructuredPromptTemplate):
 
     ```
         i1 = "Translate the following text into {language}."
-        p1 = ChatPromptTemplate(instruction_template=i1, prompt_template="{prompt}")
-        p1.examples.append(Example(input="Hello, world!", output="你好，世界！"))
-        p1.examples.append(Example(input="What's your name?", output="你叫什么名字？"))
+        p1 = ChatPromptTemplate(instruction_template=i1)
+        p1.add_example(input="Hello, world!", output="你好，世界！")
+        p1.add_example(input="What's your name?", output="你叫什么名字？")
         v1 = p1.format(language="Chinese", prompt="Today is Sunday.")
         print(f"v1={v1}")
         self.assertEqual([
@@ -47,23 +47,19 @@ class ChatPromptTemplate(StructuredPromptTemplate):
             Message(Role.AI, "你好，世界！"),
             Message(Role.HUMAN, "What's your name?"),
             Message(Role.AI, "你叫什么名字？"),
-            Message(Role.HUMAN, "Today is Sunday."),
+            Message(Role.HUMAN, "Today is Sunday.")
         ], v1)
 
-        p2 = ChatPromptTemplate(instruction_template="{instruction}"，
-                                prompt_template="{prompt}")
-        p2.examples.append(Example(input="Hello, world!", output="你好，世界！"))
-        p2.examples.append(Example(input="What's your name?", output="你叫什么名字？"))
-        v2 = p2.format(instruction="Translate the following text into Chinese.",
-                       prompt="Today is Sunday.")
+        p2 = ChatPromptTemplate("You are a helpful assistant.")
+        p3.add_history(human_message="Who won the world series in 2020?",
+                       ai_message="The Los Angeles Dodgers won the World Series in 2020.") in 2020.")
+        v2 = p2.format(prompt="Where was it played?")
         print(f"v2={v2}")
         self.assertEqual([
-            Message(Role.SYSTEM, "Translate the following text into Chinese."),
-            Message(Role.HUMAN, "Hello, world!"),
-            Message(Role.AI, "你好，世界！"),
-            Message(Role.HUMAN, "What's your name?"),
-            Message(Role.AI, "你叫什么名字？"),
-            Message(Role.HUMAN, "Today is Sunday."),
+            Message(Role.SYSTEM, "You are a helpful assistant."),
+            Message(Role.HUMAN, "Who won the world series in 2020?"),
+            Message(Role.AI, "The Los Angeles Dodgers won the World Series in 2020."),
+            Message(Role.HUMAN, "Where was it played?")
         ], v2)
     ```
 
@@ -71,12 +67,16 @@ class ChatPromptTemplate(StructuredPromptTemplate):
 
     def format(self, **kwargs: Any) -> List[Message]:
         result = []
-        instruction = Message(Role.SYSTEM, self.instruction_template.format(**kwargs))
+        instruction = Message(role=Role.SYSTEM,
+                              content=self._format_instruction(**kwargs))
         if len(instruction.content) > 0:
             result.append(instruction)
         for e in self.examples:
             result.append(Message(Role.HUMAN, e.input))
             result.append(Message(Role.AI, e.output))
-        prompt = Message(Role.HUMAN, self.prompt_template.format(**kwargs))
-        result.append(prompt)
+        result.extend(self.histories)
+        prompt = Message(role=Role.HUMAN,
+                         content=self._format_prompt(**kwargs))
+        if len(prompt.content) > 0:
+            result.append(prompt)
         return result

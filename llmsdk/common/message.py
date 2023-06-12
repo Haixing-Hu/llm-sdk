@@ -31,8 +31,10 @@ class Message:
     The optional name of the speaker.
     """
 
-    def to_dict(self,
-                role_names_map: Dict[Role, str] = ROLE_NAMES_MAP) -> Dict[str, str]:
+    def to_dict(
+            self,
+            role_names_map: Dict[Role, str] = ROLE_NAMES_MAP
+    ) -> Dict[str, str]:
         """
         Converts this message to a dictionary.
 
