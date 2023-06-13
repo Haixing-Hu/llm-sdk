@@ -12,9 +12,14 @@ import copy
 
 from .metadata import Metadata
 from .example import Example
-from .faq import Faq
 from .vector import Vector
 from .point import Point
+
+DOCUMENT_TYPE_ATTRIBUTE: str = "__type__"
+"""
+The name of the metadata attribute storing the type of a document. 
+"""
+
 
 
 @dataclass
@@ -36,14 +41,6 @@ class Document:
     EXAMPLE_OUTPUT_ATTRIBUTE: ClassVar[str] = "__example_output__"
 
     EXAMPLE_PROPERTY_ATTRIBUTE: ClassVar[str] = "__example_property__"
-
-    FAQ_ID_ATTRIBUTE: ClassVar[str] = "__faq_id__"
-
-    FAQ_QUESTION_ATTRIBUTE: ClassVar[str] = "__faq_question__"
-
-    FAQ_ANSWER_ATTRIBUTE: ClassVar[str] = "__faq_answer__"
-
-    FAQ_PROPERTY_ATTRIBUTE: ClassVar[str] = "__faq_property__"
 
     DOCUMENT_ID_ATTRIBUTE: ClassVar[str] = "__document_id__"
     """The name of the metadata attribute storing the ID of the document."""
@@ -68,8 +65,8 @@ class Document:
         Tests whether this document is a splitted document.
         :return: True if this document is a splitted document; False otherwise.
         """
-        return (self.metadata.has_key(Document.ORIGINAL_DOCUMENT_ID_ATTRIBUTE, str)
-                and self.metadata.has_key(Document.ORIGINAL_DOCUMENT_INDEX_ATTRIBUTE, int))
+        return (self.metadata.has_key_of_type(Document.ORIGINAL_DOCUMENT_ID_ATTRIBUTE, str)
+                and self.metadata.has_key_of_type(Document.ORIGINAL_DOCUMENT_INDEX_ATTRIBUTE, int))
 
     def get_original_document_id(self) -> str:
         """
@@ -179,10 +176,10 @@ class Document:
         :return: True if this document is converted from an example; False
             otherwise.
         """
-        return (self.metadata.has_key(Document.EXAMPLE_ID_ATTRIBUTE, str)
-                and self.metadata.has_key(Document.EXAMPLE_PROPERTY_ATTRIBUTE, str)
-                and self.metadata.has_key(Document.EXAMPLE_INPUT_ATTRIBUTE, str)
-                and self.metadata.has_key(Document.EXAMPLE_OUTPUT_ATTRIBUTE, str)
+        return (self.metadata.has_key_of_type(Document.EXAMPLE_ID_ATTRIBUTE, str)
+                and self.metadata.has_key_of_type(Document.EXAMPLE_PROPERTY_ATTRIBUTE, str)
+                and self.metadata.has_key_of_type(Document.EXAMPLE_INPUT_ATTRIBUTE, str)
+                and self.metadata.has_key_of_type(Document.EXAMPLE_OUTPUT_ATTRIBUTE, str)
                 and (self.metadata[Document.EXAMPLE_PROPERTY_ATTRIBUTE] != "input"
                      or self.metadata[Document.EXAMPLE_PROPERTY_ATTRIBUTE] != "output"))
 
@@ -218,93 +215,6 @@ class Document:
         return [Document.to_example(doc) for doc in documents]
 
     @classmethod
-    def from_faq(cls, faq: Faq) -> List[Document]:
-        """
-        Converts a FAQ to a list of documents.
-
-        :return: the list of documents converted from the FAQ.
-        """
-        if faq.id is None or len(faq.id) == 0:
-            raise ValueError(f"The FAQ must have a non-empty ID: {faq}")
-        question_doc = Document(id=faq.id + "-question",
-                                content=faq.question,
-                                metadata=Metadata({
-                                    Document.FAQ_ID_ATTRIBUTE: faq.id,
-                                    Document.FAQ_PROPERTY_ATTRIBUTE: "question",
-                                    Document.FAQ_QUESTION_ATTRIBUTE: faq.question,
-                                    Document.FAQ_ANSWER_ATTRIBUTE: faq.answer,
-                                }),
-                                score=faq.score)
-        answer_doc = Document(id=faq.id + "-answer",
-                              content=faq.answer,
-                              metadata=Metadata({
-                                  Document.FAQ_ID_ATTRIBUTE: faq.id,
-                                  Document.FAQ_PROPERTY_ATTRIBUTE: "answer",
-                                  Document.FAQ_QUESTION_ATTRIBUTE: faq.question,
-                                  Document.FAQ_ANSWER_ATTRIBUTE: faq.answer,
-                              }),
-                              score=faq.score)
-        return [question_doc, answer_doc]
-
-    @classmethod
-    def from_faqs(cls, faqs: List[Faq]) -> List[Document]:
-        """
-        Converts a list of FAQs to a list of documents.
-
-        :param faqs: the specified list of FAQs.
-        :return: the list of documents converted from the specified list of
-            FAQs.
-        """
-        result = []
-        for faq in faqs:
-            result.extend(Document.from_faq(faq))
-        return result
-
-    def is_converted_from_faq(self) -> bool:
-        """
-        Tests whether this document is converted from a FAQ.
-
-        :return: True if this document is converted from a FAQ; False otherwise.
-        """
-        return (self.metadata.has_key(Document.FAQ_ID_ATTRIBUTE, str)
-                and self.metadata.has_key(Document.FAQ_PROPERTY_ATTRIBUTE, str)
-                and self.metadata.has_key(Document.FAQ_QUESTION_ATTRIBUTE, str)
-                and self.metadata.has_key(Document.FAQ_ANSWER_ATTRIBUTE, str)
-                and (self.metadata[Document.FAQ_PROPERTY_ATTRIBUTE] != "question"
-                     or self.metadata[Document.FAQ_PROPERTY_ATTRIBUTE] != "answer"))
-
-    @classmethod
-    def to_faq(cls, document: Document) -> Faq:
-        """
-        Converts the specified document to a Faq.
-
-        :param document: the specified document.
-        :return: the Faq the specified document is converted from.
-        :raise ValueError: if the specified document is not converted from a Faq.
-        """
-        if not document.is_converted_from_faq():
-            raise ValueError(f"The document is not converted from a Faq: {document}")
-        faq_id = document.metadata[Document.FAQ_ID_ATTRIBUTE]
-        faq_question = document.metadata[Document.FAQ_QUESTION_ATTRIBUTE]
-        faq_answer = document.metadata[Document.FAQ_ANSWER_ATTRIBUTE]
-        faq_score = document.score
-        return Faq(id=faq_id,
-                   question=faq_question,
-                   answer=faq_answer,
-                   score=faq_score)
-
-    @classmethod
-    def to_faqs(cls, documents: List[Document]) -> List[Faq]:
-        """
-        Converts the specified list of documents to a list of FAQs.
-
-        :param documents: the specified list of documents.
-        :return: the list of FAQs the specified documents are converted from.
-        :raise ValueError: if any document is not converted from a FAQ.
-        """
-        return [Document.to_faq(doc) for doc in documents]
-
-    @classmethod
     def from_point(cls, point: Point) -> Document:
         """
         Convert a Point to a Document.
@@ -315,8 +225,8 @@ class Document:
             attributes.
         :raise ValueError: if the specified point is not converted from a document.
         """
-        if ((not point.metadata.has_key(Document.DOCUMENT_ID_ATTRIBUTE, str))
-                or (not point.metadata.has_key(Document.DOCUMENT_CONTENT_ATTRIBUTE, str))):
+        if ((not point.metadata.has_key_of_type(Document.DOCUMENT_ID_ATTRIBUTE, str))
+                or (not point.metadata.has_key_of_type(Document.DOCUMENT_CONTENT_ATTRIBUTE, str))):
             raise ValueError(f"The point is not converted from a document: {point}")
         id = point.metadata[Document.DOCUMENT_ID_ATTRIBUTE]
         content = point.metadata[Document.DOCUMENT_CONTENT_ATTRIBUTE]

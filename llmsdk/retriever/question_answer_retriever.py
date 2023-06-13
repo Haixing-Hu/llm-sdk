@@ -6,13 +6,23 @@
 # ==============================================================================
 from typing import Any, List, Dict, Optional
 
-from ..common import Document, Faq, SearchType
+from ..common import (
+    Document,
+    Faq,
+    SearchType,
+    DOCUMENT_TYPE_ATTRIBUTE,
+    FAQ_PART_ATTRIBUTE,
+)
 from ..vectorstore import VectorStore, CollectionInfo
 from ..embedding import Embedding
 from ..llm import LargeLanguageModel, ModelType
 from ..splitter import TextSplitter
 from ..criterion import equal
-from ..prompt import StructuredPromptTemplate, TextPromptTemplate, ChatPromptTemplate
+from ..prompt import (
+    StructuredPromptTemplate,
+    TextPromptTemplate,
+    ChatPromptTemplate,
+)
 from .retriever import Retriever
 from .vector_store_retriever import VectorStoreRetriever
 
@@ -152,6 +162,14 @@ class QuestionAnswerRetriever(Retriever):
         if not self._answer_limit:
             self._answer_limit = config["answer_limit"]
 
+    def get_store_info(self) -> CollectionInfo:
+        """
+        Gets the information of the collection of underlying vector store.
+
+        :return: the information of the collection of underlying vector store.
+        """
+        return self._retriever.get_store_info()
+
     def _open(self, **kwargs: Any) -> None:
         self._retriever.open(**kwargs)
         self._is_opened = True
@@ -159,6 +177,68 @@ class QuestionAnswerRetriever(Retriever):
     def _close(self) -> None:
         self._retriever.close()
         self._is_opened = False
+
+    def add_faq(self, faq: Faq) -> List[Document]:
+        """
+        Adds a FAQ to this retriever.
+
+        :param faq: the FAQ to add.
+        :return: the list of actual documents added to this retriever, which may
+            be the sub-documents splitted from the original document.
+        """
+        self._logger.info("Adding a FAQ to the retriever %s ...",
+                          self._retriever_name)
+        self._logger.debug("The FAQ to add is: %s", faq)
+        self._ensure_opened()
+        docs = Faq.to_document(faq)
+        self._logger.debug("The FAQ is converted into %d documents: %s",
+                           len(docs), docs)
+        return self._retriever.add_all(docs)
+
+    def add_faqs(self, faqs: List[Faq]) -> List[Document]:
+        """
+        Adds a list of FAQs to this retriever.
+
+        :param faqs: the list of FAQs to add.
+        :return: the list of actual documents added to this retriever, which may
+            be the sub-documents splitted from the original document.
+        """
+        self._logger.info("Adding a list of FAQs to the retriever %s ...",
+                          self._retriever_name)
+        self._logger.debug("The FAQs to add are: %s", faqs)
+        self._ensure_opened()
+        docs = Faq.to_documents(faqs)
+        self._logger.debug("The FAQs are converted into %d documents: %s",
+                           len(docs), docs)
+        return self._retriever.add_all(docs)
+
+    def add_document(self, doc: Document) -> List[Document]:
+        """
+        Adds a document to this retriever.
+
+        :param doc: the document to add.
+        :return: the list of actual documents added to this retriever, which may
+            be the sub-documents splitted from the original document.
+        """
+        self._logger.info("Adding a document to the retriever %s ...",
+                          self._retriever_name)
+        self._logger.debug("The document to add is: %s", doc)
+        self._ensure_opened()
+        return self._retriever.add(doc)
+
+    def add_documents(self, docs: List[Document]) -> List[Document]:
+        """
+        Adds a list of documents to this retriever.
+
+        :param docs: the list of documents to add.
+        :return: the list of actual documents added to this retriever, which may
+            be the sub-documents splitted from the original document.
+        """
+        self._logger.info("Adding a list of documents to the retriever %s ...",
+                          self._retriever_name)
+        self._logger.debug("The documents to add are: %s", docs)
+        self._ensure_opened()
+        return self._retriever.add_all(docs)
 
     def ask(self, query: str) -> str:
         """
@@ -180,19 +260,7 @@ class QuestionAnswerRetriever(Retriever):
         :param query: the question to ask.
         :return: the answer of the question.
         """
-        # criterion to filter the questions of FAQs
-        question_filter = equal(Document.FAQ_PROPERTY_ATTRIBUTE, "question")
-        # criterion to filter the answers of FAQs
-        answer_filter = equal(Document.FAQ_PROPERTY_ATTRIBUTE, "answer")
-        # search for the most similar questions in the FAQs
-        question_docs = self._retriever.retrieve(
-            query=query,
-            limit=self._question_limit,
-            score_threshold=self._question_score_threshold,
-            criterion=question_filter
-        )
-        questions = Document.to_faqs(question_docs)
-        self._logger.info("Found %d similar questions: %s", len(questions), questions)
+        questions = self.__get_similar_questions(query)
         if (len(questions) > 0
                 and questions[0].score > self._direct_answer_score_threshold):
             # the score of the most similar question is greater than the
@@ -205,14 +273,7 @@ class QuestionAnswerRetriever(Retriever):
                               self._direct_answer_score_threshold,
                               questions[0].answer)
             return questions[0].answer
-        answers_docs = self._retriever.retrieve(
-            query=query,
-            limit=self._answer_limit,
-            score_threshold=self._answer_score_threshold,
-            criterion=answer_filter
-        )
-        answers = Document.to_faqs(answers_docs)
-        self._logger.info("Found %d related answers: %s", len(answers), answers)
+        answers = self.__get_related_answers(query)
         faqs = questions + answers
         if len(faqs) == 0:
             return self._unknown_question_answer
@@ -234,48 +295,36 @@ class QuestionAnswerRetriever(Retriever):
         answer = self._llm.generate(prompt)
         return answer
 
+    def __get_similar_questions(self, query: str) -> List[Faq]:
+        # criterion to filter the questions of FAQs
+        criterion = equal(FAQ_PART_ATTRIBUTE, "question")
+        # search for the most similar questions in the FAQs
+        docs = self._retriever.retrieve(
+            query=query,
+            limit=self._question_limit,
+            score_threshold=self._question_score_threshold,
+            criterion=criterion
+        )
+        questions = Faq.from_documents(docs)
+        self._logger.info("Found %d similar questions: %s",
+                          len(questions),
+                          [q.question for q in questions])
+        return questions
+
+    def __get_related_answers(self, query: str) -> List[Faq]:
+        # criterion to filter the answers of FAQs
+        criterion = equal(FAQ_PART_ATTRIBUTE, "answer")
+        docs = self._retriever.retrieve(
+            query=query,
+            limit=self._answer_limit,
+            score_threshold=self._answer_score_threshold,
+            criterion=criterion
+        )
+        answers = Faq.from_documents(docs)
+        self._logger.info("Found %d related answers: %s",
+                          len(answers), answers)
+        return answers
+
     def _retrieve(self, query: str, **kwargs: Any) -> List[Document]:
         answer = self._ask(query)
         return [Document(content=answer)]
-
-    def add(self, faq: Faq) -> List[Document]:
-        """
-        Adds a FAQ to this retriever.
-
-        :param faq: the FAQ to add.
-        :return: the list of actual documents added to this retriever, which may
-            be the sub-documents splitted from the original document.
-        """
-        self._logger.info("Adding a FAQ to the retriever %s ...",
-                          self._retriever_name)
-        self._logger.debug("The FAQ to add is: %s", faq)
-        self._ensure_opened()
-        docs = Document.from_faq(faq)
-        self._logger.debug("The FAQ is converted into %d documents: %s",
-                           len(docs), docs)
-        return self._retriever.add_all(docs)
-
-    def add_all(self, faqs: List[Faq]) -> List[Document]:
-        """
-        Adds a list of FAQs to this retriever.
-
-        :param faqs: the list of FAQs to add.
-        :return: the list of actual documents added to this retriever, which may
-            be the sub-documents splitted from the original document.
-        """
-        self._logger.info("Adding a list of FAQs to the retriever %s ...",
-                          self._retriever_name)
-        self._logger.debug("The FAQs to add are: %s", faqs)
-        self._ensure_opened()
-        docs = Document.from_faqs(faqs)
-        self._logger.debug("The FAQs are converted into %d documents: %s",
-                           len(docs), docs)
-        return self._retriever.add_all(docs)
-
-    def get_store_info(self) -> CollectionInfo:
-        """
-        Gets the information of the collection of underlying vector store.
-
-        :return: the information of the collection of underlying vector store.
-        """
-        return self._retriever.get_store_info()
