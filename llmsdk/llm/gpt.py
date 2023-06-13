@@ -6,7 +6,7 @@
 # ==============================================================================
 from typing import Any, Dict, List, Optional
 
-from ..common import Prompt
+from ..common.prompt import Prompt
 from ..util.openai_utils import (
     check_model_compatibility,
     call_with_retries,
@@ -14,6 +14,7 @@ from ..util.openai_utils import (
 )
 from .openai import OpenAiModel
 from .model_type import ModelType
+
 
 DEFAULT_MODEL = "text-davinci-003"
 

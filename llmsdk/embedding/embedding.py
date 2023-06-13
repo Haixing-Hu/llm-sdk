@@ -8,8 +8,11 @@ import logging
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from ..common import Document, Vector, Point
-from ..generator import IdGenerator, DefaultIdGenerator
+from ..common.document import Document
+from ..common.vector import Vector
+from ..common.point import Point
+from ..generator.id_generator import IdGenerator
+from ..generator.default_id_generator import DefaultIdGenerator
 
 
 class Embedding(ABC):

@@ -5,11 +5,11 @@
 #                                                                              =
 # ==============================================================================
 from typing import List, Optional, Tuple
-import math
 
 import numpy as np
 
-from ..common import Vector, Matrix
+from ..common.vector import Vector
+from ..common.matrix import Matrix
 
 
 def matrix_cosine_similarity(x: Matrix, y: Matrix) -> np.ndarray:

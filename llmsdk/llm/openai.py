@@ -9,7 +9,7 @@ from abc import ABC
 from ..util.openai_utils import init_openai
 from .model_type import ModelType
 from .llm import LargeLanguageModel
-from .tokenizer import OpenAiTokenizer
+from .tokenizer.openai_tokenizer import OpenAiTokenizer
 
 
 class OpenAiModel(LargeLanguageModel, ABC):

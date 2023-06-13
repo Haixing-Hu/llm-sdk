@@ -4,10 +4,12 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from typing import Union
-from llmsdk.common import MessageList
+from typing import Union, TypeAlias
 
-Prompt = Union[str, MessageList]
+from .message import MessageList
+
+
+Prompt: TypeAlias = Union[str, MessageList]
 """
 The type of prompts. 
 

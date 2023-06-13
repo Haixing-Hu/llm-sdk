@@ -8,9 +8,13 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 from logging import Logger, getLogger
 
-from ..common import Point, Vector, SearchType, Distance
-from ..criterion import Criterion
-from ..generator import IdGenerator, DefaultIdGenerator
+from ..common.distance import Distance
+from ..common.vector import Vector
+from ..common.point import Point
+from ..common.search_type import SearchType
+from ..criterion.criterion import Criterion
+from ..generator.id_generator import IdGenerator
+from ..generator.default_id_generator import DefaultIdGenerator
 from .payload_schema import PayloadSchema
 from .collection_info import CollectionInfo
 from .vector_store_utils import maximal_marginal_relevance

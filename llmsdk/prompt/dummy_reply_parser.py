@@ -6,8 +6,8 @@
 # ==============================================================================
 from typing import Optional, Any
 
+from ..common.prompt import Prompt
 from .reply_parser import ReplyParser
-from ..common import Prompt
 
 
 class DummyReplyParser(ReplyParser):

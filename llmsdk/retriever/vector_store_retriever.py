@@ -4,14 +4,17 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from typing import Any, Dict, List
+from typing import Any, List
 
-from .retriever import Retriever
-from ..common import Document, SearchType, Distance
-from ..vectorstore import VectorStore, CollectionInfo
-from ..embedding import Embedding
-from ..splitter import TextSplitter
+from ..common.search_type import SearchType
+from ..common.distance import Distance
+from ..common.document import Document
+from ..vectorstore.collection_info import CollectionInfo
+from ..vectorstore.vector_store import VectorStore
+from ..embedding.embedding import Embedding
+from ..splitter.text_splitter import TextSplitter
 from ..util.common_utils import extract_argument
+from .retriever import Retriever
 
 
 class VectorStoreRetriever(Retriever):

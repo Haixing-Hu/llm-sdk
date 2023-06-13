@@ -6,8 +6,8 @@
 # ==============================================================================
 from typing import Any, List
 
+from ..llm.tokenizer.tokernizer import Tokenizer, SpecialTokenSet
 from .text_splitter import TextSplitter
-from ..llm.tokenizer import Tokenizer, SpecialTokenSet
 
 
 class TokenTextSplitter(TextSplitter):

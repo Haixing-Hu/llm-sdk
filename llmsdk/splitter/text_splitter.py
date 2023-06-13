@@ -9,7 +9,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import List, Callable
 
-from ..common import Document
+from ..common.document import Document
 # from .text_splitter_utils import (
 #     sort_splitted_documents,
 #     check_original_document_id,

@@ -7,7 +7,8 @@
 from dataclasses import dataclass
 from typing import Any, List
 
-from ..common import Role, Message
+from ..common.message import Message
+from ..common.role import Role
 from .structured_prompt_template import StructuredPromptTemplate
 
 

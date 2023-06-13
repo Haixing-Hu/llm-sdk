@@ -6,8 +6,8 @@
 # ==============================================================================
 from typing import List
 
-from ..common import Vector
-from ..util.common_utils import normalize_vector
+from ..common.vector import Vector
+from ..util.math_utils import normalize_vector
 from .embedding import Embedding
 
 

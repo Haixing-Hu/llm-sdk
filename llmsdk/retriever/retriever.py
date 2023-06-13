@@ -5,10 +5,10 @@
 #                                                                              =
 # ==============================================================================
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+from typing import Any, List
 from logging import Logger, getLogger
 
-from ..common import Document
+from ..common.document import Document
 
 
 class Retriever(ABC):

@@ -7,10 +7,13 @@
 import copy
 from typing import Optional, Any, List, Dict
 
-from . import CollectionInfo, PayloadSchema
+from ..common.distance import Distance
+from ..common.vector import Vector
+from ..common.point import Point
+from ..criterion.criterion import Criterion
+from .collection_info import CollectionInfo
+from .payload_schema import PayloadSchema
 from .vector_store import VectorStore
-from ..common import Vector, Point, Distance
-from ..criterion import Criterion
 
 
 class SimpleVectorStore(VectorStore):

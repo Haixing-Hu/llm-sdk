@@ -6,24 +6,21 @@
 # ==============================================================================
 from typing import Any, List, Dict, Optional
 
-from ..common import (
-    Document,
-    Faq,
-    SearchType,
-    Message,
-    Role,
-    FAQ_PART_ATTRIBUTE,
-)
-from ..vectorstore import VectorStore, CollectionInfo
-from ..embedding import Embedding
-from ..llm import LargeLanguageModel, ModelType
-from ..splitter import TextSplitter
-from ..criterion import equal
-from ..prompt import (
-    StructuredPromptTemplate,
-    TextPromptTemplate,
-    ChatPromptTemplate,
-)
+from ..common.role import Role
+from ..common.message import Message
+from ..common.search_type import SearchType
+from ..common.faq import Faq, FAQ_PART_ATTRIBUTE
+from ..common.document import Document
+from ..vectorstore.collection_info import CollectionInfo
+from ..vectorstore.vector_store import VectorStore
+from ..embedding.embedding import Embedding
+from ..llm.llm import LargeLanguageModel
+from ..llm.model_type import ModelType
+from ..splitter.text_splitter import TextSplitter
+from ..criterion.criterion_builder import equal
+from ..prompt.structured_prompt_template import StructuredPromptTemplate
+from ..prompt.text_prompt_template import TextPromptTemplate
+from ..prompt.chat_prompt_template import ChatPromptTemplate
 from .retriever import Retriever
 from .vector_store_retriever import VectorStoreRetriever
 

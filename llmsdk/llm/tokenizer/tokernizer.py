@@ -7,7 +7,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Union, AbstractSet, Literal
 
-from ...common import MessageList
+from ...common.message import MessageList
 
 
 SpecialTokenSet = Union[Literal["all"], AbstractSet[str], type(None)]

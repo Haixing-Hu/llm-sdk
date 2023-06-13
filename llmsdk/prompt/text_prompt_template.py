@@ -7,7 +7,8 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
-from ..common import Example, Message
+from ..common.example import Example
+from ..common.message import Message
 from .structured_prompt_template import StructuredPromptTemplate
 
 

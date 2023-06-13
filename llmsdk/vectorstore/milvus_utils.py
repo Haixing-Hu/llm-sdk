@@ -6,14 +6,13 @@
 # ==============================================================================
 from typing import Optional, List
 
-from ..common import DataType, Distance
-from ..criterion import (
-    Criterion,
-    SimpleCriterion,
-    ComposedCriterion,
-    Operator,
-    Relation,
-)
+from ..common.data_type import DataType
+from ..common.distance import Distance
+from ..criterion.operator import Operator
+from ..criterion.relation import Relation
+from ..criterion.criterion import Criterion
+from ..criterion.simple_criterion import SimpleCriterion
+from ..criterion.composed_criterion import ComposedCriterion
 from .payload_schema import PayloadSchema
 
 

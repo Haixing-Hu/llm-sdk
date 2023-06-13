@@ -8,7 +8,8 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
-from ..common import Prompt, Message
+from ..common.message import Message
+from ..common.prompt import Prompt
 from .model_type import ModelType
 from .tokenizer import Tokenizer
 

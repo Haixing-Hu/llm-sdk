@@ -9,7 +9,7 @@ from typing import List
 
 from .criterion import Criterion
 from .relation import Relation
-from ..common import Metadata
+from ..common.metadata import Metadata
 
 
 @dataclass(frozen=True)

@@ -6,8 +6,9 @@
 # ==============================================================================
 from typing import List, Optional
 
-from ..common import Vector
-from ..llm.tokenizer import Tokenizer, OpenAiTokenizer
+from ..common.vector import Vector
+from ..llm.tokenizer.tokernizer import Tokenizer
+from ..llm.tokenizer.openai_tokenizer import OpenAiTokenizer
 from ..util.openai_utils import (
     get_model_tokens,
     get_embedding_output_dimensions,

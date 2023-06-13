@@ -7,7 +7,7 @@
 from typing import Iterable, List, Dict, Callable, Optional
 import logging
 
-from ..common import Document
+from ..common.document import Document
 
 
 def sort_splitted_documents(splitted_documents: List[Document]) -> List[Document]:

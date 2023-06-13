@@ -4,12 +4,14 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-import logging
-from typing import Optional, Any, Dict, List
+from typing import Optional, Any, List
 
-from ..common import Vector, Point, Protocol, Distance
-from ..criterion import Criterion
-from ..generator import IdGenerator
+from ..common.distance import Distance
+from ..common.protocol import Protocol
+from ..common.vector import Vector
+from ..common.point import Point
+from ..criterion.criterion import Criterion
+from ..generator.id_generator import IdGenerator
 from ..util.common_utils import extract_argument
 from .payload_schema import PayloadSchema
 from .collection_info import CollectionInfo

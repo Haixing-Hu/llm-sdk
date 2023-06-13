@@ -7,8 +7,10 @@
 from typing import List
 import logging
 
-from ...common import Role, Message
+from ...common.role import Role
+from ...common.message import Message
 from .tokernizer import Tokenizer, SpecialTokenSet
+
 
 OPENAI_ROLE_NAMES_MAP = {
     Role.SYSTEM: "system",

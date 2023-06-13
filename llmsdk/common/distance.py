@@ -8,8 +8,7 @@ import copy
 from enum import Enum
 from typing import List, Optional
 
-import numpy as np
-
+from ..util.math_utils import cosine_distance, dot_distance, euclid_distance
 from .vector import Vector
 from .point import Point
 
@@ -63,23 +62,11 @@ class Distance(Enum):
         """
         match self:
             case Distance.COSINE:
-                v1 = np.array(v1)
-                v2 = np.array(v2)
-                dot_product = np.dot(v1, v2)
-                v1_length = np.linalg.norm(v1)
-                v2_length = np.linalg.norm(v2)
-                return dot_product / (v1_length * v2_length)
+                return cosine_distance(v1, v2)
             case Distance.DOT:
-                v1 = np.array(v1)
-                v2 = np.array(v2)
-                return float(np.dot(v1, v2))
+                return dot_distance(v1, v2)
             case Distance.EUCLID:
-                v1 = np.array(v1)
-                v2 = np.array(v2)
-                diff = v1 - v2
-                squared_diff = diff ** 2
-                sum_squared_diff = np.sum(squared_diff)
-                return np.sqrt(sum_squared_diff)
+                return euclid_distance(v1, v2)
             case _:
                 raise ValueError(f"Unsupported distance: {self}")
 

@@ -16,13 +16,14 @@ from tenacity import (
     wait_exponential,
 )
 
+from ..common.role import Role
+from ..llm.tokenizer.tokernizer import Tokenizer
 from .common_utils import (
     singleton,
     read_config_file,
     is_website_accessible,
 )
-from ..common import Role
-from ..llm.tokenizer import Tokenizer
+
 
 API_KEY_ENV_NAME = "OPENAI_API_KEY"
 CONFIG_PATH_ENV_NAME = "OPENAI_CONFIG_PATH"

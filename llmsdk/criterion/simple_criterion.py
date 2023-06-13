@@ -9,7 +9,7 @@ from typing import Any, Optional
 
 from .criterion import Criterion
 from .operator import Operator
-from ..common import Metadata
+from ..common.metadata import Metadata
 
 
 @dataclass(frozen=True)

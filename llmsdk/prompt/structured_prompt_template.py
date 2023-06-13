@@ -11,7 +11,9 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List
 import json
 
-from ..common import Example, Message, Role
+from ..common.example import Example
+from ..common.message import Message
+from ..common.role import Role
 from .prompt_template import PromptTemplate
 
 

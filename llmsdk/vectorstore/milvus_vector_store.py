@@ -6,9 +6,12 @@
 # ==============================================================================
 from typing import Dict, Optional, Any, List
 
-from ..common import Vector, Point, Metadata, Distance
-from ..criterion import Criterion
-from ..generator import IdGenerator
+from ..common.distance import Distance
+from ..common.metadata import Metadata
+from ..common.vector import Vector
+from ..common.point import Point
+from ..criterion.criterion import Criterion
+from ..generator.id_generator import IdGenerator
 from .payload_schema import PayloadSchema
 from .collection_info import CollectionInfo
 from .vector_store import VectorStore

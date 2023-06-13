@@ -7,7 +7,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
-from llmsdk.common.prompt import Prompt
+from ..common.prompt import Prompt
 
 
 class ReplyParser(ABC):

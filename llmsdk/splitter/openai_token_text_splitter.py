@@ -6,9 +6,10 @@
 # ==============================================================================
 from typing import Any
 
+from ..llm.tokenizer.tokernizer import SpecialTokenSet
+from ..llm.tokenizer.openai_tokenizer import OpenAiTokenizer
+from ..embedding.openai_embedding import OpenAiEmbedding
 from .token_text_splitter import TokenTextSplitter
-from ..llm.tokenizer import SpecialTokenSet, OpenAiTokenizer
-from ..embedding import OpenAiEmbedding
 
 
 class OpenAiTokenTextSplitter(TokenTextSplitter):

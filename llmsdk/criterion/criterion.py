@@ -6,7 +6,7 @@
 # ==============================================================================
 from abc import ABC, abstractmethod
 
-from ..common import Metadata
+from ..common.metadata import Metadata
 
 
 class Criterion(ABC):
