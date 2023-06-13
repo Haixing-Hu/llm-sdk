@@ -7,11 +7,8 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
-from ..common import Example, Message, Role
-from .structured_prompt_template import (
-    StructuredPromptTemplate,
-    DEFAULT_INSTRUCTION_TEMPLATE,
-)
+from ..common import Example, Message
+from .structured_prompt_template import StructuredPromptTemplate
 
 
 DEFAULT_INSTRUCTION_SUFFIX: str = "\n"
@@ -172,14 +169,18 @@ class TextPromptTemplate(StructuredPromptTemplate):
 
     def _format_histories(self, histories: List[Message]) -> str:
         """
-        Formats the input/output of a list of messages.
+        Formats the conversation histories as a list of input/output pairs.
         """
         if len(histories) % 2 != 0:
             raise ValueError("The number of messages must be even.")
         result = ""
         for i in range(0, len(histories), 2):
-            result += self.example_input_prefix + histories[i].content + self.example_input_suffix
-            result += self.example_output_prefix + histories[i + 1].content + self.example_output_suffix
+            result += self.example_input_prefix \
+                + histories[i].content \
+                + self.example_input_suffix \
+                + self.example_output_prefix \
+                + histories[i + 1].content \
+                + self.example_output_suffix
         return result
 
     def load(self, conf: Dict[str, str]) -> None:
