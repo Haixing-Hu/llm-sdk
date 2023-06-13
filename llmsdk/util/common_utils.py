@@ -4,44 +4,64 @@
 #    All rights reserved.                                                      =
 #                                                                              =
 # ==============================================================================
-from typing import Dict, Any
+from typing import Dict, Any, Callable
 import threading
 import requests
 
 
-def singleton(func):
+def global_init(func):
     """
-    A decorator that creates a singleton instance of the decorated function.
+    A decorator that ensures a function is globally initialized only once, even
+    in a multi-threaded environment.
 
-    :param func: The function to be decorated.
-    :type func: function
-    :return: A new function that ensures only one instance of `func` is created.
-    :rtype: function
+    :Examples:
 
-    :Example:
-
-    The following example demonstrates how to use the `@singleton` decorator to
-    create a singleton instance of a global function called `my_global_function`:
+    The following example demonstrates how to use the `global_init` decorator to
+    ensure a global initialization function is only executed once, regardless of
+    how many times it is called:
 
     .. code-block:: python
 
-        @singleton
-        def my_global_function():
-            # Your code here
-            pass
+        @global_init
+        def initialize():
+            # Global initialization code here
+            print("Global initialization")
 
-        # Call the global function
-        result = my_global_function()
+        initialize()  # Only executed once
+        # Output: Global initialization
+
+        initialize()  # Not executed again
+
+    :param func: The function to be decorated.
+    :type func: callable
+    :return: The decorated function.
+    :rtype: callable
     """
     func.__lock__ = threading.Lock()
-    func.__instance__ = None
+    func.__initialized__ = False
 
     def wrapper(*args, **kwargs):
-        if not func.__instance__:
+        """
+        Wrapper function that implements the double-checked locking mechanism to
+        globally initialize a function.
+
+        This wrapper function implements the double-checked locking mechanism to
+        ensure that the decorated function is globally initialized only once. It
+        first checks if the function has been initialized without acquiring
+        the lock, and if not, it acquires the lock and performs the initialization.
+        The use of the lock and the __initialized__ flag provides thread safety
+        in a multi-threaded environment.
+
+        :param args: Positional arguments passed to the decorated function.
+        :param kwargs: Keyword arguments passed to the decorated function.
+        :return: The result of the decorated function.
+        """
+        if not func.__initialized__:
             with func.__lock__:
-                if not func.__instance__:
-                    func.__instance__ = func(*args, **kwargs)
-        return func.__instance__
+                if not func.__initialized__:
+                    func(*args, **kwargs)
+                    func.__initialized__ = True
+
     return wrapper
 
 

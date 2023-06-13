@@ -19,7 +19,7 @@ from tenacity import (
 from ..common.role import Role
 from ..llm.tokenizer.tokernizer import Tokenizer
 from .common_utils import (
-    singleton,
+    global_init,
     read_config_file,
     is_website_accessible,
 )
@@ -287,12 +287,14 @@ def set_openai_proxy(proxy: Optional[Dict] = None) -> dict:
     return proxy
 
 
-@singleton
+@global_init
 def init_openai(api_key: Optional[str] = None,
                 use_proxy: Optional[bool] = None,
                 proxy: Optional[Dict] = None) -> None:
     """
     Initializes the OpenAI APIs.
+
+    Note that this initialization function will be executed only once globally.
 
     :param api_key: the API KEY of the OpenAI. If it is None, the program will
      try to get it from the environment variable "OPENAI_API_KEY" or from the
