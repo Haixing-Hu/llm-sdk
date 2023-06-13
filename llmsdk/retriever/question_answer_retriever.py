@@ -309,7 +309,9 @@ class QuestionAnswerRetriever(Retriever):
         faqs = list(set(faqs))
         # sort the faqs by their scores
         faqs.sort(key=lambda x: x.score, reverse=True)
-        self._logger.info("Get %d different related FAQs: %s", len(faqs), faqs)
+        self._logger.info("Get %d different related FAQs: %s",
+                          len(faqs),
+                          [(q.question, q.score) for q in faqs])
         self._prompt_template.set_examples(Faq.to_examples(faqs))
         self._prompt_template.set_histories(self._histories)
         self._logger.debug("The prompt template is:\n%s", self._prompt_template)
@@ -324,6 +326,7 @@ class QuestionAnswerRetriever(Retriever):
         return answer
 
     def __get_similar_questions(self, question: str) -> List[Faq]:
+        self._logger.info("Searching the similar FAQ questions to: %s", question)
         # criterion to filter the questions of FAQs
         criterion = equal(FAQ_PART_ATTRIBUTE, "question")
         # search for the most similar questions in the FAQs
@@ -336,10 +339,11 @@ class QuestionAnswerRetriever(Retriever):
         result = Faq.from_documents(docs)
         self._logger.info("Found %d similar questions: %s",
                           len(result),
-                          [q.question for q in result])
+                          [(q.question, q.score) for q in result])
         return result
 
     def __get_related_answers(self, question: str) -> List[Faq]:
+        self._logger.info("Searching the related FAQ answer to: %s", question)
         # criterion to filter the answers of FAQs
         criterion = equal(FAQ_PART_ATTRIBUTE, "answer")
         docs = self._retriever.retrieve(
@@ -349,8 +353,9 @@ class QuestionAnswerRetriever(Retriever):
             criterion=criterion
         )
         result = Faq.from_documents(docs)
-        self._logger.info("Found %d related answers: %s",
-                          len(result), result)
+        self._logger.info("Found %d related FAQ answers: %s",
+                          len(result),
+                          [(q.question, q.score) for q in result])
         return result
 
     def _retrieve(self, query: str, **kwargs: Any) -> List[Document]:
