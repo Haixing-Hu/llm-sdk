@@ -425,7 +425,7 @@ class VectorStore(ABC):
         :return: the list of points as the searching result.
         """
         self._logger.info("Performing similarity search ...")
-        self._logger.debug("query_vector=%s, limit=%d, score_threshold=%f, "
+        self._logger.debug("query_vector=%s, limit=%d, score_threshold=%s, "
                            "criterion = %s", query_vector, limit,
                            score_threshold, criterion)
         self._ensure_store_opened()
@@ -495,7 +495,7 @@ class VectorStore(ABC):
         :return: the list of points as the searching result.
         """
         self._logger.info("Performing max marginal relevance search ...")
-        self._logger.debug("query_vector=%s, limit=%d, score_threshold=%f, "
+        self._logger.debug("query_vector=%s, limit=%d, score_threshold=%s, "
                            "criterion = %s, fetch_limit=%d, lambda_multiply=%f",
                            query_vector, limit, score_threshold, criterion,
                            fetch_limit, lambda_multiply)
