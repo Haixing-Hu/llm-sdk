@@ -134,6 +134,15 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
         """
         self.examples.extend(examples)
 
+    def set_examples(self, examples: List[Example]) -> None:
+        """
+        Sets the examples of this template to the specified example list.
+
+        :param examples: the specified example list.
+        """
+        self.examples.clear()
+        self.examples.extend(examples)
+
     def clear_histories(self) -> None:
         """
         Clears all histories.
@@ -157,6 +166,22 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
         :param histories: the list of conversation histories to be added, which
         must alternat human and AI messages.
         """
+        self._check_histories(histories)
+        for i in range(0, len(histories), 2):
+            self.histories.append(histories[i])
+            self.histories.append(histories[i + 1])
+
+    def set_histories(self, histories: List[Message]) -> None:
+        """
+        Sets the histories of this template to the specified history list.
+
+        :param histories: the specified history list.
+        """
+        self._check_histories(histories)
+        self.histories.clear()
+        self.histories.extend(histories)
+
+    def _check_histories(self, histories: List[Message]) -> None:
         if len(histories) % 2 != 0:
             raise ValueError("The number of conversation histories must be even.")
         for i in range(0, len(histories), 2):
@@ -166,8 +191,6 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
             if histories[i + 1].role != Role.AI:
                 raise ValueError("The message at index {} is not an AI "
                                  "message.".format(i + 1))
-            self.histories.append(histories[i])
-            self.histories.append(histories[i + 1])
 
     def _format_instruction(self, **kwargs: Any) -> str:
         if (self.instruction_template == DEFAULT_INSTRUCTION_TEMPLATE

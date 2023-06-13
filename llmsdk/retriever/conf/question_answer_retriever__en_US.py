@@ -23,4 +23,5 @@ CONFIG = {
     "answer_score_threshold": 0.75,
     "question_limit": 5,
     "answer_limit": 5,
+    "history_limit": 5,
 }

@@ -10,7 +10,8 @@ from ..common import (
     Document,
     Faq,
     SearchType,
-    DOCUMENT_TYPE_ATTRIBUTE,
+    Message,
+    Role,
     FAQ_PART_ATTRIBUTE,
 )
 from ..vectorstore import VectorStore, CollectionInfo
@@ -45,7 +46,8 @@ class QuestionAnswerRetriever(Retriever):
                  question_score_threshold: Optional[float] = None,
                  answer_score_threshold: Optional[float] = None,
                  question_limit: Optional[int] = None,
-                 answer_limit: Optional[int] = None) -> None:
+                 answer_limit: Optional[int] = None,
+                 history_limit: Optional[int] = None) -> None:
         """
         Constructs a LlmQuestionAnswerRetriever.
 
@@ -99,6 +101,9 @@ class QuestionAnswerRetriever(Retriever):
         :param answer_limit: the maximum number of the related answers to be
             selected. If this argument is set to `None`, the class will use the
             default value from the default configuration.
+        :param history_limit: the maximum number of the remembered conversation
+            histories. If this argument is set to `None`, the class will use the
+            default value from the default configuration.
         """
         super().__init__()
         self._retriever = VectorStoreRetriever(vector_store=vector_store,
@@ -116,6 +121,8 @@ class QuestionAnswerRetriever(Retriever):
         self._answer_score_threshold = answer_score_threshold
         self._question_limit = question_limit
         self._answer_limit = answer_limit
+        self._history_limit = history_limit
+        self._histories: List[Message] = []
         self.__init_parameters()
 
     def __load_config(self) -> Dict[str, Any]:
@@ -137,7 +144,6 @@ class QuestionAnswerRetriever(Retriever):
     def __init_parameters(self) -> None:
         if self._default_config is None:
             config = self.__load_config()
-            self._default_config = config
         else:
             config = self._default_config
         if not self._unknown_question_answer:
@@ -161,6 +167,8 @@ class QuestionAnswerRetriever(Retriever):
             self._question_limit = config["question_limit"]
         if not self._answer_limit:
             self._answer_limit = config["answer_limit"]
+        if not self._history_limit:
+            self._history_limit = config["history_limit"]
 
     def get_store_info(self) -> CollectionInfo:
         """
@@ -240,41 +248,61 @@ class QuestionAnswerRetriever(Retriever):
         self._ensure_opened()
         return self._retriever.add_all(docs)
 
-    def ask(self, query: str) -> str:
+    def ask(self, question: str) -> str:
         """
         Asks a question and gets the answer.
 
-        :param query: the question to ask.
+        :param question: the question to ask.
         :return: the answer of the question.
         """
-        self._logger.info("The user asks a question: '%s'", query)
+        self._logger.info("The user asks a question: '%s'", question)
         self._ensure_opened()
-        answer = self._ask(query)
+        answer = self._ask(question)
         self._logger.info("Get the following answer: '%s'", answer)
+        self.__append_history(question, answer)
         return answer
 
-    def _ask(self, query: str) -> str:
+    def __append_history(self, question: str, answer: str) -> None:
+        """
+        Adds a history of a question and its answer to the remembered histories.
+
+        If the length of remembered histories exceeds the limit, the oldest
+        history will be forgotten.
+
+        :param question: the question asked by the user.
+        :param answer: the answer replied by the AI.
+        """
+        self._logger.debug("Adding a history of a question and its answer to "
+                           "the remembered histories: '%s' -> '%s'",
+                           question, answer)
+        if len(self._histories) >= self._history_limit * 2:
+            self._histories.pop(0)
+            self._histories.pop(0)
+        self._histories.append(Message(Role.HUMAN, question))
+        self._histories.append(Message(Role.AI, answer))
+
+    def _ask(self, question: str) -> str:
         """
         Asks a question and gets the answer.
 
-        :param query: the question to ask.
+        :param question: the question to ask.
         :return: the answer of the question.
         """
-        questions = self.__get_similar_questions(query)
-        if (len(questions) > 0
-                and questions[0].score > self._direct_answer_score_threshold):
+        question_faqs = self.__get_similar_questions(question)
+        if (len(question_faqs) > 0
+                and question_faqs[0].score > self._direct_answer_score_threshold):
             # the score of the most similar question is greater than the
             # direct answer score threshold, so we can reply the answer
             # directly
             self._logger.info("The score of the most similar question is %f,"
                               "which is greater than the direct answer score "
                               "threshold %f: %s",
-                              questions[0].score,
+                              question_faqs[0].score,
                               self._direct_answer_score_threshold,
-                              questions[0].answer)
-            return questions[0].answer
-        answers = self.__get_related_answers(query)
-        faqs = questions + answers
+                              question_faqs[0])
+            return question_faqs[0].answer
+        answer_faqs = self.__get_related_answers(question)
+        faqs = question_faqs + answer_faqs
         if len(faqs) == 0:
             return self._unknown_question_answer
         # remove the duplicated elements in the faqs list
@@ -282,48 +310,48 @@ class QuestionAnswerRetriever(Retriever):
         # sort the faqs by their scores
         faqs.sort(key=lambda x: x.score, reverse=True)
         self._logger.info("Get %d different related FAQs: %s", len(faqs), faqs)
-        self._prompt_template.examples.clear()
-        self._prompt_template.examples.extend(Faq.to_examples(faqs))
-        self._logger.debug("The prompt template is: %s", self._prompt_template)
+        self._prompt_template.set_examples(Faq.to_examples(faqs))
+        self._prompt_template.set_histories(self._histories)
+        self._logger.debug("The prompt template is:\n%s", self._prompt_template)
         # generate the prompt
         prompt = self._prompt_template.format(
-            question=query,
+            question=question,
             unknown_question_answer=self._unknown_question_answer
         )
-        self._logger.info("The prompt is: %s", prompt)
+        self._logger.info("The prompt is:\n%s", prompt)
         # generate the answer by the LLM
         answer = self._llm.generate(prompt)
         return answer
 
-    def __get_similar_questions(self, query: str) -> List[Faq]:
+    def __get_similar_questions(self, question: str) -> List[Faq]:
         # criterion to filter the questions of FAQs
         criterion = equal(FAQ_PART_ATTRIBUTE, "question")
         # search for the most similar questions in the FAQs
         docs = self._retriever.retrieve(
-            query=query,
+            query=question,
             limit=self._question_limit,
             score_threshold=self._question_score_threshold,
             criterion=criterion
         )
-        questions = Faq.from_documents(docs)
+        result = Faq.from_documents(docs)
         self._logger.info("Found %d similar questions: %s",
-                          len(questions),
-                          [q.question for q in questions])
-        return questions
+                          len(result),
+                          [q.question for q in result])
+        return result
 
-    def __get_related_answers(self, query: str) -> List[Faq]:
+    def __get_related_answers(self, question: str) -> List[Faq]:
         # criterion to filter the answers of FAQs
         criterion = equal(FAQ_PART_ATTRIBUTE, "answer")
         docs = self._retriever.retrieve(
-            query=query,
+            query=question,
             limit=self._answer_limit,
             score_threshold=self._answer_score_threshold,
             criterion=criterion
         )
-        answers = Faq.from_documents(docs)
+        result = Faq.from_documents(docs)
         self._logger.info("Found %d related answers: %s",
-                          len(answers), answers)
-        return answers
+                          len(result), result)
+        return result
 
     def _retrieve(self, query: str, **kwargs: Any) -> List[Document]:
         answer = self._ask(query)
