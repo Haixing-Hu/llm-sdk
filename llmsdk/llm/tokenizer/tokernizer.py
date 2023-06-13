@@ -69,10 +69,10 @@ class Tokenizer(ABC):
         :return: the text decoded from the specified list of tokens.
         """
 
-    def count_tokens(self,
-                     text: str,
-                     allowed_special: SpecialTokenSet = None,
-                     disallowed_special: SpecialTokenSet = "all") -> int:
+    def count_text_tokens(self,
+                          text: str,
+                          allowed_special: SpecialTokenSet = None,
+                          disallowed_special: SpecialTokenSet = "all") -> int:
         """
         Counts the number of tokens encoded from the specified piece of text.
 

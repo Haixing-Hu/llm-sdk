@@ -15,21 +15,21 @@ class TestOpenAiTokenizer(unittest.TestCase):
     def test_count_tokens_text_davinci_002(self):
         tokenizer = OpenAiTokenizer("text-davinci-002")
         text = "hello world"
-        result = tokenizer.count_tokens(text)
+        result = tokenizer.count_text_tokens(text)
         self.assertEqual(result, 2)
 
         text = "\nHello there, how may I assist you today?"
-        result = tokenizer.count_tokens(text)
+        result = tokenizer.count_text_tokens(text)
         self.assertEqual(result, 11)
 
         text = "你好，世界！"
-        result = tokenizer.count_tokens(text)
+        result = tokenizer.count_text_tokens(text)
         self.assertEqual(result, 14)
 
     def test_count_tokens_gpt_3_5_turbo(self):
         tokenizer = OpenAiTokenizer("gpt-3.5-turbo")
         text = "你好，世界！"
-        result = tokenizer.count_tokens(text)
+        result = tokenizer.count_text_tokens(text)
         self.assertEqual(result, 7)
 
     def test_count_message_tokens(self):
