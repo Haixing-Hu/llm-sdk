@@ -155,12 +155,12 @@ class Faq:
         :return: True if the document is converted from a FAQ; false otherwise.
         """
         return ((doc.metadata is not None)
-                and doc.metadata.has_key_of_type(DOCUMENT_TYPE_ATTRIBUTE, str)
+                and doc.metadata.has_value_of_type(DOCUMENT_TYPE_ATTRIBUTE, str)
                 and (doc.metadata[DOCUMENT_TYPE_ATTRIBUTE] == "FAQ")
-                and doc.metadata.has_key_of_type(FAQ_ID_ATTRIBUTE, str)
-                and doc.metadata.has_key_of_type(FAQ_PART_ATTRIBUTE, str)
-                and doc.metadata.has_key_of_type(FAQ_QUESTION_ATTRIBUTE, str)
-                and doc.metadata.has_key_of_type(FAQ_ANSWER_ATTRIBUTE, str)
+                and doc.metadata.has_value_of_type(FAQ_ID_ATTRIBUTE, str)
+                and doc.metadata.has_value_of_type(FAQ_PART_ATTRIBUTE, str)
+                and doc.metadata.has_value_of_type(FAQ_QUESTION_ATTRIBUTE, str)
+                and doc.metadata.has_value_of_type(FAQ_ANSWER_ATTRIBUTE, str)
                 and (doc.metadata[FAQ_PART_ATTRIBUTE] == "question"
                      or doc.metadata[FAQ_PART_ATTRIBUTE] == "answer"))
 

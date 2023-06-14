@@ -34,18 +34,18 @@ class TestMetadata(unittest.TestCase):
         m1["a"] = 1
         m1["b"] = "b"
         m1["c"] = 0.1
-        self.assertEqual(True, m1.has_key_of_type("a", int))
-        self.assertEqual(False, m1.has_key_of_type("a", float))
-        self.assertEqual(False, m1.has_key_of_type("a", str))
-        self.assertEqual(True, m1.has_key_of_type("b", str))
-        self.assertEqual(False, m1.has_key_of_type("b", int))
-        self.assertEqual(False, m1.has_key_of_type("b", float))
-        self.assertEqual(True, m1.has_key_of_type("c", float))
-        self.assertEqual(False, m1.has_key_of_type("c", int))
-        self.assertEqual(False, m1.has_key_of_type("c", str))
-        self.assertEqual(False, m1.has_key_of_type("d", int))
-        self.assertEqual(False, m1.has_key_of_type("d", float))
-        self.assertEqual(False, m1.has_key_of_type("d", str))
+        self.assertEqual(True, m1.has_value_of_type("a", int))
+        self.assertEqual(False, m1.has_value_of_type("a", float))
+        self.assertEqual(False, m1.has_value_of_type("a", str))
+        self.assertEqual(True, m1.has_value_of_type("b", str))
+        self.assertEqual(False, m1.has_value_of_type("b", int))
+        self.assertEqual(False, m1.has_value_of_type("b", float))
+        self.assertEqual(True, m1.has_value_of_type("c", float))
+        self.assertEqual(False, m1.has_value_of_type("c", int))
+        self.assertEqual(False, m1.has_value_of_type("c", str))
+        self.assertEqual(False, m1.has_value_of_type("d", int))
+        self.assertEqual(False, m1.has_value_of_type("d", float))
+        self.assertEqual(False, m1.has_value_of_type("d", str))
 
 
 if __name__ == '__main__':

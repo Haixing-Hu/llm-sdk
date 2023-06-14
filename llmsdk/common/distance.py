@@ -96,7 +96,8 @@ class Distance(Enum):
 
     def sort(self, points: List[Point]) -> List[Point]:
         """
-        Sorts a list of points by their scores with this distance metric.
+        Sorts a list of points by their scores with respect to this distance
+        metric.
 
         :param points: the list of points.
         :return: the sorted list of points.
