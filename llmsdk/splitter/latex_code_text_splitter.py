@@ -1,9 +1,11 @@
-# ==============================================================================
-#                                                                              =
-#    Copyright (c) 2023. Haixing Hu                                            =
-#    All rights reserved.                                                      =
-#                                                                              =
-# ==============================================================================
+# ##############################################################################
+#                                                                              #
+#     Copyright (c) 2022 - 2023.                                               #
+#     Haixing Hu, Qubit Co. Ltd.                                               #
+#                                                                              #
+#     All rights reserved.                                                     #
+#                                                                              #
+# ##############################################################################
 from typing import Any
 
 from .recursive_character_text_splitter import RecursiveCharacterTextSplitter

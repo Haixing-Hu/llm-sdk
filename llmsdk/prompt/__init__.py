@@ -1,9 +1,11 @@
-# ==============================================================================
-#                                                                              =
-#    Copyright (c) 2023. Haixing Hu                                            =
-#    All rights reserved.                                                      =
-#                                                                              =
-# ==============================================================================
+# ##############################################################################
+#                                                                              #
+#     Copyright (c) 2022 - 2023.                                               #
+#     Haixing Hu, Qubit Co. Ltd.                                               #
+#                                                                              #
+#     All rights reserved.                                                     #
+#                                                                              #
+# ##############################################################################
 from .reply_parser import ReplyParser
 from .dummy_reply_parser import DummyReplyParser
 from .prompt_template import PromptTemplate

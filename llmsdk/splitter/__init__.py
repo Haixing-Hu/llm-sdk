@@ -1,9 +1,11 @@
-# ==============================================================================
-#                                                                              =
-#    Copyright (c) 2023. Haixing Hu                                            =
-#    All rights reserved.                                                      =
-#                                                                              =
-# ==============================================================================
+# ##############################################################################
+#                                                                              #
+#     Copyright (c) 2022 - 2023.                                               #
+#     Haixing Hu, Qubit Co. Ltd.                                               #
+#                                                                              #
+#     All rights reserved.                                                     #
+#                                                                              #
+# ##############################################################################
 from .text_splitter import TextSplitter
 from .token_text_splitter import TokenTextSplitter
 from .openai_token_text_splitter import OpenAiTokenTextSplitter
