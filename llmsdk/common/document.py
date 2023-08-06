@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, Dict, Any, List
 import copy
 
 from .metadata import Metadata
@@ -116,3 +116,42 @@ class Document:
         metadata[ORIGINAL_DOCUMENT_ID_ATTRIBUTE] = self.id
         metadata[SPLITTED_DOCUMENT_INDEX_ATTRIBUTE] = index
         return Document(id=id, content=text, metadata=metadata)
+
+    @classmethod
+    def from_record(cls,
+                    id_field: str,
+                    record: Dict[str, Any]) -> List[Document]:
+        """
+        Creates documents from a record.
+
+        :param id_field: the name of the field storing the ID of the record.
+        :param record: the record to be converted.
+        :return: the list of documents converted from the specified record.
+        """
+        result = []
+        metadata = Metadata(record)
+        for key in record.keys():
+            if key == id_field:
+                continue
+            content = str(record[key]).strip()
+            if len(content) == 0:
+                continue
+            doc = Document(content=content, metadata=copy.deepcopy(metadata))
+            result.append(doc)
+        return result
+
+    @classmethod
+    def from_records(cls,
+                     id_field: str,
+                     records: List[Dict[str, Any]]) -> List[Document]:
+        """
+        Creates a list of documents from a list of records.
+
+        :param id_field: the name of the field storing the ID of the record.
+        :param records: the records to be converted.
+        :return: the list of documents converted from the specified records.
+        """
+        result = []
+        for record in records:
+            result.extend(cls.from_record(id_field, record))
+        return result
