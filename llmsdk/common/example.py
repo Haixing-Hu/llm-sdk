@@ -120,7 +120,7 @@ class Example:
         """
         result = []
         for example in examples:
-            result.extend(Document.from_example(example))
+            result.extend(Example.to_document(example))
         return result
 
     @classmethod

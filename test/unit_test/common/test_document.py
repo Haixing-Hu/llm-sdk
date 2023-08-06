@@ -8,8 +8,7 @@
 # ##############################################################################
 import unittest
 
-from llmsdk.common import Document, Metadata, Example, Faq
-from llmsdk.embedding import MockEmbedding
+from llmsdk.common import Document, Metadata
 
 
 class TestDocument(unittest.TestCase):
@@ -30,63 +29,6 @@ class TestDocument(unittest.TestCase):
         self.assertEqual(3, doc2.metadata["x"])
         # the passed constructor argument is also change
         self.assertEqual(3, meta2["x"])
-
-    def test_to_point(self):
-        texts = ["content1", "content2"]
-        embedding = MockEmbedding()
-        vectors = embedding.embed_texts(texts)
-
-        d0 = Document(id="001",
-                      content=texts[0],
-                      metadata=Metadata({"f1": "v1", "f2": "v2"}))
-
-        p0 = Document.to_point(d0, vectors[0])
-        self.assertIsNone(p0.id)
-        self.assertEqual(vectors[0], p0.vector)
-        m0 = Metadata({
-            "f1": "v1",
-            "f2": "v2",
-            Document.DOCUMENT_ID_ATTRIBUTE: d0.id,
-            Document.DOCUMENT_CONTENT_ATTRIBUTE: d0.content,
-        })
-        self.assertEqual(m0, p0.metadata)
-        self.assertIsNone(p0.score)
-
-        d1 = Document(id="001",
-                      content=texts[1],
-                      metadata=Metadata({"f1": "v1", "f2": "v2", "f3": "v3"}))
-
-        p1 = Document.to_point(d1, vectors[1])
-        self.assertIsNone(p1.id)
-        self.assertEqual(vectors[1], p1.vector)
-        m1 = Metadata({
-            "f1": "v1",
-            "f2": "v2",
-            "f3": "v3",
-            Document.DOCUMENT_ID_ATTRIBUTE: d1.id,
-            Document.DOCUMENT_CONTENT_ATTRIBUTE: d1.content,
-        })
-        self.assertEqual(m1, p1.metadata)
-        self.assertIsNone(p1.score)
-
-    def test_from_point(self):
-        texts = ["content1", "content2"]
-        embedding = MockEmbedding()
-        vectors = embedding.embed_texts(texts)
-
-        d0 = Document(id="001",
-                      content=texts[0],
-                      metadata=Metadata({"f1": "v1", "f2": "v2"}))
-        p0 = Document.to_point(d0, vectors[0])
-        a0 = Document.from_point(p0)
-        self.assertEqual(d0, a0)
-
-        d1 = Document(id="001",
-                      content=texts[1],
-                      metadata=Metadata({"f1": "v1", "f2": "v2", "f3": "v3"}))
-        p1 = Document.to_point(d1, vectors[1])
-        a1 = Document.from_point(p1)
-        self.assertEqual(d1, a1)
 
 
 if __name__ == '__main__':
