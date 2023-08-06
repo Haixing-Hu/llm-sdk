@@ -11,9 +11,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, List
 
+from .document import Document, DOCUMENT_TYPE_ATTRIBUTE
 from .example import Example
 from .metadata import Metadata
-from .document import Document, DOCUMENT_TYPE_ATTRIBUTE
 
 
 FAQ_ID_ATTRIBUTE: str = "__faq_id__"
@@ -31,7 +31,7 @@ FAQ_ANSWER_ATTRIBUTE: str = "__faq_answer__"
 The name of the metadata attribute storing the original answer of a FAQ.
 """
 
-FAQ_PART_ATTRIBUTE: str = "__faq_property__"
+FAQ_PART_ATTRIBUTE: str = "__faq_part__"
 """
 The name of the metadata attribute storing the name of the part of a FAQ.
 """
@@ -156,15 +156,16 @@ class Faq:
         :param doc: the document to be tested.
         :return: True if the document is converted from a FAQ; false otherwise.
         """
-        return ((doc.metadata is not None)
-                and doc.metadata.has_value_of_type(DOCUMENT_TYPE_ATTRIBUTE, str)
-                and (doc.metadata[DOCUMENT_TYPE_ATTRIBUTE] == "FAQ")
-                and doc.metadata.has_value_of_type(FAQ_ID_ATTRIBUTE, str)
-                and doc.metadata.has_value_of_type(FAQ_PART_ATTRIBUTE, str)
-                and doc.metadata.has_value_of_type(FAQ_QUESTION_ATTRIBUTE, str)
-                and doc.metadata.has_value_of_type(FAQ_ANSWER_ATTRIBUTE, str)
-                and (doc.metadata[FAQ_PART_ATTRIBUTE] == "question"
-                     or doc.metadata[FAQ_PART_ATTRIBUTE] == "answer"))
+        metadata = doc.metadata
+        return (metadata is not None
+                and metadata.has_value_of_type(DOCUMENT_TYPE_ATTRIBUTE, str)
+                and metadata[DOCUMENT_TYPE_ATTRIBUTE] == "FAQ"
+                and metadata.has_value_of_type(FAQ_ID_ATTRIBUTE, str)
+                and metadata.has_value_of_type(FAQ_QUESTION_ATTRIBUTE, str)
+                and metadata.has_value_of_type(FAQ_ANSWER_ATTRIBUTE, str)
+                and metadata.has_value_of_type(FAQ_PART_ATTRIBUTE, str)
+                and (metadata[FAQ_PART_ATTRIBUTE] == "question"
+                     or metadata[FAQ_PART_ATTRIBUTE] == "answer"))
 
     @classmethod
     def from_document(cls, doc: Document) -> Faq:
