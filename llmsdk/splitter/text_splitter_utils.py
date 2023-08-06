@@ -28,7 +28,7 @@ def sort_splitted_documents(splitted_documents: List[Document]) -> List[Document
         raise ValueError("Empty list of splitted documents.")
     result: List[Optional[Document]] = [None] * n
     for doc in splitted_documents:
-        index = doc.get_original_document_index()
+        index = doc.get_splitted_document_index()
         if index < 0 or index >= n:
             raise ValueError(f"Invalid splitted index of the document: {doc}")
         if result[index] is not None:

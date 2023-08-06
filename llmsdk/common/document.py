@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import ClassVar, Optional
+from typing import Optional
 import copy
 
 from .metadata import Metadata
@@ -20,6 +20,16 @@ DOCUMENT_TYPE_ATTRIBUTE: str = "__type__"
 The name of the metadata attribute storing the type of a document. 
 """
 
+ORIGINAL_DOCUMENT_ID_ATTRIBUTE: str = "__original_document_id__"
+"""
+The name of the metadata attribute storing the ID of the original document. 
+"""
+
+SPLITTED_DOCUMENT_INDEX_ATTRIBUTE: str = "__splitted_document_index__"
+"""
+The name of the metadata attribute storing the index of the splitted document. 
+"""
+
 
 @dataclass
 class Document:
@@ -28,10 +38,6 @@ class Document:
 
     A document has a title, a content, and optional metadata.
     """
-
-    ORIGINAL_DOCUMENT_ID_ATTRIBUTE: ClassVar[str] = "__original_document_id__"
-
-    ORIGINAL_DOCUMENT_INDEX_ATTRIBUTE: ClassVar[str] = "__original_document_index__"
 
     content: str
     """The content of the document."""
@@ -50,8 +56,8 @@ class Document:
         Tests whether this document is a splitted document.
         :return: True if this document is a splitted document; False otherwise.
         """
-        return (self.metadata.has_value_of_type(Document.ORIGINAL_DOCUMENT_ID_ATTRIBUTE, str)
-                and self.metadata.has_value_of_type(Document.ORIGINAL_DOCUMENT_INDEX_ATTRIBUTE, int))
+        return (self.metadata.has_value_of_type(ORIGINAL_DOCUMENT_ID_ATTRIBUTE, str)
+                and self.metadata.has_value_of_type(SPLITTED_DOCUMENT_INDEX_ATTRIBUTE, int))
 
     def get_original_document_id(self) -> str:
         """
@@ -65,9 +71,9 @@ class Document:
         """
         if not self.is_splitted():
             raise ValueError("This document is not a splitted document.")
-        return self.metadata[Document.ORIGINAL_DOCUMENT_ID_ATTRIBUTE]
+        return self.metadata[ORIGINAL_DOCUMENT_ID_ATTRIBUTE]
 
-    def get_original_document_index(self) -> int:
+    def get_splitted_document_index(self) -> int:
         """
         Gets the index of this splitted document in its original document.
 
@@ -77,7 +83,7 @@ class Document:
         """
         if not self.is_splitted():
             raise ValueError("This document is not a splitted document.")
-        return self.metadata[Document.ORIGINAL_DOCUMENT_INDEX_ATTRIBUTE]
+        return self.metadata[SPLITTED_DOCUMENT_INDEX_ATTRIBUTE]
 
     def get_original_document_metadata(self) -> Metadata:
         """
@@ -88,10 +94,10 @@ class Document:
         """
         if not self.is_splitted():
             raise ValueError("This document is not a splitted document.")
-        result = copy.deepcopy(self.metadata)
-        result.pop(Document.ORIGINAL_DOCUMENT_ID_ATTRIBUTE)
-        result.pop(Document.ORIGINAL_DOCUMENT_INDEX_ATTRIBUTE)
-        return result
+        metadata = copy.deepcopy(self.metadata)
+        metadata.pop(ORIGINAL_DOCUMENT_ID_ATTRIBUTE)
+        metadata.pop(SPLITTED_DOCUMENT_INDEX_ATTRIBUTE)
+        return metadata
 
     def create_splitted_document(self,
                                  text: str,
@@ -107,6 +113,6 @@ class Document:
             raise ValueError(f"The ID of the original document must be set: {self}")
         id = self.id + "-" + str(index)
         metadata = copy.deepcopy(self.metadata)
-        metadata[Document.ORIGINAL_DOCUMENT_ID_ATTRIBUTE] = self.id
-        metadata[Document.ORIGINAL_DOCUMENT_INDEX_ATTRIBUTE] = index
+        metadata[ORIGINAL_DOCUMENT_ID_ATTRIBUTE] = self.id
+        metadata[SPLITTED_DOCUMENT_INDEX_ATTRIBUTE] = index
         return Document(id=id, content=text, metadata=metadata)
