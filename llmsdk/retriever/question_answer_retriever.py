@@ -7,6 +7,7 @@
 #                                                                              #
 # ##############################################################################
 from typing import Any, List, Dict, Optional
+from importlib import import_module
 
 from ..common.role import Role
 from ..common.message import Message
@@ -17,12 +18,9 @@ from ..vectorstore.collection_info import CollectionInfo
 from ..vectorstore.vector_store import VectorStore
 from ..embedding.embedding import Embedding
 from ..llm.llm import LargeLanguageModel
-from ..llm.model_type import ModelType
 from ..splitter.text_splitter import TextSplitter
 from ..criterion.criterion_builder import equal
 from ..prompt.structured_prompt_template import StructuredPromptTemplate
-from ..prompt.text_prompt_template import TextPromptTemplate
-from ..prompt.chat_prompt_template import ChatPromptTemplate
 from .retriever import Retriever
 from .vector_store_retriever import VectorStoreRetriever
 
@@ -48,7 +46,7 @@ class QuestionAnswerRetriever(Retriever):
                  answer_limit: Optional[int] = None,
                  history_limit: Optional[int] = None) -> None:
         """
-        Constructs a LlmQuestionAnswerRetriever.
+        Constructs a `QuestionAnswerRetriever`.
 
         :param vector_store: the underlying vector store.
         :param collection_name: the name of the vector collection to use. The
@@ -124,38 +122,16 @@ class QuestionAnswerRetriever(Retriever):
         self._histories: List[Message] = []
         self.__init_parameters()
 
-    def __load_config(self) -> Dict[str, Any]:
-        """
-        Loads the default configuration with respect to the specified langauge.
-
-        :return: the default configuration with respect to the specified langauge.
-        """
-        match self._language:
-            case "en_US":
-                from .conf.question_answer_retriever__en_US import CONFIG
-                return CONFIG
-            case "zh_CN":
-                from .conf.question_answer_retriever__zh_CN import CONFIG
-                return CONFIG
-            case _:
-                raise ValueError(f"Unsupported language: {self._language}")
-
     def __init_parameters(self) -> None:
         if self._default_config is None:
-            config = self.__load_config()
+            module = f".conf.question_answer_retriever__{self._language}"
+            config = import_module(module).CONFIG
         else:
             config = self._default_config
         if not self._unknown_question_answer:
             self._unknown_question_answer = config["unknown_question_answer"]
         if not self._prompt_template:
-            match self._llm.model_type:
-                case ModelType.TEXT_COMPLETION:
-                    self._prompt_template = TextPromptTemplate()
-                case ModelType.CHAT_COMPLETION:
-                    self._prompt_template = ChatPromptTemplate()
-                case _:
-                    raise ValueError(f"Unsupported LLM model type: {self._llm.model_type}")
-            self._prompt_template.load(config["prompt_template"])
+            self._prompt_template = self._llm.model_type.load_prompt_template(config["prompt_template"])
         if not self._direct_answer_score_threshold:
             self._direct_answer_score_threshold = config["direct_answer_score_threshold"]
         if not self._question_score_threshold:
@@ -191,7 +167,7 @@ class QuestionAnswerRetriever(Retriever):
 
         :param faq: the FAQ to add.
         :return: the list of actual documents added to this retriever, which may
-            be the sub-documents splitted from the original document.
+            be the sub-documents split from the original document.
         """
         self._logger.info("Adding a FAQ to the retriever %s ...",
                           self._retriever_name)
@@ -208,7 +184,7 @@ class QuestionAnswerRetriever(Retriever):
 
         :param faqs: the list of FAQs to add.
         :return: the list of actual documents added to this retriever, which may
-            be the sub-documents splitted from the original document.
+            be the sub-documents split from the original document.
         """
         self._logger.info("Adding a list of FAQs to the retriever %s ...",
                           self._retriever_name)
@@ -225,7 +201,7 @@ class QuestionAnswerRetriever(Retriever):
 
         :param doc: the document to add.
         :return: the list of actual documents added to this retriever, which may
-            be the sub-documents splitted from the original document.
+            be the sub-documents split from the original document.
         """
         self._logger.info("Adding a document to the retriever %s ...",
                           self._retriever_name)
@@ -239,7 +215,7 @@ class QuestionAnswerRetriever(Retriever):
 
         :param docs: the list of documents to add.
         :return: the list of actual documents added to this retriever, which may
-            be the sub-documents splitted from the original document.
+            be the sub-documents split from the original document.
         """
         self._logger.info("Adding a list of documents to the retriever %s ...",
                           self._retriever_name)

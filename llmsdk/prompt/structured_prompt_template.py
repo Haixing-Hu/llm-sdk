@@ -76,27 +76,27 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
             conf = json.loads(text)
             self.load(conf)
 
-    def load(self, conf: Dict[str, Any]) -> None:
+    def load(self, config: Dict[str, Any]) -> None:
         """
         Loads the configuration of this prompt template.
 
-        :param conf: the dictionary of the configuration.
+        :param config: the dictionary of the configuration.
         """
-        instruction_template = conf.get("instruction_template",
-                                        DEFAULT_INSTRUCTION_TEMPLATE)
-        prompt_template = conf.get("prompt_template",
-                                   DEFAULT_PROMPT_TEMPLATE)
+        instruction_template = config.get("instruction_template",
+                                          DEFAULT_INSTRUCTION_TEMPLATE)
+        prompt_template = config.get("prompt_template",
+                                     DEFAULT_PROMPT_TEMPLATE)
         examples = []
-        if "examples" in conf:
-            for e in conf["examples"]:
+        if "examples" in config:
+            for e in config["examples"]:
                 id = e.get("id", None)
                 input = e.get("input")
                 output = e.get("output")
                 example = Example(id=id, input=input, output=output)
                 examples.append(example)
         histories = []
-        if "histories" in conf:
-            data = conf["histories"]
+        if "histories" in config:
+            data = config["histories"]
             if len(data) % 2 != 0:
                 raise ValueError("The number of conversation histories must be even.")
             for i in range(0, len(data), 2):

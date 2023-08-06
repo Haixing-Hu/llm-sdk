@@ -186,17 +186,17 @@ class TextPromptTemplate(StructuredPromptTemplate):
                 + self.example_output_suffix
         return result
 
-    def load(self, conf: Dict[str, str]) -> None:
-        super().load(conf)
-        self.instruction_suffix = conf.get("instruction_suffix",
-                                           DEFAULT_INSTRUCTION_SUFFIX)
-        self.example_list_prefix = conf.get("example_list_prefix",
-                                            DEFAULT_EXAMPLE_LIST_PREFIX)
-        self.example_input_prefix = conf.get("example_input_prefix",
-                                             DEFAULT_EXAMPLE_INPUT_PREFIX)
-        self.example_input_suffix = conf.get("example_input_suffix",
-                                             DEFAULT_EXAMPLE_INPUT_SUFFIX)
-        self.example_output_prefix = conf.get("example_output_prefix",
-                                              DEFAULT_EXAMPLE_OUTPUT_PREFIX)
-        self.example_output_suffix = conf.get("example_output_suffix",
-                                              DEFAULT_EXAMPLE_OUTPUT_SUFFIX)
+    def load(self, config: Dict[str, str]) -> None:
+        super().load(config)
+        self.instruction_suffix = config.get("instruction_suffix",
+                                             DEFAULT_INSTRUCTION_SUFFIX)
+        self.example_list_prefix = config.get("example_list_prefix",
+                                              DEFAULT_EXAMPLE_LIST_PREFIX)
+        self.example_input_prefix = config.get("example_input_prefix",
+                                               DEFAULT_EXAMPLE_INPUT_PREFIX)
+        self.example_input_suffix = config.get("example_input_suffix",
+                                               DEFAULT_EXAMPLE_INPUT_SUFFIX)
+        self.example_output_prefix = config.get("example_output_prefix",
+                                                DEFAULT_EXAMPLE_OUTPUT_PREFIX)
+        self.example_output_suffix = config.get("example_output_suffix",
+                                                DEFAULT_EXAMPLE_OUTPUT_SUFFIX)

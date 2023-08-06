@@ -15,7 +15,7 @@ CONFIG = {
                                 "不要试图捏造答案。",
         "prompt_template": "{question}",
         "example_input_prefix": "问题：",
-        "example_output_prefix": "回答："
+        "example_output_prefix": "回答：",
     },
     "direct_answer_score_threshold": 0.92,
     "question_score_threshold": 0.85,
