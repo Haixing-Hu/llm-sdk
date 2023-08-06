@@ -11,6 +11,7 @@ from typing import Any, List
 from ..common.search_type import SearchType
 from ..common.distance import Distance
 from ..common.document import Document
+from ..common.point import Point
 from ..vectorstore.collection_info import CollectionInfo
 from ..vectorstore.vector_store import VectorStore
 from ..embedding.embedding import Embedding
@@ -129,7 +130,7 @@ class VectorStoreRetriever(Retriever):
             case _:
                 raise ValueError(f"Unsupported searching type: {self._search_type}")
         self._logger.debug("Gets the query result: %s", points)
-        return Document.from_points(points)
+        return Point.to_documents(points)
 
     def add(self, document: Document) -> List[Document]:
         """

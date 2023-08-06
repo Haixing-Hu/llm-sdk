@@ -17,7 +17,7 @@ from llmsdk.vectorstore import (
     CollectionInfo,
 )
 from llmsdk.embedding import MockEmbedding, OpenAiEmbedding
-from llmsdk.common import Document, DataType, Metadata, Distance
+from llmsdk.common import Document, DataType, Metadata, Distance, Point
 from llmsdk.criterion import equal
 
 COLLECTION_NAME: str = "test"
@@ -197,7 +197,7 @@ class TestVectorStoreBase(unittest.TestCase):
             result_points = store.similarity_search(vector,
                                                     limit=len(questions),
                                                     score_threshold=0.9)
-            result = Document.from_points(result_points)
+            result = Point.to_documents(result_points)
             print(result)
             self.assertEqual(1, len(result))
             self.assertEqual("什么是“惠民保”？", result[0].content)

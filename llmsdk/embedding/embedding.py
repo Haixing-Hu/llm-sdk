@@ -76,7 +76,7 @@ class Embedding(ABC):
         if not document.id:
             document.id = self._id_generator.generate()
         vectors = self._embed_texts([document.content])
-        point = Document.to_point(document, vectors[0])
+        point = Point.from_document(document, vectors[0])
         self._logger.info("Successfully embedded the document.")
         self._logger.debug("The embedded point of the document is: %s", point)
         return point
@@ -96,7 +96,7 @@ class Embedding(ABC):
         for i in range(n):
             if not documents[i].id:
                 documents[i].id = self._id_generator.generate()
-            p = Document.to_point(documents[i], vectors[i])
+            p = Point.from_document(documents[i], vectors[i])
             points.append(p)
         self._logger.info("Successfully embedded %d documents.", n)
         self._logger.debug("The embedded points of the documents are: %s", points)
