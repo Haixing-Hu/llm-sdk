@@ -137,8 +137,6 @@ class Document:
         metadata = Metadata(record)
         metadata[DOCUMENT_TYPE_ATTRIBUTE] = "RECORD"
         for key in record.keys():
-            if key == id_field:
-                continue
             content = str(record[key]).strip()
             if len(content) == 0:
                 continue

@@ -33,64 +33,75 @@ class TestDocument(unittest.TestCase):
     def test_from_record(self):
         record = {
             "id": "001",
-            "name": "doc1",
+            "name": "name1",
             "spec": "10ml",
             "value": 1,
             "delta": 0.13,
         }
         docs = Document.from_record("id", record)
-        self.assertEqual(4, len(docs))
+        self.assertEqual(5, len(docs))
 
-        self.assertEqual("doc1", docs[0].content)
+        self.assertEqual("001", docs[0].content)
         self.assertEqual(Metadata({
             "id": "001",
-            "name": "doc1",
+            "name": "name1",
+            "spec": "10ml",
+            "value": 1,
+            "delta": 0.13,
+            "__type__": "RECORD",
+            "__record_field__": "id",
+        }), docs[0].metadata)
+
+        self.assertEqual("name1", docs[1].content)
+        self.assertEqual(Metadata({
+            "id": "001",
+            "name": "name1",
             "spec": "10ml",
             "value": 1,
             "delta": 0.13,
             "__type__": "RECORD",
             "__record_field__": "name",
-        }), docs[0].metadata)
+        }), docs[1].metadata)
 
-        self.assertEqual("10ml", docs[1].content)
+        self.assertEqual("10ml", docs[2].content)
         self.assertEqual(Metadata({
             "id": "001",
-            "name": "doc1",
+            "name": "name1",
             "spec": "10ml",
             "value": 1,
             "delta": 0.13,
             "__type__": "RECORD",
             "__record_field__": "spec",
-        }), docs[1].metadata)
+        }), docs[2].metadata)
 
-        self.assertEqual("1", docs[2].content)
+        self.assertEqual("1", docs[3].content)
         self.assertEqual(Metadata({
             "id": "001",
-            "name": "doc1",
+            "name": "name1",
             "spec": "10ml",
             "value": 1,
             "delta": 0.13,
             "__type__": "RECORD",
             "__record_field__": "value",
-        }), docs[2].metadata)
+        }), docs[3].metadata)
 
-        self.assertEqual("0.13", docs[3].content)
+        self.assertEqual("0.13", docs[4].content)
         self.assertEqual(Metadata({
             "id": "001",
-            "name": "doc1",
+            "name": "name1",
             "spec": "10ml",
             "value": 1,
             "delta": 0.13,
             "__type__": "RECORD",
             "__record_field__": "delta",
-        }), docs[3].metadata)
+        }), docs[4].metadata)
 
     def test_to_record(self):
         doc = Document(
-            content="doc1",
+            content="name1",
             metadata=Metadata({
                 "id": "001",
-                "name": "doc1",
+                "name": "name1",
                 "spec": "10ml",
                 "value": 1,
                 "delta": 0.13,
@@ -101,7 +112,7 @@ class TestDocument(unittest.TestCase):
         record = Document.to_record(doc)
         self.assertEqual({
             "id": "001",
-            "name": "doc1",
+            "name": "name1",
             "spec": "10ml",
             "value": 1,
             "delta": 0.13,
@@ -109,10 +120,22 @@ class TestDocument(unittest.TestCase):
 
     def test_to_records(self):
         doc1 = Document(
-            content="doc1",
+            content="001",
             metadata=Metadata({
                 "id": "001",
-                "name": "doc1",
+                "name": "name1",
+                "spec": "10ml",
+                "value": 1,
+                "delta": 0.13,
+                "__type__": "RECORD",
+                "__record_field__": "id",
+            }),
+        )
+        doc2 = Document(
+            content="name1",
+            metadata=Metadata({
+                "id": "001",
+                "name": "name1",
                 "spec": "10ml",
                 "value": 1,
                 "delta": 0.13,
@@ -120,11 +143,11 @@ class TestDocument(unittest.TestCase):
                 "__record_field__": "name",
             }),
         )
-        doc2 = Document(
+        doc3 = Document(
             content="10ml",
             metadata=Metadata({
                 "id": "001",
-                "name": "doc1",
+                "name": "name1",
                 "spec": "10ml",
                 "value": 1,
                 "delta": 0.13,
@@ -132,11 +155,11 @@ class TestDocument(unittest.TestCase):
                 "__record_field__": "spec",
             }),
         )
-        doc3 = Document(
+        doc4 = Document(
             content="1",
             metadata=Metadata({
                 "id": "001",
-                "name": "doc1",
+                "name": "name1",
                 "spec": "10ml",
                 "value": 1,
                 "delta": 0.13,
@@ -144,11 +167,11 @@ class TestDocument(unittest.TestCase):
                 "__record_field__": "value",
             }),
         )
-        doc4 = Document(
+        doc5 = Document(
             content="0.13",
             metadata=Metadata({
                 "id": "001",
-                "name": "doc1",
+                "name": "name1",
                 "spec": "10ml",
                 "value": 1,
                 "delta": 0.13,
@@ -156,12 +179,12 @@ class TestDocument(unittest.TestCase):
                 "__record_field__": "delta",
             }),
         )
-        docs = [doc1, doc2, doc3, doc4]
+        docs = [doc1, doc2, doc3, doc4, doc5]
         records = Document.to_records("id", docs)
         self.assertEqual(1, len(records))
         self.assertEqual({
             "id": "001",
-            "name": "doc1",
+            "name": "name1",
             "spec": "10ml",
             "value": 1,
             "delta": 0.13,
