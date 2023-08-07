@@ -9,10 +9,8 @@
 from typing import Any, List, Dict, Optional
 from importlib import import_module
 
-from ..common.role import Role
-from ..common.message import Message
 from ..common.search_type import SearchType
-from ..common.document import Document
+from ..common.document import Document, RECORD_FIELD_ATTRIBUTE
 from ..vectorstore.collection_info import CollectionInfo
 from ..vectorstore.vector_store import VectorStore
 from ..embedding.embedding import Embedding
@@ -20,6 +18,7 @@ from ..llm.llm import LargeLanguageModel
 from ..splitter.text_splitter import TextSplitter
 from ..criterion.criterion_builder import equal
 from ..prompt.structured_prompt_template import StructuredPromptTemplate
+from ..util.common_utils import record_to_csv, records_to_csv
 from .retriever import Retriever
 from .vector_store_retriever import VectorStoreRetriever
 
@@ -39,6 +38,7 @@ class SimilarRecordRetriever(Retriever):
                  default_config: Optional[Dict[str, Any]] = None,
                  language: Optional[str] = "en_US",
                  prompt_template: Optional[StructuredPromptTemplate] = None,
+                 record_limit: Optional[int] = None,
                  record_score_threshold: Optional[float] = None) -> None:
         """
         Constructs a `SimilarRecordRetriever`.
@@ -61,6 +61,9 @@ class SimilarRecordRetriever(Retriever):
         :param prompt_template: the prompt template used to generate the prompt
             send to the LLM. If this argument is set to `None`, the class will
             use the default prompt template from the default configuration.
+        :param record_limit: the maximum number of the related records to be
+            selected. If this argument is set to `None`, the class will use the
+            default value from the default configuration.
         :param record_score_threshold: the threshold of the scores of the
             similar records. When user gives a query record, the program will
             embed the record to a vector and search for the most similar records
@@ -81,21 +84,24 @@ class SimilarRecordRetriever(Retriever):
         self._default_config = default_config
         self._language = language
         self._prompt_template = prompt_template
-        self.record_score_threshold = record_score_threshold
+        self._record_limit = record_limit
+        self._record_score_threshold = record_score_threshold
         self.__init_parameters()
 
     def __init_parameters(self) -> None:
         if self._default_config is None:
             module = f".conf.similar_record_retriever__{self._language}"
-            config = import_module(module).CONFIG
+            config = import_module(name=module, package=__package__).CONFIG
         else:
             config = self._default_config
         if not self._prompt_template:
             self._prompt_template = (self._llm
                                          .model_type
                                          .load_prompt_template(config["prompt_template"]))
-        if not self.record_score_threshold:
-            self._history_limit = config["record_score_threshold"]
+        if not self._record_limit:
+            self._record_limit = config["record_limit"]
+        if not self._record_score_threshold:
+            self._record_score_threshold = config["record_score_threshold"]
 
     def get_store_info(self) -> CollectionInfo:
         """
@@ -179,13 +185,13 @@ class SimilarRecordRetriever(Retriever):
         self._logger.debug("The top similar records are: %s", similar_records)
         id_field = self._record_id_field
         prompt = self._prompt_template.format(
-            known_records=similar_records,
-            query_record=record,
+            known_records=records_to_csv(similar_records),
+            query_record=record_to_csv(record),
             id_field=id_field
         )
         self._logger.info("The prompt to LLM is:\n%s", prompt)
         answer = self._llm.generate(prompt).strip()
-        self._logger.info("The answer from LLM is:\n%s", answer)
+        self._logger.info("The answer from LLM is: %s", answer)
         if answer == "NONE":
             return None
         else:
@@ -201,8 +207,33 @@ class SimilarRecordRetriever(Retriever):
         :param record: the query record.
         :return: the list of similar records to the given query record.
         """
-        pass
+        result = []
+        for key in record:
+            docs = self._retriever.retrieve(
+                query=str(record[key]),
+                limit=self._record_limit,
+                score_threshold=self._record_score_threshold,
+                criterion=equal(RECORD_FIELD_ATTRIBUTE, key),
+            )
+            result.extend(Document.to_records(self._record_id_field, docs))
+        if len(result) == 0:
+            # try to find the similar records without the attribute constraint
+            self._logger.info("No similar records are found with the attribute "
+                              "constraint, trying to find similar records "
+                              "without the attribute constraint ...")
+            for key in record:
+                docs = self._retriever.retrieve(
+                    query=str(record[key]),
+                    limit=self._record_limit,
+                    score_threshold=self._record_score_threshold,
+                )
+                result.extend(Document.to_records(self._record_id_field, docs))
+        self._logger.info("Found %d similar records: %s", len(result), result)
+        return result
 
     def _retrieve(self, query: str, **kwargs: Any) -> List[Document]:
-        answer = self._find(query)
-        return [Document(content=answer)]
+        record = self._find({"query": query})
+        if record is None:
+            return []
+        else:
+            return Document.from_record(self._record_id_field, record)

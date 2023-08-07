@@ -21,5 +21,6 @@ CONFIG = {
         "example_input_prefix": "输入：\n",
         "example_output_prefix": "输出：\n",
     },
+    "record_limit": 10,
     "record_score_threshold": 0.85,
 }

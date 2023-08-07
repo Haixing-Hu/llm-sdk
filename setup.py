@@ -13,7 +13,7 @@ setup(
     version="0.2.0",
     packages=find_packages(),
     install_requires=[
-        "numpy~=1.23.0",
+        "numpy~=1.25.0",
         "frozendict",
         "requests",
         "tenacity",

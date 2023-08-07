@@ -133,6 +133,8 @@ class Document:
         :param record: the record to be converted.
         :return: the list of documents converted from the specified record.
         """
+        if id_field not in record:
+            raise ValueError(f"The ID field '{id_field}' is not found in the record: {record}")
         result = []
         metadata = Metadata(record)
         metadata[DOCUMENT_TYPE_ATTRIBUTE] = "RECORD"

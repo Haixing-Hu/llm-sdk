@@ -125,7 +125,7 @@ class QuestionAnswerRetriever(Retriever):
     def __init_parameters(self) -> None:
         if self._default_config is None:
             module = f".conf.question_answer_retriever__{self._language}"
-            config = import_module(module).CONFIG
+            config = import_module(name=module, package=__package__).CONFIG
         else:
             config = self._default_config
         if not self._unknown_question_answer:
