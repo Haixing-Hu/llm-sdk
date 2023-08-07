@@ -16,6 +16,8 @@ from llmsdk.util.common_utils import (
     read_config_file,
     is_website_accessible,
     extract_argument,
+    record_to_csv,
+    records_to_csv,
 )
 
 
@@ -108,6 +110,53 @@ class TestCommonUtils(unittest.TestCase):
         result = extract_argument(kwargs, name, default_value)
         self.assertEqual(result, expected_result)
         self.assertNotIn(name, kwargs)
+
+    def test_record_to_csv(self):
+        record1 = {
+            "id": "001",
+            "name": "name1",
+            "spec": "10ml",
+            "value": 1,
+            "delta": 0.13,
+        }
+        csv1 = record_to_csv(record1)
+        expected_csv1 = ("id,name,spec,value,delta\n"
+                         "001,name1,10ml,1,0.13\n")
+        self.assertEqual(csv1, expected_csv1)
+
+        record2 = {
+            "id": "002",
+            "name": "name,2\"",
+            "spec": "20ml",
+            "value": 2,
+            "delta": 3.14,
+        }
+        csv2 = record_to_csv(record2)
+        expected_csv2 = ("id,name,spec,value,delta\n"
+                         "002,\"name,2\"\"\",20ml,2,3.14\n")
+        self.assertEqual(csv2, expected_csv2)
+
+    def test_records_to_csv(self):
+        record1 = {
+            "id": "001",
+            "name": "name1",
+            "spec": "10ml",
+            "value": 1,
+            "delta": 0.13,
+        }
+        record2 = {
+            "id": "002",
+            "name": "name,2\"",
+            "brand": "qubit",
+            "spec": "20ml",
+            "value": 2,
+            "delta": 3.14,
+        }
+        csv = records_to_csv([record1, record2])
+        expected_csv = ("id,name,spec,value,delta,brand\n"
+                        "001,name1,10ml,1,0.13,\n"
+                        "002,\"name,2\"\"\",20ml,2,3.14,qubit\n")
+        self.assertEqual(csv, expected_csv)
 
 
 if __name__ == "__main__":

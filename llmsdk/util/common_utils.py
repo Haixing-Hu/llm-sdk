@@ -6,9 +6,11 @@
 #     All rights reserved.                                                     #
 #                                                                              #
 # ##############################################################################
-from typing import Dict, Any, Callable
+from typing import Dict, Any, List
 import threading
 import requests
+import csv
+from io import StringIO
 
 
 def global_init(func):
@@ -139,3 +141,56 @@ def extract_argument(kwargs: Dict[str, Any], name: str, default_value: Any) -> A
         return value
     else:
         return default_value
+
+
+def record_to_csv(record: Dict[str, Any]) -> str:
+    """
+    Convert a record to a CSV string.
+
+    :param record: the record to be converted.
+    :return: the CSV string of the record.
+    """
+    header = []
+    row = []
+    for key, value in record.items():
+        header.append(key)
+        row.append(value)
+    # Create a CSV file in memory
+    csv_file = StringIO()
+    csv_writer = csv.writer(csv_file, lineterminator='\n')
+    # Write CSV data
+    csv_writer.writerow(header)
+    csv_writer.writerow(row)
+    # Get CSV data
+    return csv_file.getvalue()
+
+
+def records_to_csv(records: List[Dict[str, Any]]) -> str:
+    """
+    Convert a list of records to a CSV string.
+
+    :param records: the list of records to be converted.
+    :return: the CSV string of the records.
+    """
+    header = []
+    rows = []
+    for record in records:
+        for key in record.keys():
+            if key not in header:
+                header.append(key)
+    for record in records:
+        row = []
+        for key in header:
+            if key in record:
+                row.append(record[key])
+            else:
+                row.append("")
+        rows.append(row)
+    # Create a CSV file in memory
+    csv_file = StringIO()
+    csv_writer = csv.writer(csv_file, lineterminator='\n')
+    # Write CSV data
+    csv_writer.writerow(header)
+    csv_writer.writerows(rows)
+    # Get CSV data
+    return csv_file.getvalue()
