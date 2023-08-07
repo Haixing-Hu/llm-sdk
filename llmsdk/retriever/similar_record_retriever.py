@@ -71,13 +71,13 @@ class SimilarRecordRetriever(Retriever):
             use the default value from the default configuration.
         """
         super().__init__()
-        self._record_id_field = record_id_field
         self._retriever = VectorStoreRetriever(vector_store=vector_store,
                                                collection_name=collection_name,
                                                embedding=embedding,
                                                splitter=splitter,
                                                search_type=SearchType.SIMILARITY)
         self._llm = llm
+        self._record_id_field = record_id_field
         self._default_config = default_config
         self._language = language
         self._prompt_template = prompt_template

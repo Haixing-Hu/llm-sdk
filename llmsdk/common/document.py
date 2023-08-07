@@ -20,6 +20,11 @@ DOCUMENT_TYPE_ATTRIBUTE: str = "__type__"
 The name of the metadata attribute storing the type of a document. 
 """
 
+RECORD_FIELD_ATTRIBUTE: str = "__record_field__"
+"""
+The name of the metadata attribute storing the field of a record. 
+"""
+
 ORIGINAL_DOCUMENT_ID_ATTRIBUTE: str = "__original_document_id__"
 """
 The name of the metadata attribute storing the ID of the original document. 
@@ -130,13 +135,16 @@ class Document:
         """
         result = []
         metadata = Metadata(record)
+        metadata[DOCUMENT_TYPE_ATTRIBUTE] = "RECORD"
         for key in record.keys():
             if key == id_field:
                 continue
             content = str(record[key]).strip()
             if len(content) == 0:
                 continue
-            doc = Document(content=content, metadata=copy.deepcopy(metadata))
+            m = copy.deepcopy(metadata)
+            m[RECORD_FIELD_ATTRIBUTE] = key
+            doc = Document(content=content, metadata=m)
             result.append(doc)
         return result
 
@@ -154,4 +162,43 @@ class Document:
         result = []
         for record in records:
             result.extend(cls.from_record(id_field, record))
+        return result
+
+    @classmethod
+    def to_record(cls, doc: Document) -> Dict[str, Any]:
+        """
+        Converts a document to a record.
+
+        :param doc: the document to be converted.
+        :return: the record converted from the specified document.
+        """
+        record = dict(doc.metadata)
+        record.pop(DOCUMENT_TYPE_ATTRIBUTE)
+        record.pop(RECORD_FIELD_ATTRIBUTE)
+        return record
+
+    @classmethod
+    def to_records(cls, id_field: str, docs: List[Document]) -> List[Dict[str, Any]]:
+        """
+        Converts a list of documents to a list of records.
+
+        Note that the result list of records will remove the duplicated records
+        with the same ID.
+
+        :param id_field: the name of the field storing the ID of the record.
+        :param docs: the documents to be converted.
+        :return: the list of records converted from the specified documents,
+            which will remove the duplicated records with the same ID.
+        """
+        result = []
+        id_set = set()
+        for doc in docs:
+            record = cls.to_record(doc)
+            if id_field not in record:
+                raise ValueError(f"The ID field '{id_field}' is not found in the record: {record}")
+            id = record[id_field]
+            if id in id_set:
+                continue
+            result.append(record)
+            id_set.add(id)
         return result

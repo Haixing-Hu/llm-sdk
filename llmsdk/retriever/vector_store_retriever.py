@@ -110,25 +110,14 @@ class VectorStoreRetriever(Retriever):
         limit = extract_argument(kwargs, "limit", VectorStoreRetriever.DEFAULT_LIMIT)
         score_threshold = extract_argument(kwargs, "score_threshold", None)
         criterion = extract_argument(kwargs, "criterion", None)
-        match self._search_type:
-            case SearchType.SIMILARITY:
-                points = self._vector_store.similarity_search(
-                    query_vector=query_vector,
-                    limit=limit,
-                    score_threshold=score_threshold,
-                    criterion=criterion,
-                    **kwargs,
-                )
-            case SearchType.MAX_MARGINAL_RELEVANCE:
-                points = self._vector_store.max_marginal_relevance_search(
-                    query_vector=query_vector,
-                    limit=limit,
-                    score_threshold=score_threshold,
-                    criterion=criterion,
-                    **kwargs,
-                )
-            case _:
-                raise ValueError(f"Unsupported searching type: {self._search_type}")
+        points = self._vector_store.search(
+            query_vector=query_vector,
+            limit=limit,
+            score_threshold=score_threshold,
+            criterion=criterion,
+            search_type=self._search_type,
+            **kwargs,
+        )
         self._logger.debug("Gets the query result: %s", points)
         return Point.to_documents(points)
 
