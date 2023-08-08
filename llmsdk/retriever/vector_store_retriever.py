@@ -50,6 +50,17 @@ class VectorStoreRetriever(Retriever):
         self._search_type = search_type
         self._query_vector_cache = {}
 
+    def set_logging_level(self, level: int | str) -> None:
+        """
+        Sets the logging level of this object.
+
+        :param level: the logging level to be set.
+        """
+        self._logger.setLevel(level)
+        self._vector_store.set_logging_level(level)
+        self._embedding.set_logging_level(level)
+        self._splitter.set_logging_level(level)
+
     @property
     def vector_store(self) -> VectorStore:
         return self._vector_store

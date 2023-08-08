@@ -42,7 +42,7 @@ class TestSimilarRecordRetriever(unittest.TestCase):
     }, {
         "编码": "0004",
         "名称": "一次性使用负压采血管",
-        "药品规格": "促凝管+分离胶 1ml ",
+        "药品规格": "促凝管+分离胶 1ml",
         "包装规格": "",
         "药品商品名": "一次性使用负压采血管",
         "中文通用名": "203-采血管",
@@ -85,7 +85,7 @@ class TestSimilarRecordRetriever(unittest.TestCase):
         embedding = OpenAiEmbedding()
         splitter = CharacterTextSplitter()
         collection_name = "DRUG_MATCH"
-        llm = ChatGpt()
+        llm = ChatGpt(temperature=1)
         cls.retriever = SimilarRecordRetriever(record_id_field="编码",
                                                vector_store=store,
                                                collection_name=collection_name,
@@ -106,13 +106,14 @@ class TestSimilarRecordRetriever(unittest.TestCase):
         cls.retriever.close()
 
     def test_find(self):
+        # self.retriever.set_logging_level(logging.DEBUG)
         f1 = self.retriever.find({"名称": "山楂颗粒"})
         self.assertEqual(self.TEST_DATA[5], f1)
         f3 = self.retriever.find({"名称": "采血管", "规格": "1ml"})
         self.assertEqual(self.TEST_DATA[3], f3)
         f5 = self.retriever.find({"名称": "采血管9ml"})
         self.assertEqual(self.TEST_DATA[4], f5)
-        f8 = self.retriever.find({"名称": "九制丸"})
+        f8 = self.retriever.find({"名称": "大黄丸"})
         self.assertEqual(self.TEST_DATA[7], f8)
 
     def test_find__non_name_field_match(self):

@@ -86,6 +86,8 @@ class SimilarRecordRetriever(Retriever):
         self._prompt_template = prompt_template
         self._record_limit = record_limit
         self._record_score_threshold = record_score_threshold
+        self._last_prompt = None
+        self._last_reply = None
         self.__init_parameters()
 
     def __init_parameters(self) -> None:
@@ -102,6 +104,16 @@ class SimilarRecordRetriever(Retriever):
             self._record_limit = config["record_limit"]
         if not self._record_score_threshold:
             self._record_score_threshold = config["record_score_threshold"]
+
+    def set_logging_level(self, level: int | str) -> None:
+        """
+        Sets the logging level of this object.
+
+        :param level: the logging level to be set.
+        """
+        self._logger.setLevel(level)
+        self._retriever.set_logging_level(level)
+        self._llm.set_logging_level(level)
 
     def get_store_info(self) -> CollectionInfo:
         """
@@ -190,13 +202,15 @@ class SimilarRecordRetriever(Retriever):
             id_field=id_field
         )
         self._logger.info("The prompt to LLM is:\n%s", prompt)
-        answer = self._llm.generate(prompt).strip()
-        self._logger.info("The answer from LLM is: %s", answer)
-        if answer == "NONE":
+        self._last_prompt = prompt
+        reply = self._llm.generate(prompt).strip()
+        self._logger.info("The answer from LLM is: %s", reply)
+        self._last_reply = reply
+        if reply == "NONE":
             return None
         else:
             for r in similar_records:
-                if (id_field in r) and (r[id_field] == answer):
+                if (id_field in r) and (r[id_field] == reply):
                     return r
             return None
 
@@ -237,3 +251,10 @@ class SimilarRecordRetriever(Retriever):
             return []
         else:
             return Document.from_record(self._record_id_field, record)
+
+    def explain(self) -> str:
+        """
+        Gets the explanation of the last query.
+
+        :return: the explanation of the last query.
+        """

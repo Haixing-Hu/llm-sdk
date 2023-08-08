@@ -24,12 +24,19 @@ class ChatPromptTemplate(StructuredPromptTemplate):
     ```
     [
         Message(Role.SYSTEM, {instruction}),
-        Message(Role.HUMAN, {example1.input}),
-        Message(Role.AI, {example1.output}),
-        Message(Role.HUMAN, {example2.input}),
-        Message(Role.AI, {example2.output}),
-        Message(Role.HUMAN, {example3.input}),
-        Message(Role.AI, {example3.output}),
+        Message(Role.HUMAN, {examples[0].input}),
+        Message(Role.AI, {examples[0].output}),
+        Message(Role.HUMAN, {examples[1].input}),
+        Message(Role.AI, {examples[1].output}),
+        Message(Role.HUMAN, {examples[2].input}),
+        Message(Role.AI, {examples[2].output}),
+        ...
+        Message(Role.HUMAN, {histories[0].content}),
+        Message(Role.AI, {histories[1].content}),
+        Message(Role.HUMAN, {histories[2].content}),
+        Message(Role.AI, {histories[3].content}),
+        Message(Role.HUMAN, {histories[4].content}),
+        Message(Role.AI, {histories[5].content}),
         ...
         Message(Role.HUMAN, prompt),
     ]

@@ -6,10 +6,10 @@
 #     All rights reserved.                                                     #
 #                                                                              #
 # ##############################################################################
-import copy
-import logging
 from abc import ABC, abstractmethod
 from typing import List, Callable
+from logging import Logger, getLogger
+import copy
 
 from ..common.document import Document
 # from .text_splitter_utils import (
@@ -41,7 +41,19 @@ class TextSplitter(ABC):
         self._chunk_size = chunk_size
         self._chunk_overlap = chunk_overlap
         self._length_function = length_function
-        self._logger = logging.getLogger(self.__class__.__name__)
+        self._logger = getLogger(self.__class__.__name__)
+
+    @property
+    def logger(self) -> Logger:
+        return self._logger
+
+    def set_logging_level(self, level: int | str) -> None:
+        """
+        Sets the logging level of this object.
+
+        :param level: the logging level to be set.
+        """
+        self._logger.setLevel(level)
 
     @property
     def chunk_size(self) -> int:

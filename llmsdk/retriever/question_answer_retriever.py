@@ -145,6 +145,16 @@ class QuestionAnswerRetriever(Retriever):
         if not self._history_limit:
             self._history_limit = config["history_limit"]
 
+    def set_logging_level(self, level: int | str) -> None:
+        """
+        Sets the logging level of this object.
+
+        :param level: the logging level to be set.
+        """
+        self._logger.setLevel(level)
+        self._retriever.set_logging_level(level)
+        self._llm.set_logging_level(level)
+
     def get_store_info(self) -> CollectionInfo:
         """
         Gets the information of the collection of underlying vector store.

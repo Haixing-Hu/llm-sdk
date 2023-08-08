@@ -7,7 +7,7 @@
 #                                                                              #
 # ##############################################################################
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 from logging import Logger, getLogger
 
 from ..common.distance import Distance
@@ -42,6 +42,14 @@ class VectorStore(ABC):
     @property
     def logger(self) -> Logger:
         return self._logger
+
+    def set_logging_level(self, level: int | str) -> None:
+        """
+        Sets the logging level of this object.
+
+        :param level: the logging level to be set.
+        """
+        self._logger.setLevel(level)
 
     @property
     def store_name(self) -> str:

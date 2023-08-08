@@ -59,9 +59,9 @@ class ChatGpt(OpenAiModel):
         self._api = openai.ChatCompletion.create
 
     def _submit_request(self, prompt: Prompt, n: int) -> Dict[str, Any]:
-        if (not isinstance(prompt, list)) \
-                or (len(prompt) == 0) \
-                or (not isinstance(prompt[0], Message)):
+        if ((not isinstance(prompt, list))
+                or (len(prompt) == 0)
+                or (not isinstance(prompt[0], Message))):
             raise ValueError("The OpenAI's GPT-3.5+ model only support message list prompt.")
         messages = [m.to_dict(role_names_map=OPENAI_ROLE_NAMES_MAP) for m in prompt]
         self._logger.debug("Submit messages:\n%s", messages)

@@ -6,9 +6,9 @@
 #     All rights reserved.                                                     #
 #                                                                              #
 # ##############################################################################
-import logging
 from abc import ABC, abstractmethod
 from typing import List, Optional
+from logging import Logger, getLogger
 
 from ..common.document import Document
 from ..common.vector import Vector
@@ -31,9 +31,26 @@ class Embedding(ABC):
         :param vector_dimension: the number of dimension of the embedded vectors.
         :param id_generator: the generator used to generating document IDs.
         """
-        self._logger = logging.getLogger(self.__class__.__name__)
+        self._logger = getLogger(self.__class__.__name__)
         self._vector_dimension = vector_dimension
         self._id_generator = id_generator or DefaultIdGenerator()
+
+    @property
+    def logger(self) -> Logger:
+        """
+        Gets the logger of this object.
+
+        :return: the logger of this object.
+        """
+        return self._logger
+
+    def set_logging_level(self, level: int | str) -> None:
+        """
+        Sets the logging level of this object.
+
+        :param level: the logging level to be set.
+        """
+        self._logger.setLevel(level)
 
     @property
     def vector_dimension(self) -> int:
