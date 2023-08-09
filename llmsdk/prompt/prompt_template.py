@@ -30,7 +30,7 @@ class PromptTemplate(ABC):
     """
 
     @abstractmethod
-    def format(self, **kwargs: Any) -> Prompt:
+    def format_prompt(self, **kwargs: Any) -> Prompt:
         """
         Formats the prompt with the specified input variables.
 
@@ -38,7 +38,7 @@ class PromptTemplate(ABC):
 
         .. code-block:: python
 
-            prompt.format(variable1="foo")
+            template.format_prompt(variable1="foo")
 
         :param kwargs: Any arguments to be passed to the prompt template.
         :return: the formatted prompt.

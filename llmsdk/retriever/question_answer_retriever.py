@@ -301,7 +301,7 @@ class QuestionAnswerRetriever(Retriever):
         self._prompt_template.set_histories(self._histories)
         self._logger.debug("The prompt template is:\n%s", self._prompt_template)
         # generate the prompt
-        prompt = self._prompt_template.format(
+        prompt = self._prompt_template.format_prompt(
             question=question,
             unknown_question_answer=self._unknown_question_answer
         )

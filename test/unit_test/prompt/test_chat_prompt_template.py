@@ -18,12 +18,15 @@ from llmsdk.prompt import (
     DEFAULT_INSTRUCTION_TEMPLATE,
     DEFAULT_CONTEXT_TEMPLATE,
     DEFAULT_OUTPUT_REQUIREMENT_TEMPLATE,
+    DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE,
     DEFAULT_INSTRUCTION_PREFIX,
     DEFAULT_INSTRUCTION_SUFFIX,
     DEFAULT_CONTEXT_PREFIX,
     DEFAULT_CONTEXT_SUFFIX,
     DEFAULT_OUTPUT_REQUIREMENT_PREFIX,
     DEFAULT_OUTPUT_REQUIREMENT_SUFFIX,
+    DEFAULT_EXPLANATION_INSTRUCTION_PREFIX,
+    DEFAULT_EXPLANATION_INSTRUCTION_SUFFIX,
 )
 
 TEST_CONFIGURATIONS = [{
@@ -31,6 +34,7 @@ TEST_CONFIGURATIONS = [{
     "context_template": "Template context 0",
     "output_requirement_template": "Template output indicator 0",
     "input_template": "Template input 0",
+    "explanation_instruction_template": "Explanation instruction 0",
     "examples": [
         {
             "id": "1",
@@ -53,6 +57,7 @@ TEST_CONFIGURATIONS = [{
     "context_template": "Template context 1",
     "output_requirement_template": "Template output indicator 1",
     "input_template": "Template input 1",
+    "explanation_instruction_template": "Explanation instruction 1",
     "examples": [
         {
             "id": "1",
@@ -71,6 +76,8 @@ TEST_CONFIGURATIONS = [{
     "context_suffix": "<br/>",
     "output_requirement_prefix": "Output requirement 1:<br/>",
     "output_requirement_suffix": "<br/>",
+    "explanation_instruction_prefix": "Explanation Instruction 1: <br/>",
+    "explanation_instruction_suffix": "<br/>",
     "example_list_prefix": "<ul>",
     "example_list_suffix": "</ul>",
     "example_input_prefix": "<li>Input: ",
@@ -82,6 +89,7 @@ TEST_CONFIGURATIONS = [{
     "context_template": "Template context 2",
     "output_requirement_template": "Template output indicator 2",
     "input_template": "Template input 2",
+    "explanation_instruction_template": "Explanation instruction 2",
     "examples": [
         {
             "id": "1",
@@ -138,6 +146,8 @@ class TestChatPromptTemplate(unittest.TestCase):
                          p1.output_requirement_template)
         self.assertEqual(DEFAULT_INPUT_TEMPLATE,
                          p1.input_template)
+        self.assertEqual(DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE,
+                         p1.explanation_instruction_template)
         self.assertEqual(DEFAULT_INSTRUCTION_PREFIX,
                          p1.instruction_prefix)
         self.assertEqual(DEFAULT_INSTRUCTION_SUFFIX,
@@ -150,6 +160,10 @@ class TestChatPromptTemplate(unittest.TestCase):
                          p1.output_requirement_prefix)
         self.assertEqual(DEFAULT_OUTPUT_REQUIREMENT_SUFFIX,
                          p1.output_requirement_suffix)
+        self.assertEqual(DEFAULT_EXPLANATION_INSTRUCTION_PREFIX,
+                         p1.explanation_instruction_prefix)
+        self.assertEqual(DEFAULT_EXPLANATION_INSTRUCTION_SUFFIX,
+                         p1.explanation_instruction_suffix)
         self.assertEqual([], p1.examples)
         self.assertEqual([], p1.histories)
 
@@ -162,6 +176,8 @@ class TestChatPromptTemplate(unittest.TestCase):
                          p2.output_requirement_template)
         self.assertEqual(DEFAULT_INPUT_TEMPLATE,
                          p2.input_template)
+        self.assertEqual(DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE,
+                         p2.explanation_instruction_template)
         self.assertEqual(DEFAULT_INSTRUCTION_PREFIX,
                          p2.instruction_prefix)
         self.assertEqual(DEFAULT_INSTRUCTION_SUFFIX,
@@ -174,6 +190,10 @@ class TestChatPromptTemplate(unittest.TestCase):
                          p2.output_requirement_prefix)
         self.assertEqual(DEFAULT_OUTPUT_REQUIREMENT_SUFFIX,
                          p2.output_requirement_suffix)
+        self.assertEqual(DEFAULT_EXPLANATION_INSTRUCTION_PREFIX,
+                         p2.explanation_instruction_prefix)
+        self.assertEqual(DEFAULT_EXPLANATION_INSTRUCTION_SUFFIX,
+                         p2.explanation_instruction_suffix)
         self.assertEqual([], p2.examples)
         self.assertEqual([], p2.histories)
 
@@ -193,6 +213,8 @@ class TestChatPromptTemplate(unittest.TestCase):
                          p3.output_requirement_template)
         self.assertEqual(DEFAULT_INPUT_TEMPLATE,
                          p3.input_template)
+        self.assertEqual(DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE,
+                         p3.explanation_instruction_template)
         self.assertEqual(DEFAULT_INSTRUCTION_PREFIX,
                          p3.instruction_prefix)
         self.assertEqual(DEFAULT_INSTRUCTION_SUFFIX,
@@ -205,6 +227,10 @@ class TestChatPromptTemplate(unittest.TestCase):
                          p3.output_requirement_prefix)
         self.assertEqual(DEFAULT_OUTPUT_REQUIREMENT_SUFFIX,
                          p3.output_requirement_suffix)
+        self.assertEqual(DEFAULT_EXPLANATION_INSTRUCTION_PREFIX,
+                         p3.explanation_instruction_prefix)
+        self.assertEqual(DEFAULT_EXPLANATION_INSTRUCTION_SUFFIX,
+                         p3.explanation_instruction_suffix)
         self.assertEqual(e3, p3.examples)
         self.assertEqual([], p3.histories)
 
@@ -214,7 +240,7 @@ class TestChatPromptTemplate(unittest.TestCase):
             input_template="{input}")
         p1.add_example(input="Hello, world!", output="你好，世界！")
         p1.add_example(input="What's your name?", output="你叫什么名字？")
-        v1 = p1.format(language="Chinese", input="Today is Sunday.")
+        v1 = p1.format_prompt(language="Chinese", input="Today is Sunday.")
         print(f"v1={v1}")
         self.assertEqual([
             Message(Role.SYSTEM, "Translate the following text into Chinese."),
@@ -231,8 +257,8 @@ class TestChatPromptTemplate(unittest.TestCase):
         )
         p2.add_example(input="Hello, world!", output="你好，世界！")
         p2.add_example(input="What's your name?", output="你叫什么名字？")
-        v2 = p2.format(instruction="Translate the following text into Chinese.",
-                       input="Today is Sunday.")
+        v2 = p2.format_prompt(instruction="Translate the following text into Chinese.",
+                              input="Today is Sunday.")
         print(f"v2={v2}")
         self.assertEqual([
             Message(Role.SYSTEM, "Translate the following text into Chinese."),
@@ -246,8 +272,8 @@ class TestChatPromptTemplate(unittest.TestCase):
         p3 = ChatPromptTemplate(instruction_template="")
         p3.add_example(input="Hello, world!", output="你好，世界！")
         p3.add_example(input="What's your name?", output="你叫什么名字？")
-        v3 = p3.format(instruction="Translate the following text into Chinese.",
-                       input="Today is Sunday.")
+        v3 = p3.format_prompt(instruction="Translate the following text into Chinese.",
+                              input="Today is Sunday.")
         print(f"v3={v3}")
         self.assertEqual([
             Message(Role.HUMAN, "Hello, world!"),
@@ -260,8 +286,8 @@ class TestChatPromptTemplate(unittest.TestCase):
         p4 = ChatPromptTemplate()
         p4.add_history(human_message="Who won the world series in 2020?",
                        ai_message="The Los Angeles Dodgers won the World Series in 2020.")
-        v4 = p4.format(instruction="You are a helpful assistant.",
-                       input="Where was it played?")
+        v4 = p4.format_prompt(instruction="You are a helpful assistant.",
+                              input="Where was it played?")
         print(f"v4={v4}")
         self.assertEqual([
             Message(Role.SYSTEM, "You are a helpful assistant."),
@@ -274,8 +300,8 @@ class TestChatPromptTemplate(unittest.TestCase):
         p8 = ChatPromptTemplate()
         p8.add_history(human_message="Who won the world series in 2020?",
                        ai_message="The Los Angeles Dodgers won the World Series in 2020.")
-        v8 = p8.format(instruction="You are a helpful assistant.",
-                       input="Where was it played?")
+        v8 = p8.format_prompt(instruction="You are a helpful assistant.",
+                              input="Where was it played?")
         self.assertEqual([
             Message(Role.SYSTEM, "You are a helpful assistant."),
             Message(Role.HUMAN, "Who won the world series in 2020?"),
@@ -288,9 +314,9 @@ class TestChatPromptTemplate(unittest.TestCase):
         p8.context_template = "Context: {context}"
         p8.add_history(human_message="Who won the world series in 2020?",
                        ai_message="The Los Angeles Dodgers won the World Series in 2020.")
-        v8 = p8.format(instruction="You are a helpful assistant.",
-                       input="Where was it played?",
-                       context="In the World Series 2020 in Arlington, Texas， "
+        v8 = p8.format_prompt(instruction="You are a helpful assistant.",
+                              input="Where was it played?",
+                              context="In the World Series 2020 in Arlington, Texas， "
                                "Los Angeles Dodgers beat Tampa Bay Rays 4-2 and "
                                "won the first championship in 32 years.")
         self.assertEqual([
@@ -309,12 +335,12 @@ class TestChatPromptTemplate(unittest.TestCase):
         p8.context_template = "Context: {context}"
         p8.add_history(human_message="Who won the world series in 2020?",
                        ai_message="{'answer': 'Los Angeles Dodgers'}")
-        v8 = p8.format(instruction="You are a helpful assistant.",
-                       input="Where was it played?",
-                       context="In the World Series 2020 in Arlington, Texas， "
+        v8 = p8.format_prompt(instruction="You are a helpful assistant.",
+                              input="Where was it played?",
+                              context="In the World Series 2020 in Arlington, Texas， "
                                "Los Angeles Dodgers beat Tampa Bay Rays 4-2 and "
                                "won the first championship in 32 years.",
-                       output_requirement="The output must be a JSON object.")
+                              output_requirement="The output must be a JSON object.")
         self.assertEqual([
             Message(Role.SYSTEM, "You are a helpful assistant.\n\n"
                                  "The following are known context:\n"
@@ -343,6 +369,9 @@ class TestChatPromptTemplate(unittest.TestCase):
         self.assertEqual(conf.get("input_template",
                                   DEFAULT_INPUT_TEMPLATE),
                          template.input_template)
+        self.assertEqual(conf.get("explanation_instruction_template",
+                                  DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE),
+                         template.explanation_instruction_template)
         self.assertEqual(conf.get("instruction_prefix",
                                   DEFAULT_INSTRUCTION_PREFIX),
                          template.instruction_prefix)
@@ -361,6 +390,12 @@ class TestChatPromptTemplate(unittest.TestCase):
         self.assertEqual(conf.get("output_requirement_suffix",
                                   DEFAULT_OUTPUT_REQUIREMENT_SUFFIX),
                          template.output_requirement_suffix)
+        self.assertEqual(conf.get("explanation_instruction_prefix",
+                                  DEFAULT_EXPLANATION_INSTRUCTION_PREFIX),
+                         template.explanation_instruction_prefix)
+        self.assertEqual(conf.get("explanation_instruction_suffix",
+                                  DEFAULT_EXPLANATION_INSTRUCTION_SUFFIX),
+                         template.explanation_instruction_suffix)
         if "examples" in conf:
             self.assertEqual(len(conf["examples"]), len(template.examples))
             for c_example, t_example in zip(conf["examples"], template.examples):

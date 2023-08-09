@@ -8,14 +8,15 @@
 # ##############################################################################
 from __future__ import annotations
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
 import json
 
 from ..common.example import Example
-from ..common.message import Message
 from ..common.role import Role
+from ..common.message import Message
+from ..common.prompt import Prompt
 from .prompt_template import PromptTemplate
 
 DEFAULT_INSTRUCTION_TEMPLATE: str = "{instruction}"
@@ -39,6 +40,12 @@ DEFAULT_INPUT_TEMPLATE: str = "{input}"
 """
 The default template of the input or question that we are interested to find a 
 response for.
+"""
+
+DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE: str = "Please explain the last answer."
+"""
+The default template of the instruction to get the explanation of the last 
+response from the model.
 """
 
 DEFAULT_INSTRUCTION_PREFIX: str = ""
@@ -70,6 +77,16 @@ The default prefix for the output requirement.
 DEFAULT_OUTPUT_REQUIREMENT_SUFFIX: str = "\n\n"
 """
 The default suffix for the output requirement.
+"""
+
+DEFAULT_EXPLANATION_INSTRUCTION_PREFIX: str = "\n"
+"""
+The default prefix for the explanation instruction.
+"""
+
+DEFAULT_EXPLANATION_INSTRUCTION_SUFFIX: str = ""
+"""
+The default suffix for the explanation instruction.
 """
 
 
@@ -123,6 +140,12 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
     This template may contain formatting placeholders.
     """
 
+    explanation_instruction_template: str = DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE
+    """
+    The template fo the instruction to get the explanation of the last response
+    from the model.
+    """
+
     instruction_prefix: str = DEFAULT_INSTRUCTION_PREFIX
     """
     The prefix for the instruction.
@@ -151,6 +174,16 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
     output_requirement_suffix: str = DEFAULT_OUTPUT_REQUIREMENT_SUFFIX
     """
     The suffix for the output requirement.
+    """
+
+    explanation_instruction_prefix: str = DEFAULT_EXPLANATION_INSTRUCTION_PREFIX
+    """
+    The prefix for the explanation instruction.
+    """
+
+    explanation_instruction_suffix: str = DEFAULT_EXPLANATION_INSTRUCTION_SUFFIX
+    """
+    The suffix for the explanation instruction.
     """
 
     examples: List[Example] = field(default_factory=list)
@@ -187,6 +220,11 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
     The formatted input.
     """
 
+    formatted_explanation_instruction: str = ""
+    """
+    The formatted explanation instruction.
+    """
+
     def load_from_file(self, file_path: str) -> None:
         """
         Loads the configuration of this prompt template from a file in the JSON
@@ -207,24 +245,30 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
         """
         instruction_template = config.get("instruction_template",
                                           DEFAULT_INSTRUCTION_TEMPLATE)
-        context_template = config.get("context_template",
-                                      DEFAULT_CONTEXT_TEMPLATE)
-        output_requirement_template = config.get("output_requirement_template",
-                                                 DEFAULT_OUTPUT_REQUIREMENT_TEMPLATE)
-        input_template = config.get("input_template",
-                                    DEFAULT_INPUT_TEMPLATE)
         instruction_prefix = config.get("instruction_prefix",
                                         DEFAULT_INSTRUCTION_PREFIX)
         instruction_suffix = config.get("instruction_suffix",
                                         DEFAULT_INSTRUCTION_SUFFIX)
+        context_template = config.get("context_template",
+                                      DEFAULT_CONTEXT_TEMPLATE)
         context_prefix = config.get("context_prefix",
                                     DEFAULT_CONTEXT_PREFIX)
         context_suffix = config.get("context_suffix",
                                     DEFAULT_CONTEXT_SUFFIX)
+        output_requirement_template = config.get("output_requirement_template",
+                                                 DEFAULT_OUTPUT_REQUIREMENT_TEMPLATE)
         output_requirement_prefix = config.get("output_requirement_prefix",
                                                DEFAULT_OUTPUT_REQUIREMENT_PREFIX)
         output_requirement_suffix = config.get("output_requirement_suffix",
                                                DEFAULT_OUTPUT_REQUIREMENT_SUFFIX)
+        input_template = config.get("input_template",
+                                    DEFAULT_INPUT_TEMPLATE)
+        explanation_instruction_template = config.get("explanation_instruction_template",
+                                                      DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE)
+        explanation_instruction_prefix = config.get("explanation_instruction_prefix",
+                                                    DEFAULT_EXPLANATION_INSTRUCTION_PREFIX)
+        explanation_instruction_suffix = config.get("explanation_instruction_suffix",
+                                                    DEFAULT_EXPLANATION_INSTRUCTION_SUFFIX)
         examples = []
         if "examples" in config:
             for e in config["examples"]:
@@ -259,6 +303,9 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
         self.output_requirement_prefix = output_requirement_prefix
         self.output_requirement_suffix = output_requirement_suffix
         self.input_template = input_template
+        self.explanation_instruction_template = explanation_instruction_template
+        self.explanation_instruction_prefix = explanation_instruction_prefix
+        self.explanation_instruction_suffix = explanation_instruction_suffix
         self.examples = examples
         self.histories = histories
 
@@ -428,3 +475,38 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
             result = self.input_template.format(**kwargs)
         self.formatted_input = result
         return result
+
+    def format_explanation_instruction(self, **kwargs: Any) -> str:
+        """
+        Formats the explanation instruction of this template.
+
+        This function will set the attribute `formatted_explanation_instruction` of
+        this template to the formatted output requirement.
+
+        :param kwargs: the keyword arguments to be used to format the output
+            requirement.
+        :return: the formatted output requirement.
+        """
+        if (self.explanation_instruction_template == DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE
+                and ("explanation_instruction_template" not in kwargs)):
+            result = ""
+        else:
+            result = self.explanation_instruction_template.format(**kwargs)
+        if len(result) > 0:
+            result = (self.explanation_instruction_prefix
+                      + result
+                      + self.explanation_instruction_suffix)
+        self.formatted_explanation_instruction = result
+        return result
+
+    @abstractmethod
+    def format_explanation_prompt(self,
+                                  last_response: str,
+                                  **kwargs: Any) -> Prompt:
+        """
+        Formats the prompt to get the explanation of the last response from the
+        model.
+
+        :param last_response: the last response from the model.
+        :param kwargs: the optional keyword arguments to be used to format the prompt.
+        """

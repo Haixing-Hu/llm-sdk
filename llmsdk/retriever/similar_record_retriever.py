@@ -196,7 +196,7 @@ class SimilarRecordRetriever(Retriever):
             return None
         self._logger.debug("The top similar records are: %s", similar_records)
         id_field = self._record_id_field
-        prompt = self._prompt_template.format(
+        prompt = self._prompt_template.format_prompt(
             known_records=records_to_csv(similar_records),
             query_record=record_to_csv(record),
             id_field=id_field

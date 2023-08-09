@@ -9,6 +9,7 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
+from ..common import Prompt
 from ..common.example import Example
 from ..common.message import Message
 from .structured_prompt_template import StructuredPromptTemplate
@@ -149,7 +150,7 @@ class TextPromptTemplate(StructuredPromptTemplate):
     The suffix for the input of an example.
     """
 
-    def format(self, **kwargs: Any) -> str:
+    def format_prompt(self, **kwargs: Any) -> str:
         instruction = self.format_instruction(**kwargs)
         context = self.format_context(**kwargs)
         output_requirement = self.format_output_requirement(**kwargs)
@@ -166,6 +167,9 @@ class TextPromptTemplate(StructuredPromptTemplate):
             result += self.example_input_prefix + input.strip() + self.example_input_suffix
             result += self.example_output_prefix
         return result.strip()
+
+    def format_explanation_prompt(self, last_response: str, **kwargs: Any) -> Prompt:
+        pass
 
     def format_example(self, example: Example) -> str:
         """

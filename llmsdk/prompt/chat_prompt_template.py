@@ -78,7 +78,7 @@ class ChatPromptTemplate(StructuredPromptTemplate):
 
     """
 
-    def format(self, **kwargs: Any) -> List[Message]:
+    def format_prompt(self, **kwargs: Any) -> List[Message]:
         result = []
         instruction = self.format_instruction(**kwargs)
         context = self.format_context(**kwargs)
@@ -94,3 +94,6 @@ class ChatPromptTemplate(StructuredPromptTemplate):
         if len(input) > 0:
             result.append(Message(role=Role.HUMAN, content=input.strip()))
         return result
+
+    def format_explanation_prompt(self, last_response: str, **kwargs: Any) -> List[Message]:
+        pass
