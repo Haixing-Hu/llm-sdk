@@ -17,28 +17,31 @@ from .structured_prompt_template import StructuredPromptTemplate
 @dataclass
 class ChatPromptTemplate(StructuredPromptTemplate):
     """
-    The prompt template used to format the few-shot prompts.
+    The prompt template used to format the few-shot prompts in the
+    chat-completion models.
 
     The formatted prompt has the following form:
 
     ```
     [
-        Message(Role.SYSTEM, {instruction}),
-        Message(Role.HUMAN, {examples[0].input}),
-        Message(Role.AI, {examples[0].output}),
-        Message(Role.HUMAN, {examples[1].input}),
-        Message(Role.AI, {examples[1].output}),
-        Message(Role.HUMAN, {examples[2].input}),
-        Message(Role.AI, {examples[2].output}),
+        Message(Role.SYSTEM, formatted_instruction
+                            + formatted_context
+                            + formatted_output_indicator),
+        Message(Role.HUMAN, examples[0].input),
+        Message(Role.AI, examples[0].output),
+        Message(Role.HUMAN, examples[1].input),
+        Message(Role.AI, examples[1].output),
+        Message(Role.HUMAN, examples[2].input),
+        Message(Role.AI, examples[2].output),
         ...
-        Message(Role.HUMAN, {histories[0].content}),
-        Message(Role.AI, {histories[1].content}),
-        Message(Role.HUMAN, {histories[2].content}),
-        Message(Role.AI, {histories[3].content}),
-        Message(Role.HUMAN, {histories[4].content}),
-        Message(Role.AI, {histories[5].content}),
+        Message(Role.HUMAN, histories[0].content),
+        Message(Role.AI, histories[1].content),
+        Message(Role.HUMAN, histories[2].content),
+        Message(Role.AI, histories[3].content),
+        Message(Role.HUMAN, histories[4].content),
+        Message(Role.AI, histories[5].content),
         ...
-        Message(Role.HUMAN, prompt),
+        Message(Role.HUMAN, formatted_input),
     ]
     ```
 
@@ -77,16 +80,17 @@ class ChatPromptTemplate(StructuredPromptTemplate):
 
     def format(self, **kwargs: Any) -> List[Message]:
         result = []
-        instruction = Message(role=Role.SYSTEM,
-                              content=self._format_instruction(**kwargs))
-        if len(instruction.content) > 0:
-            result.append(instruction)
+        instruction = self.format_instruction(**kwargs)
+        context = self.format_context(**kwargs)
+        output_requirement = self.format_output_requirement(**kwargs)
+        if len(instruction) > 0 or len(context) > 0 or len(output_requirement) > 0:
+            content = instruction + context + output_requirement
+            result.append(Message(role=Role.SYSTEM, content=content.strip()))
         for e in self.examples:
-            result.append(Message(Role.HUMAN, e.input))
-            result.append(Message(Role.AI, e.output))
+            result.append(Message(role=Role.HUMAN, content=e.input.strip()))
+            result.append(Message(role=Role.AI, content=e.output.strip()))
         result.extend(self.histories)
-        prompt = Message(role=Role.HUMAN,
-                         content=self._format_prompt(**kwargs))
-        if len(prompt.content) > 0:
-            result.append(prompt)
+        input = self.format_input(**kwargs)
+        if len(input) > 0:
+            result.append(Message(role=Role.HUMAN, content=input.strip()))
         return result

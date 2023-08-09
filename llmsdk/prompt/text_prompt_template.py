@@ -13,15 +13,14 @@ from ..common.example import Example
 from ..common.message import Message
 from .structured_prompt_template import StructuredPromptTemplate
 
-
-DEFAULT_INSTRUCTION_SUFFIX: str = "\n"
-"""
-The default suffix for the instruction.
-"""
-
-DEFAULT_EXAMPLE_LIST_PREFIX = "\n"
+DEFAULT_EXAMPLE_LIST_PREFIX = ""
 """
 The default prefix for the list of examples.
+"""
+
+DEFAULT_EXAMPLE_LIST_SUFFIX = ""
+"""
+The default suffix for the list of examples.
 """
 
 DEFAULT_EXAMPLE_INPUT_PREFIX: str = "input: "
@@ -48,12 +47,15 @@ The default suffix for the input of an example.
 @dataclass
 class TextPromptTemplate(StructuredPromptTemplate):
     """
-    The prompt template used to format the few-shot prompts.
+    The prompt template used to format the few-shot prompts in the
+    text-completion models.
 
     The formatted text prompt has the following form:
 
     ```
-    {instruction}{instruction_suffix}
+    {instruction_prefix}{formatted_instruction}{instruction_suffix}
+    {context_prefix}{formatted_context}{context_suffix}
+    {output_requirement_prefix}{formatted_output_requirement}{output_requirement_suffix}
     {example_input_prefix}{examples[0].input}{example_input_suffix}
     {example_output_prefix}{examples[0].output}{example_output_suffix}
     {example_input_prefix}{examples[1].input}{example_input_suffix}
@@ -68,7 +70,7 @@ class TextPromptTemplate(StructuredPromptTemplate):
     {example_input_prefix}{histories[4].content}{example_input_suffix}
     {example_output_prefix}{histories[5].content}{example_output_suffix}
     ...
-    {example_input_prefix}{prompt}{example_input_suffix}
+    {example_input_prefix}{formatted_input}{example_input_suffix}
     {example_output_prefix}
     ```
 
@@ -117,14 +119,14 @@ class TextPromptTemplate(StructuredPromptTemplate):
 
     """
 
-    instruction_suffix: str = DEFAULT_INSTRUCTION_SUFFIX
-    """
-    The suffix for the instruction.
-    """
-
     example_list_prefix: str = DEFAULT_EXAMPLE_LIST_PREFIX
     """
     The prefix for the list of examples.
+    """
+
+    example_list_suffix: str = DEFAULT_EXAMPLE_LIST_SUFFIX
+    """
+    The suffix for the list of examples.
     """
 
     example_input_prefix: str = DEFAULT_EXAMPLE_INPUT_PREFIX
@@ -148,29 +150,35 @@ class TextPromptTemplate(StructuredPromptTemplate):
     """
 
     def format(self, **kwargs: Any) -> str:
-        instruction = self._format_instruction(**kwargs)
-        examples = [self._format_example(e) for e in self.examples]
-        histories = self._format_histories(self.histories)
-        prompt = self._format_prompt(**kwargs)
-        if ((len(instruction) > 0)
-                and (len(examples) > 0 or len(prompt) > 0)):
-            instruction += self.instruction_suffix
-        if ((len(examples) > 0 or len(histories) > 0)
-                and (len(instruction.strip()) > 0 or len(self.example_list_prefix.strip()) > 0)):
-            instruction += self.example_list_prefix
-        if (len(examples) > 0 or len(histories) > 0) and len(prompt) > 0:
-            prompt = self.example_input_prefix + prompt + self.example_input_suffix \
-                + self.example_output_prefix
-        return instruction + "".join(examples) + histories + prompt
+        instruction = self.format_instruction(**kwargs)
+        context = self.format_context(**kwargs)
+        output_requirement = self.format_output_requirement(**kwargs)
+        examples = [self.format_example(e) for e in self.examples]
+        histories = self.format_histories(self.histories)
+        input = self.format_input(**kwargs)
+        result = instruction + context + output_requirement
+        if len(examples) > 0 or len(histories) > 0:
+            result += self.example_list_prefix
+            result += "".join(examples)
+            result += histories
+            result += self.example_list_suffix
+        if len(input) > 0:
+            result += self.example_input_prefix + input.strip() + self.example_input_suffix
+            result += self.example_output_prefix
+        return result.strip()
 
-    def _format_example(self, example: Example) -> str:
+    def format_example(self, example: Example) -> str:
         """
         Formats the input/output of an example.
         """
-        return self.example_input_prefix + example.input + self.example_input_suffix \
-            + self.example_output_prefix + example.output + self.example_output_suffix
+        return (self.example_input_prefix
+                + example.input.strip()
+                + self.example_input_suffix
+                + self.example_output_prefix
+                + example.output.strip()
+                + self.example_output_suffix)
 
-    def _format_histories(self, histories: List[Message]) -> str:
+    def format_histories(self, histories: List[Message]) -> str:
         """
         Formats the conversation histories as a list of input/output pairs.
         """
@@ -178,20 +186,20 @@ class TextPromptTemplate(StructuredPromptTemplate):
             raise ValueError("The number of messages must be even.")
         result = ""
         for i in range(0, len(histories), 2):
-            result += self.example_input_prefix \
-                + histories[i].content \
-                + self.example_input_suffix \
-                + self.example_output_prefix \
-                + histories[i + 1].content \
-                + self.example_output_suffix
+            result += (self.example_input_prefix
+                       + histories[i].content.strip()
+                       + self.example_input_suffix
+                       + self.example_output_prefix
+                       + histories[i + 1].content.strip()
+                       + self.example_output_suffix)
         return result
 
     def load(self, config: Dict[str, str]) -> None:
         super().load(config)
-        self.instruction_suffix = config.get("instruction_suffix",
-                                             DEFAULT_INSTRUCTION_SUFFIX)
         self.example_list_prefix = config.get("example_list_prefix",
                                               DEFAULT_EXAMPLE_LIST_PREFIX)
+        self.example_list_suffix = config.get("example_list_suffix",
+                                              DEFAULT_EXAMPLE_LIST_SUFFIX)
         self.example_input_prefix = config.get("example_input_prefix",
                                                DEFAULT_EXAMPLE_INPUT_PREFIX)
         self.example_input_suffix = config.get("example_input_suffix",

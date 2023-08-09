@@ -7,7 +7,7 @@
 #                                                                              #
 # ##############################################################################
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from .role import Role, ROLE_NAMES_MAP
 
@@ -28,7 +28,7 @@ class Message:
     The content of the message.
     """
 
-    name: str = None
+    name: Optional[str] = None
     """
     The optional name of the speaker.
     """

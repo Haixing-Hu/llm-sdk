@@ -14,10 +14,18 @@ import json
 from llmsdk.common import Example
 from llmsdk.prompt import (
     TextPromptTemplate,
-    DEFAULT_PROMPT_TEMPLATE,
+    DEFAULT_INPUT_TEMPLATE,
     DEFAULT_INSTRUCTION_TEMPLATE,
+    DEFAULT_CONTEXT_TEMPLATE,
+    DEFAULT_OUTPUT_REQUIREMENT_TEMPLATE,
+    DEFAULT_INSTRUCTION_PREFIX,
     DEFAULT_INSTRUCTION_SUFFIX,
+    DEFAULT_CONTEXT_PREFIX,
+    DEFAULT_CONTEXT_SUFFIX,
+    DEFAULT_OUTPUT_REQUIREMENT_PREFIX,
+    DEFAULT_OUTPUT_REQUIREMENT_SUFFIX,
     DEFAULT_EXAMPLE_LIST_PREFIX,
+    DEFAULT_EXAMPLE_LIST_SUFFIX,
     DEFAULT_EXAMPLE_INPUT_PREFIX,
     DEFAULT_EXAMPLE_INPUT_SUFFIX,
     DEFAULT_EXAMPLE_OUTPUT_PREFIX,
@@ -26,8 +34,10 @@ from llmsdk.prompt import (
 
 
 TEST_CONFIGURATIONS = [{
-    "instruction_template": "Template instruction",
-    "prompt_template": "Template prompt",
+    "instruction_template": "Template instruction 0",
+    "context_template": "Template context 0",
+    "output_requirement_template": "Template output indicator 0",
+    "input_template": "Template input 0",
     "examples": [
         {
             "id": "1",
@@ -46,8 +56,10 @@ TEST_CONFIGURATIONS = [{
     ],
     "instruction_suffix": "\n",
 }, {
-    "instruction_template": "Template instruction",
-    "prompt_template": "Template prompt",
+    "instruction_template": "Template instruction 1",
+    "context_template": "Template context 1",
+    "output_requirement_template": "Template output indicator 1",
+    "input_template": "Template input 1",
     "examples": [
         {
             "id": "1",
@@ -60,15 +72,23 @@ TEST_CONFIGURATIONS = [{
             "output": "Output 2"
         }
     ],
+    "instruction_prefix": "Instruction 1: <br/>",
     "instruction_suffix": "<br/>",
+    "context_prefix": "Context 1: <br/>",
+    "context_suffix": "<br/>",
+    "output_requirement_prefix": "Output requirement 1:<br/>",
+    "output_requirement_suffix": "<br/>",
     "example_list_prefix": "<ul>",
+    "example_list_suffix": "</ul>",
     "example_input_prefix": "<li>Input: ",
     "example_input_suffix": "</li>",
     "example_output_prefix": "<li>Output: ",
-    "example_output_suffix": "</li></ul>",
+    "example_output_suffix": "</li>",
 }, {
-    "instruction_template": "Template instruction",
-    "prompt_template": "Template prompt",
+    "instruction_template": "Template instruction 2",
+    "context_template": "Template context 2",
+    "output_requirement_template": "Template output indicator 2",
+    "input_template": "Template input 2",
     "examples": [
         {
             "id": "1",
@@ -91,15 +111,21 @@ TEST_CONFIGURATIONS = [{
             "content": "Output 3"
         }
     ],
+    "instruction_prefix": "Instruction 2: <br/>",
     "instruction_suffix": "<br/>",
+    "context_prefix": "Context 2: <br/>",
+    "context_suffix": "<br/>",
+    "output_requirement_prefix": "Output requirement 2:<br/>",
+    "output_requirement_suffix": "<br/>",
     "example_list_prefix": "<ul>",
+    "example_list_suffix": "</ul>",
     "example_input_prefix": "<li>Input: ",
     "example_input_suffix": "</li>",
     "example_output_prefix": "<li>Output: ",
-    "example_output_suffix": "</li></ul>",
+    "example_output_suffix": "</li>",
 }, {
-    "instruction_template": "Template instruction",
-    "prompt_template": "Template prompt",
+    "instruction_template": "Template instruction 3",
+    "input_template": "Template input 3",
     "example_input_prefix": "question: ",
     "example_output_prefix": "answer: ",
 }, {
@@ -113,12 +139,28 @@ class TestTextPromptTemplate(unittest.TestCase):
         p1 = TextPromptTemplate()
         self.assertEqual(DEFAULT_INSTRUCTION_TEMPLATE,
                          p1.instruction_template)
-        self.assertEqual(DEFAULT_PROMPT_TEMPLATE,
-                         p1.prompt_template)
+        self.assertEqual(DEFAULT_CONTEXT_TEMPLATE,
+                         p1.context_template)
+        self.assertEqual(DEFAULT_OUTPUT_REQUIREMENT_TEMPLATE,
+                         p1.output_requirement_template)
+        self.assertEqual(DEFAULT_INPUT_TEMPLATE,
+                         p1.input_template)
+        self.assertEqual(DEFAULT_INSTRUCTION_PREFIX,
+                         p1.instruction_prefix)
         self.assertEqual(DEFAULT_INSTRUCTION_SUFFIX,
                          p1.instruction_suffix)
+        self.assertEqual(DEFAULT_CONTEXT_PREFIX,
+                         p1.context_prefix)
+        self.assertEqual(DEFAULT_CONTEXT_SUFFIX,
+                         p1.context_suffix)
+        self.assertEqual(DEFAULT_OUTPUT_REQUIREMENT_PREFIX,
+                         p1.output_requirement_prefix)
+        self.assertEqual(DEFAULT_OUTPUT_REQUIREMENT_SUFFIX,
+                         p1.output_requirement_suffix)
         self.assertEqual(DEFAULT_EXAMPLE_LIST_PREFIX,
                          p1.example_list_prefix)
+        self.assertEqual(DEFAULT_EXAMPLE_LIST_SUFFIX,
+                         p1.example_list_suffix)
         self.assertEqual(DEFAULT_EXAMPLE_INPUT_PREFIX,
                          p1.example_input_prefix)
         self.assertEqual(DEFAULT_EXAMPLE_INPUT_SUFFIX,
@@ -128,16 +170,33 @@ class TestTextPromptTemplate(unittest.TestCase):
         self.assertEqual(DEFAULT_EXAMPLE_OUTPUT_SUFFIX,
                          p1.example_output_suffix)
         self.assertEqual([], p1.examples)
+        self.assertEqual([], p1.histories)
 
         p2 = TextPromptTemplate("Translate the following text into {language}.")
-        self.assertEqual(DEFAULT_INSTRUCTION_TEMPLATE,
-                         p2.instruction_template)
         self.assertEqual("Translate the following text into {language}.",
-                         p2.prompt_template)
+                         p2.instruction_template)
+        self.assertEqual(DEFAULT_CONTEXT_TEMPLATE,
+                         p2.context_template)
+        self.assertEqual(DEFAULT_OUTPUT_REQUIREMENT_TEMPLATE,
+                         p2.output_requirement_template)
+        self.assertEqual(DEFAULT_INPUT_TEMPLATE,
+                         p2.input_template)
+        self.assertEqual(DEFAULT_INSTRUCTION_PREFIX,
+                         p2.instruction_prefix)
         self.assertEqual(DEFAULT_INSTRUCTION_SUFFIX,
                          p2.instruction_suffix)
+        self.assertEqual(DEFAULT_CONTEXT_PREFIX,
+                         p2.context_prefix)
+        self.assertEqual(DEFAULT_CONTEXT_SUFFIX,
+                         p2.context_suffix)
+        self.assertEqual(DEFAULT_OUTPUT_REQUIREMENT_PREFIX,
+                         p2.output_requirement_prefix)
+        self.assertEqual(DEFAULT_OUTPUT_REQUIREMENT_SUFFIX,
+                         p2.output_requirement_suffix)
         self.assertEqual(DEFAULT_EXAMPLE_LIST_PREFIX,
                          p2.example_list_prefix)
+        self.assertEqual(DEFAULT_EXAMPLE_LIST_SUFFIX,
+                         p2.example_list_suffix)
         self.assertEqual(DEFAULT_EXAMPLE_INPUT_PREFIX,
                          p2.example_input_prefix)
         self.assertEqual(DEFAULT_EXAMPLE_INPUT_SUFFIX,
@@ -147,23 +206,40 @@ class TestTextPromptTemplate(unittest.TestCase):
         self.assertEqual(DEFAULT_EXAMPLE_OUTPUT_SUFFIX,
                          p2.example_output_suffix)
         self.assertEqual([], p2.examples)
+        self.assertEqual([], p2.histories)
 
         e3 = [
             Example(input="Hello, world!", output="你好，世界！"),
             Example(input="What's your name?", output="你叫什么名字？"),
         ]
         p3 = TextPromptTemplate(
-            "Translate the following text into {language}.",
+            input_template="Translate the following text into {language}.",
             examples=e3,
         )
         self.assertEqual(DEFAULT_INSTRUCTION_TEMPLATE,
                          p3.instruction_template)
+        self.assertEqual(DEFAULT_CONTEXT_TEMPLATE,
+                         p3.context_template)
+        self.assertEqual(DEFAULT_OUTPUT_REQUIREMENT_TEMPLATE,
+                         p3.output_requirement_template)
         self.assertEqual("Translate the following text into {language}.",
-                         p3.prompt_template)
+                         p3.input_template)
+        self.assertEqual(DEFAULT_INSTRUCTION_PREFIX,
+                         p3.instruction_prefix)
         self.assertEqual(DEFAULT_INSTRUCTION_SUFFIX,
                          p3.instruction_suffix)
+        self.assertEqual(DEFAULT_CONTEXT_PREFIX,
+                         p3.context_prefix)
+        self.assertEqual(DEFAULT_CONTEXT_SUFFIX,
+                         p3.context_suffix)
+        self.assertEqual(DEFAULT_OUTPUT_REQUIREMENT_PREFIX,
+                         p3.output_requirement_prefix)
+        self.assertEqual(DEFAULT_OUTPUT_REQUIREMENT_SUFFIX,
+                         p3.output_requirement_suffix)
         self.assertEqual(DEFAULT_EXAMPLE_LIST_PREFIX,
                          p3.example_list_prefix)
+        self.assertEqual(DEFAULT_EXAMPLE_LIST_SUFFIX,
+                         p3.example_list_suffix)
         self.assertEqual(DEFAULT_EXAMPLE_INPUT_PREFIX,
                          p3.example_input_prefix)
         self.assertEqual(DEFAULT_EXAMPLE_INPUT_SUFFIX,
@@ -173,15 +249,16 @@ class TestTextPromptTemplate(unittest.TestCase):
         self.assertEqual(DEFAULT_EXAMPLE_OUTPUT_SUFFIX,
                          p3.example_output_suffix)
         self.assertEqual(e3, p3.examples)
+        self.assertEqual([], p3.histories)
 
     def test_format(self):
         p1 = TextPromptTemplate(
             instruction_template="Translate the following text into {language}.",
-            prompt_template="{prompt}"
+            input_template="{input}"
         )
         p1.add_example(input="Hello, world!", output="你好，世界！")
         p1.add_example(input="What's your name?", output="你叫什么名字？")
-        v1 = p1.format(language="Chinese", prompt="Today is Sunday.")
+        v1 = p1.format(language="Chinese", input="Today is Sunday.")
         print(f"v1={v1}")
         self.assertEqual("Translate the following text into Chinese.\n\n"
                          "input: Hello, world!\n"
@@ -189,16 +266,16 @@ class TestTextPromptTemplate(unittest.TestCase):
                          "input: What's your name?\n"
                          "output: 你叫什么名字？\n\n"
                          "input: Today is Sunday.\n"
-                         "output: ", v1)
+                         "output:", v1)
 
         p2 = TextPromptTemplate(
             instruction_template="{instruction}",
-            prompt_template="{prompt}"
+            input_template="{input}"
         )
         p2.add_example(input="Hello, world!", output="你好，世界！")
         p2.add_example(input="What's your name?", output="你叫什么名字？")
         v2 = p2.format(instruction="Translate the following text into Chinese.",
-                       prompt="Today is Sunday.")
+                       input="Today is Sunday.")
         print(f"v2={v2}")
         self.assertEqual("Translate the following text into Chinese.\n\n"
                          "input: Hello, world!\n"
@@ -206,23 +283,23 @@ class TestTextPromptTemplate(unittest.TestCase):
                          "input: What's your name?\n"
                          "output: 你叫什么名字？\n\n"
                          "input: Today is Sunday.\n"
-                         "output: ", v2)
+                         "output:", v2)
 
         p3 = TextPromptTemplate(instruction_template="")
         p3.add_example(input="Hello, world!", output="你好，世界！")
         p3.add_example(input="What's your name?", output="你叫什么名字？")
         v3 = p3.format(instruction="Translate the following text into Chinese.",
-                       prompt="Today is Sunday.")
+                       input="Today is Sunday.")
         print(f"v3={v3}")
         self.assertEqual("input: Hello, world!\n"
                          "output: 你好，世界！\n\n"                     
                          "input: What's your name?\n"
                          "output: 你叫什么名字？\n\n"
                          "input: Today is Sunday.\n"
-                         "output: ", v3)
+                         "output:", v3)
 
-        p4 = TextPromptTemplate("{prompt}")
-        v4 = p4.format(prompt="你好！")
+        p4 = TextPromptTemplate("{text}")
+        v4 = p4.format(text="你好！")
         print(f"v4={v4}")
         self.assertEqual("你好！", v4)
 
@@ -246,12 +323,55 @@ class TestTextPromptTemplate(unittest.TestCase):
         p8.add_history(human_message="Who won the world series in 2020?",
                        ai_message="The Los Angeles Dodgers won the World Series in 2020.")
         v8 = p8.format(instruction="You are a helpful assistant.",
-                       prompt="Where was it played?")
+                       input="Where was it played?")
         self.assertEqual("You are a helpful assistant.\n\n"
                          "input: Who won the world series in 2020?\n"
                          "output: The Los Angeles Dodgers won the World Series in 2020.\n\n"
                          "input: Where was it played?\n"
-                         "output: ", v8)
+                         "output:", v8)
+
+    def test_format_with_context(self):
+        p8 = TextPromptTemplate()
+        p8.context_template = "Context: {context}"
+        p8.add_history(human_message="Who won the world series in 2020?",
+                       ai_message="The Los Angeles Dodgers won the World Series in 2020.")
+        v8 = p8.format(instruction="You are a helpful assistant.",
+                       input="Where was it played?",
+                       context="In the World Series 2020 in Arlington, Texas， "
+                               "Los Angeles Dodgers beat Tampa Bay Rays 4-2 and "
+                               "won the first championship in 32 years.")
+        self.assertEqual("You are a helpful assistant.\n\n"
+                         "The following are known context:\n"
+                         "Context: In the World Series 2020 in Arlington, Texas， "
+                         "Los Angeles Dodgers beat Tampa Bay Rays 4-2 and "
+                         "won the first championship in 32 years.\n\n"
+                         "input: Who won the world series in 2020?\n"
+                         "output: The Los Angeles Dodgers won the World Series in 2020.\n\n"
+                         "input: Where was it played?\n"
+                         "output:", v8)
+
+    def test_format_with_context_and_output_requirement(self):
+        p8 = TextPromptTemplate()
+        p8.context_template = "Context: {context}"
+        p8.add_history(human_message="Who won the world series in 2020?",
+                       ai_message="{'answer': 'Los Angeles Dodgers'}")
+        v8 = p8.format(instruction="You are a helpful assistant.",
+                       input="Where was it played?",
+                       context="In the World Series 2020 in Arlington, Texas， "
+                               "Los Angeles Dodgers beat Tampa Bay Rays 4-2 and "
+                               "won the first championship in 32 years.",
+                       output_requirement="The output must be a JSON object.")
+        self.assertEqual("You are a helpful assistant.\n\n"
+                         "The following are known context:\n"
+                         "Context: In the World Series 2020 in Arlington, Texas， "
+                         "Los Angeles Dodgers beat Tampa Bay Rays 4-2 and "
+                         "won the first championship in 32 years.\n\n"
+                         "The output must satisfy the following requirements:\n"
+                         "The output must be a JSON object.\n\n"
+                         "input: Who won the world series in 2020?\n"
+                         "output: {'answer': 'Los Angeles Dodgers'}\n\n"
+                         "input: Where was it played?\n"
+                         "output:", v8)
 
     def _check_load_result(self,
                            template: TextPromptTemplate,
@@ -259,15 +379,39 @@ class TestTextPromptTemplate(unittest.TestCase):
         self.assertEqual(conf.get("instruction_template",
                                   DEFAULT_INSTRUCTION_TEMPLATE),
                          template.instruction_template)
-        self.assertEqual(conf.get("prompt_template",
-                                  DEFAULT_PROMPT_TEMPLATE),
-                         template.prompt_template)
+        self.assertEqual(conf.get("context_template",
+                                  DEFAULT_CONTEXT_TEMPLATE),
+                         template.context_template)
+        self.assertEqual(conf.get("output_requirement_template",
+                                  DEFAULT_OUTPUT_REQUIREMENT_TEMPLATE),
+                         template.output_requirement_template)
+        self.assertEqual(conf.get("input_template",
+                                  DEFAULT_INPUT_TEMPLATE),
+                         template.input_template)
+        self.assertEqual(conf.get("instruction_prefix",
+                                  DEFAULT_INSTRUCTION_PREFIX),
+                         template.instruction_prefix)
         self.assertEqual(conf.get("instruction_suffix",
                                   DEFAULT_INSTRUCTION_SUFFIX),
                          template.instruction_suffix)
+        self.assertEqual(conf.get("context_prefix",
+                                  DEFAULT_CONTEXT_PREFIX),
+                         template.context_prefix)
+        self.assertEqual(conf.get("context_suffix",
+                                  DEFAULT_CONTEXT_SUFFIX),
+                         template.context_suffix)
+        self.assertEqual(conf.get("output_requirement_prefix",
+                                  DEFAULT_OUTPUT_REQUIREMENT_PREFIX),
+                         template.output_requirement_prefix)
+        self.assertEqual(conf.get("output_requirement_suffix",
+                                  DEFAULT_OUTPUT_REQUIREMENT_SUFFIX),
+                         template.output_requirement_suffix)
         self.assertEqual(conf.get("example_list_prefix",
                                   DEFAULT_EXAMPLE_LIST_PREFIX),
                          template.example_list_prefix)
+        self.assertEqual(conf.get("example_list_suffix",
+                                  DEFAULT_EXAMPLE_LIST_SUFFIX),
+                         template.example_list_suffix)
         self.assertEqual(conf.get("example_input_prefix",
                                   DEFAULT_EXAMPLE_INPUT_PREFIX),
                          template.example_input_prefix)
@@ -281,12 +425,17 @@ class TestTextPromptTemplate(unittest.TestCase):
                                   DEFAULT_EXAMPLE_OUTPUT_SUFFIX),
                          template.example_output_suffix)
         if "examples" in conf:
-            self.assertEqual(len(conf["examples"]),
-                             len(template.examples))
+            self.assertEqual(len(conf["examples"]), len(template.examples))
             for c_example, t_example in zip(conf["examples"], template.examples):
                 self.assertEqual(c_example.get("id", None), t_example.id)
                 self.assertEqual(c_example.get("input"), t_example.input)
                 self.assertEqual(c_example.get("output"), t_example.output)
+        if "histories" in conf:
+            self.assertEqual(len(conf["histories"]), len(template.histories))
+            for c_history, t_history in zip(conf["histories"], template.histories):
+                self.assertEqual(c_history.get("role"), t_history.role.value)
+                self.assertEqual(c_history.get("content"), t_history.content)
+                self.assertEqual(c_history.get("name", None), t_history.name)
 
     def _test_load_from_file(self,
                              template: TextPromptTemplate,

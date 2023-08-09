@@ -16,7 +16,7 @@ CONFIG = {
                                 "the end. If you don't know the answer, just say "
                                 "\"{unknown_question_answer}\", don't try to make up "
                                 "an answer.",
-        "prompt_template": "{question}",
+        "input_template": "{question}",
         "example_input_prefix": "question: ",
         "example_output_prefix": "answer: ",
     },

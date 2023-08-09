@@ -13,7 +13,7 @@ CONFIG = {
         "instruction_template": "请根据下面给出的信息回答最后给出的问题，你的回答必须专业、准确。"
                                 "如果不知道答案，请回答“{unknown_question_answer}”，"
                                 "不要试图捏造答案。",
-        "prompt_template": "{question}",
+        "input_template": "{question}",
         "example_input_prefix": "问题：",
         "example_output_prefix": "回答：",
     },
