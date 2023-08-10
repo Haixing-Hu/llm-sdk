@@ -24,9 +24,10 @@ class ChatPromptTemplate(StructuredPromptTemplate):
 
     ```
     [
-        Message(Role.SYSTEM, formatted_instruction
-                            + formatted_context
-                            + formatted_output_indicator),
+        Message(Role.SYSTEM,
+            {instruction_prefix}{formatted_instruction}{instruction_suffix}
+            + {context_prefix}{formatted_context}{context_suffix}
+            + {output_requirement_prefix}{formatted_output_requirement}{output_requirement_suffix}),
         Message(Role.HUMAN, examples[0].input),
         Message(Role.AI, examples[0].output),
         Message(Role.HUMAN, examples[1].input),
