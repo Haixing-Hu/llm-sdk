@@ -108,24 +108,52 @@ class TestSimilarRecordRetriever(unittest.TestCase):
     def test_find(self):
         # self.retriever.set_logging_level(logging.DEBUG)
         f1 = self.retriever.find({"名称": "山楂颗粒"})
+        print("f1:", f1)
+        e1 = self.retriever.explain()
+        print("e1:", e1)
         self.assertEqual(self.TEST_DATA[5], f1)
         f3 = self.retriever.find({"名称": "采血管", "规格": "1ml"})
+        print("f3:", f3)
+        e3 = self.retriever.explain()
+        print("e3:", e3)
         self.assertEqual(self.TEST_DATA[3], f3)
         f5 = self.retriever.find({"名称": "采血管9ml"})
+        print("f5:", f5)
+        e5 = self.retriever.explain()
+        print("e5:", e5)
         self.assertEqual(self.TEST_DATA[4], f5)
         f8 = self.retriever.find({"名称": "大黄丸"})
+        print("f8:", f8)
+        e8 = self.retriever.explain()
+        print("e8:", e8)
+        self.assertEqual(self.TEST_DATA[7], f8)
+
+    def test_find_has_match(self):
+        f8 = self.retriever.find({"名称": "大黄丸"})
+        print("f8:", f8)
+        e8 = self.retriever.explain()
+        print("e8:", e8)
         self.assertEqual(self.TEST_DATA[7], f8)
 
     def test_find__non_name_field_match(self):
         f2 = self.retriever.find({"名称": "人工关节"})
+        print("f2:", f2)
+        e2 = self.retriever.explain()
+        print("e2:", e2)
         self.assertEqual(self.TEST_DATA[2], f2)
 
     def test_find__no_match_1(self):
         f4 = self.retriever.find({"名称": "采血管12ml"})
+        print("f4:", f4)
+        e4 = self.retriever.explain()
+        print("e4:", e4)
         self.assertIsNone(f4)
 
     def test_find__more_than_one_match(self):
         f6 = self.retriever.find({"名称": "中成药"})
+        print("f6:", f6)
+        e6 = self.retriever.explain()
+        print("e6:", e6)
         self.assertIsNone(f6)
 
 

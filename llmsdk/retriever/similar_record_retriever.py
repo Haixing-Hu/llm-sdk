@@ -8,6 +8,7 @@
 # ##############################################################################
 from typing import Any, List, Dict, Optional
 from importlib import import_module
+import json
 
 from ..common.search_type import SearchType
 from ..common.document import Document, RECORD_FIELD_ATTRIBUTE
@@ -86,8 +87,7 @@ class SimilarRecordRetriever(Retriever):
         self._prompt_template = prompt_template
         self._record_limit = record_limit
         self._record_score_threshold = record_score_threshold
-        self._last_prompt = None
-        self._last_reply = None
+        self._histories = {"explanation": "No query."}
         self.__init_parameters()
 
     def __init_parameters(self) -> None:
@@ -193,25 +193,44 @@ class SimilarRecordRetriever(Retriever):
         """
         similar_records = self.__get_top_similar_records(record)
         if len(similar_records) == 0:
+            self._histories = {
+                "explanation": "No similar record found in the vector database.",
+            }
             return None
         self._logger.debug("The top similar records are: %s", similar_records)
         id_field = self._record_id_field
+        self._histories = {
+            "known_records": records_to_csv(similar_records),
+            "query_record": record_to_csv(record),
+            "id_field": id_field,
+            "explanation": "",
+        }
         prompt = self._prompt_template.format_prompt(
-            known_records=records_to_csv(similar_records),
-            query_record=record_to_csv(record),
+            known_records=self._histories["known_records"],
+            query_record=self._histories["query_record"],
             id_field=id_field
         )
+        self._histories["prompt"] = prompt
         self._logger.info("The prompt to LLM is:\n%s", prompt)
-        self._last_prompt = prompt
         reply = self._llm.generate(prompt).strip()
         self._logger.info("The answer from LLM is: %s", reply)
-        self._last_reply = reply
-        if reply == "NONE":
+        self._histories["reply"] = reply
+        try:
+            result = json.loads(reply)
+        except json.JSONDecodeError:
+            self._logger.error("Failed to parse the JSON reply from LLM: %s", reply)
+            return None
+        self._histories["answer"] = result["answer"]
+        self._histories["explanation"] = result["explanation"]
+        if result["answer"] == "NONE":
+            self._logger.info("No similar record found by the LLM.")
             return None
         else:
             for r in similar_records:
-                if (id_field in r) and (r[id_field] == reply):
+                if (id_field in r) and (r[id_field] == result["answer"]):
                     return r
+            self._logger.warn("The LLM returns a record that is not in the "
+                              "top similar records: %s", reply)
             return None
 
     def __get_top_similar_records(self, record: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -258,3 +277,17 @@ class SimilarRecordRetriever(Retriever):
 
         :return: the explanation of the last query.
         """
+        if len(self._histories["explanation"]) > 0:
+            return self._histories["explanation"]
+        else:
+            explanation_prompt = self._prompt_template.format_explanation_prompt(
+                last_reply=self._histories["reply"],
+                known_records=self._histories["known_records"],
+                query_record=self._histories["query_record"],
+                id_field=self._histories["id_field"],
+            )
+            self._logger.info("The explanation prompt to LLM is:\n%s", explanation_prompt)
+            explanation = self._llm.generate(explanation_prompt).strip()
+            self._logger.info("The explanation from LLM is: %s", explanation)
+            self._histories["explanation"] = explanation
+            return explanation
