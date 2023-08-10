@@ -42,12 +42,6 @@ The default template of the input or question that we are interested to find a
 response for.
 """
 
-DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE: str = "{explanation_instruction}"
-"""
-The default template of the instruction to get the explanation of the last 
-response from the model.
-"""
-
 DEFAULT_EXPLANATION_INSTRUCTION: str = "Please explain the last answer."
 """
 The default instruction to get the explanation of the last response from the model.
@@ -145,10 +139,9 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
     This template may contain formatting placeholders.
     """
 
-    explanation_instruction_template: str = DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE
+    explanation_instruction: str = DEFAULT_EXPLANATION_INSTRUCTION
     """
-    The template fo the instruction to get the explanation of the last response
-    from the model.
+    The instruction to get the explanation of the last response from the model.
     """
 
     instruction_prefix: str = DEFAULT_INSTRUCTION_PREFIX
@@ -243,8 +236,8 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
                                                DEFAULT_OUTPUT_REQUIREMENT_SUFFIX)
         input_template = config.get("input_template",
                                     DEFAULT_INPUT_TEMPLATE)
-        explanation_instruction_template = config.get("explanation_instruction_template",
-                                                      DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE)
+        explanation_instruction = config.get("explanation_instruction",
+                                             DEFAULT_EXPLANATION_INSTRUCTION)
         explanation_instruction_prefix = config.get("explanation_instruction_prefix",
                                                     DEFAULT_EXPLANATION_INSTRUCTION_PREFIX)
         explanation_instruction_suffix = config.get("explanation_instruction_suffix",
@@ -283,7 +276,7 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
         self.output_requirement_prefix = output_requirement_prefix
         self.output_requirement_suffix = output_requirement_suffix
         self.input_template = input_template
-        self.explanation_instruction_template = explanation_instruction_template
+        self.explanation_instruction = explanation_instruction
         self.explanation_instruction_prefix = explanation_instruction_prefix
         self.explanation_instruction_suffix = explanation_instruction_suffix
         self.examples = examples
@@ -442,34 +435,15 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
             result = self.input_template.format(**kwargs)
         return result
 
-    def _format_explanation_instruction(self, **kwargs: Any) -> str:
-        """
-        Formats the explanation instruction of this template.
-
-        :param kwargs: the keyword arguments to be used to format the output
-            requirement.
-        :return: the formatted output requirement.
-        """
-        if (self.explanation_instruction_template == DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE
-                and ("explanation_instruction" not in kwargs)):
-            result = DEFAULT_EXPLANATION_INSTRUCTION
-        else:
-            result = self.explanation_instruction_template.format(**kwargs)
-        if len(result) > 0:
-            result = (self.explanation_instruction_prefix
-                      + result
-                      + self.explanation_instruction_suffix)
-        return result
-
     @abstractmethod
     def format_explanation_prompt(self,
-                                  last_response: str,
+                                  last_reply: str,
                                   **kwargs: Any) -> Prompt:
         """
         Formats the prompt to get the explanation of the last response from the
         model.
 
-        :param last_response: the last response from the model.
+        :param last_reply: the last reply from the model.
         :param kwargs: the keyword arguments to be used to format the last prompt.
         :return: the formatted prompt used to ask the model to explain its last
             response.

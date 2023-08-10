@@ -18,7 +18,7 @@ from llmsdk.prompt import (
     DEFAULT_INSTRUCTION_TEMPLATE,
     DEFAULT_CONTEXT_TEMPLATE,
     DEFAULT_OUTPUT_REQUIREMENT_TEMPLATE,
-    DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE,
+    DEFAULT_EXPLANATION_INSTRUCTION,
     DEFAULT_INSTRUCTION_PREFIX,
     DEFAULT_INSTRUCTION_SUFFIX,
     DEFAULT_CONTEXT_PREFIX,
@@ -34,7 +34,7 @@ TEST_CONFIGURATIONS = [{
     "context_template": "Template context 0",
     "output_requirement_template": "Template output indicator 0",
     "input_template": "Template input 0",
-    "explanation_instruction_template": "Explanation instruction 0",
+    "explanation_instruction": "Explanation instruction 0",
     "examples": [
         {
             "id": "1",
@@ -57,7 +57,7 @@ TEST_CONFIGURATIONS = [{
     "context_template": "Template context 1",
     "output_requirement_template": "Template output indicator 1",
     "input_template": "Template input 1",
-    "explanation_instruction_template": "Explanation instruction 1",
+    "explanation_instruction": "Explanation instruction 1",
     "examples": [
         {
             "id": "1",
@@ -89,7 +89,7 @@ TEST_CONFIGURATIONS = [{
     "context_template": "Template context 2",
     "output_requirement_template": "Template output indicator 2",
     "input_template": "Template input 2",
-    "explanation_instruction_template": "Explanation instruction 2",
+    "explanation_instruction": "Explanation instruction 2",
     "examples": [
         {
             "id": "1",
@@ -146,8 +146,8 @@ class TestChatPromptTemplate(unittest.TestCase):
                          p1.output_requirement_template)
         self.assertEqual(DEFAULT_INPUT_TEMPLATE,
                          p1.input_template)
-        self.assertEqual(DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE,
-                         p1.explanation_instruction_template)
+        self.assertEqual(DEFAULT_EXPLANATION_INSTRUCTION,
+                         p1.explanation_instruction)
         self.assertEqual(DEFAULT_INSTRUCTION_PREFIX,
                          p1.instruction_prefix)
         self.assertEqual(DEFAULT_INSTRUCTION_SUFFIX,
@@ -176,8 +176,8 @@ class TestChatPromptTemplate(unittest.TestCase):
                          p2.output_requirement_template)
         self.assertEqual(DEFAULT_INPUT_TEMPLATE,
                          p2.input_template)
-        self.assertEqual(DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE,
-                         p2.explanation_instruction_template)
+        self.assertEqual(DEFAULT_EXPLANATION_INSTRUCTION,
+                         p2.explanation_instruction)
         self.assertEqual(DEFAULT_INSTRUCTION_PREFIX,
                          p2.instruction_prefix)
         self.assertEqual(DEFAULT_INSTRUCTION_SUFFIX,
@@ -213,8 +213,8 @@ class TestChatPromptTemplate(unittest.TestCase):
                          p3.output_requirement_template)
         self.assertEqual(DEFAULT_INPUT_TEMPLATE,
                          p3.input_template)
-        self.assertEqual(DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE,
-                         p3.explanation_instruction_template)
+        self.assertEqual(DEFAULT_EXPLANATION_INSTRUCTION,
+                         p3.explanation_instruction)
         self.assertEqual(DEFAULT_INSTRUCTION_PREFIX,
                          p3.instruction_prefix)
         self.assertEqual(DEFAULT_INSTRUCTION_SUFFIX,
@@ -369,9 +369,9 @@ class TestChatPromptTemplate(unittest.TestCase):
         self.assertEqual(conf.get("input_template",
                                   DEFAULT_INPUT_TEMPLATE),
                          template.input_template)
-        self.assertEqual(conf.get("explanation_instruction_template",
-                                  DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE),
-                         template.explanation_instruction_template)
+        self.assertEqual(conf.get("explanation_instruction",
+                                  DEFAULT_EXPLANATION_INSTRUCTION),
+                         template.explanation_instruction)
         self.assertEqual(conf.get("instruction_prefix",
                                   DEFAULT_INSTRUCTION_PREFIX),
                          template.instruction_prefix)
@@ -452,7 +452,7 @@ class TestChatPromptTemplate(unittest.TestCase):
             Message(Role.HUMAN, "Where was it played?"),
         ], v8)
         v9 = p8.format_explanation_prompt(
-            last_response="{'answer': 'Arlington, Texas'}",
+            last_reply="{'answer': 'Arlington, Texas'}",
             instruction="You are a helpful assistant.",
             input="Where was it played?",
             context="In the World Series 2020 in Arlington, Texas， "

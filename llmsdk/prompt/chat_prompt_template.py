@@ -96,10 +96,8 @@ class ChatPromptTemplate(StructuredPromptTemplate):
             result.append(Message(role=Role.HUMAN, content=input.strip()))
         return result
 
-    def format_explanation_prompt(self, last_response: str, **kwargs: Any) -> List[Message]:
-        last_prompt = self.format_prompt(**kwargs)
-        explanation_instruction = self._format_explanation_instruction(**kwargs)
-        result = last_prompt
-        result.append(Message(role=Role.AI, content=last_response))
-        result.append(Message(role=Role.HUMAN, content=explanation_instruction))
+    def format_explanation_prompt(self, last_reply: str, **kwargs: Any) -> List[Message]:
+        result = self.format_prompt(**kwargs)
+        result.append(Message(role=Role.AI, content=last_reply))
+        result.append(Message(role=Role.HUMAN, content=self.explanation_instruction))
         return result
