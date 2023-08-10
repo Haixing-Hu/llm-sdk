@@ -490,6 +490,52 @@ class TestTextPromptTemplate(unittest.TestCase):
         for conf in TEST_CONFIGURATIONS:
             self._test_load_from_file(template, conf)
 
+    def test_format_format_explanation_prompt(self):
+        p8 = TextPromptTemplate()
+        p8.context_template = "Context: {context}"
+        p8.add_history(human_message="Who won the world series in 2020?",
+                       ai_message="{'answer': 'Los Angeles Dodgers'}")
+        v8 = p8.format_prompt(
+            instruction="You are a helpful assistant.",
+            input="Where was it played?",
+            context="In the World Series 2020 in Arlington, Texas， "
+            "Los Angeles Dodgers beat Tampa Bay Rays 4-2 and "
+            "won the first championship in 32 years.",
+            output_requirement="The output must be a JSON object.",
+        )
+        self.assertEqual("You are a helpful assistant.\n\n"
+                         "The following are known context:\n"
+                         "Context: In the World Series 2020 in Arlington, Texas， "
+                         "Los Angeles Dodgers beat Tampa Bay Rays 4-2 and "
+                         "won the first championship in 32 years.\n\n"
+                         "The output must satisfy the following requirements:\n"
+                         "The output must be a JSON object.\n\n"
+                         "input: Who won the world series in 2020?\n"
+                         "output: {'answer': 'Los Angeles Dodgers'}\n\n"
+                         "input: Where was it played?\n"
+                         "output:", v8)
+        v9 = p8.format_explanation_prompt(
+            last_response="Arlington, Texas",
+            instruction="You are a helpful assistant.",
+            input="Where was it played?",
+            context="In the World Series 2020 in Arlington, Texas， "
+            "Los Angeles Dodgers beat Tampa Bay Rays 4-2 and "
+            "won the first championship in 32 years.",
+            output_requirement="The output must be a JSON object.",
+        )
+        self.assertEqual("You are a helpful assistant.\n\n"
+                         "The following are known context:\n"
+                         "Context: In the World Series 2020 in Arlington, Texas， "
+                         "Los Angeles Dodgers beat Tampa Bay Rays 4-2 and "
+                         "won the first championship in 32 years.\n\n"
+                         "The output must satisfy the following requirements:\n"
+                         "The output must be a JSON object.\n\n"
+                         "input: Who won the world series in 2020?\n"
+                         "output: {'answer': 'Los Angeles Dodgers'}\n\n"
+                         "input: Where was it played?\n"
+                         "output: Arlington, Texas\n\n"
+                         "Please explain the last answer.", v9)
+
 
 if __name__ == '__main__':
     unittest.main()

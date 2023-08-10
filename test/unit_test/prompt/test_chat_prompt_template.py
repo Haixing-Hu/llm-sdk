@@ -428,6 +428,52 @@ class TestChatPromptTemplate(unittest.TestCase):
         for conf in TEST_CONFIGURATIONS:
             self._test_load_from_file(template, conf)
 
+    def test_format_explanation_prompt(self):
+        p8 = ChatPromptTemplate()
+        p8.context_template = "Context: {context}"
+        p8.add_history(human_message="Who won the world series in 2020?",
+                       ai_message="{'answer': 'Los Angeles Dodgers'}")
+        v8 = p8.format_prompt(instruction="You are a helpful assistant.",
+                              input="Where was it played?",
+                              context="In the World Series 2020 in Arlington, Texas， "
+                               "Los Angeles Dodgers beat Tampa Bay Rays 4-2 and "
+                               "won the first championship in 32 years.",
+                              output_requirement="The output must be a JSON object.")
+        self.assertEqual([
+            Message(Role.SYSTEM, "You are a helpful assistant.\n\n"
+                                 "The following are known context:\n"
+                                 "Context: In the World Series 2020 in Arlington, Texas， "
+                                 "Los Angeles Dodgers beat Tampa Bay Rays 4-2 and "
+                                 "won the first championship in 32 years.\n\n"
+                                 "The output must satisfy the following requirements:\n"
+                                 "The output must be a JSON object."),
+            Message(Role.HUMAN, "Who won the world series in 2020?"),
+            Message(Role.AI, "{'answer': 'Los Angeles Dodgers'}"),
+            Message(Role.HUMAN, "Where was it played?"),
+        ], v8)
+        v9 = p8.format_explanation_prompt(
+            last_response="{'answer': 'Arlington, Texas'}",
+            instruction="You are a helpful assistant.",
+            input="Where was it played?",
+            context="In the World Series 2020 in Arlington, Texas， "
+            "Los Angeles Dodgers beat Tampa Bay Rays 4-2 and "
+            "won the first championship in 32 years.",
+            output_requirement="The output must be a JSON object."
+        )
+        self.assertEqual([
+            Message(Role.SYSTEM, "You are a helpful assistant.\n\n"
+                                 "The following are known context:\n"
+                                 "Context: In the World Series 2020 in Arlington, Texas， "
+                                 "Los Angeles Dodgers beat Tampa Bay Rays 4-2 and "
+                                 "won the first championship in 32 years.\n\n"
+                                 "The output must satisfy the following requirements:\n"
+                                 "The output must be a JSON object."),
+            Message(Role.HUMAN, "Who won the world series in 2020?"),
+            Message(Role.AI, "{'answer': 'Los Angeles Dodgers'}"),
+            Message(Role.HUMAN, "Where was it played?"),
+            Message(Role.AI, "{'answer': 'Arlington, Texas'}"),
+            Message(Role.HUMAN, "Please explain the last answer."),
+        ], v9)
 
 if __name__ == '__main__':
     unittest.main()

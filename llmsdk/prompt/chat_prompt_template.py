@@ -80,9 +80,9 @@ class ChatPromptTemplate(StructuredPromptTemplate):
 
     def format_prompt(self, **kwargs: Any) -> List[Message]:
         result = []
-        instruction = self.format_instruction(**kwargs)
-        context = self.format_context(**kwargs)
-        output_requirement = self.format_output_requirement(**kwargs)
+        instruction = self._format_instruction(**kwargs)
+        context = self._format_context(**kwargs)
+        output_requirement = self._format_output_requirement(**kwargs)
         if len(instruction) > 0 or len(context) > 0 or len(output_requirement) > 0:
             content = instruction + context + output_requirement
             result.append(Message(role=Role.SYSTEM, content=content.strip()))
@@ -90,10 +90,15 @@ class ChatPromptTemplate(StructuredPromptTemplate):
             result.append(Message(role=Role.HUMAN, content=e.input.strip()))
             result.append(Message(role=Role.AI, content=e.output.strip()))
         result.extend(self.histories)
-        input = self.format_input(**kwargs)
+        input = self._format_input(**kwargs)
         if len(input) > 0:
             result.append(Message(role=Role.HUMAN, content=input.strip()))
         return result
 
     def format_explanation_prompt(self, last_response: str, **kwargs: Any) -> List[Message]:
-        pass
+        last_prompt = self.format_prompt(**kwargs)
+        explanation_instruction = self._format_explanation_instruction(**kwargs)
+        result = last_prompt
+        result.append(Message(role=Role.AI, content=last_response))
+        result.append(Message(role=Role.HUMAN, content=explanation_instruction))
+        return result

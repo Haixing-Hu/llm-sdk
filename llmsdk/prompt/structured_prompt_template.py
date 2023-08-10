@@ -42,10 +42,15 @@ The default template of the input or question that we are interested to find a
 response for.
 """
 
-DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE: str = "Please explain the last answer."
+DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE: str = "{explanation_instruction}"
 """
 The default template of the instruction to get the explanation of the last 
 response from the model.
+"""
+
+DEFAULT_EXPLANATION_INSTRUCTION: str = "Please explain the last answer."
+"""
+The default instruction to get the explanation of the last response from the model.
 """
 
 DEFAULT_INSTRUCTION_PREFIX: str = ""
@@ -79,7 +84,7 @@ DEFAULT_OUTPUT_REQUIREMENT_SUFFIX: str = "\n\n"
 The default suffix for the output requirement.
 """
 
-DEFAULT_EXPLANATION_INSTRUCTION_PREFIX: str = "\n"
+DEFAULT_EXPLANATION_INSTRUCTION_PREFIX: str = ""
 """
 The default prefix for the explanation instruction.
 """
@@ -198,31 +203,6 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
     The list of conversation histories.
     
     Note that the histories should not contain formatting placeholders.
-    """
-
-    formatted_instruction: str = ""
-    """
-    The formatted instruction.
-    """
-
-    formatted_context: str = ""
-    """
-    The formatted context.
-    """
-
-    formatted_output_requirement: str = ""
-    """
-    The formatted output requirement.
-    """
-
-    formatted_input: str = ""
-    """
-    The formatted input.
-    """
-
-    formatted_explanation_instruction: str = ""
-    """
-    The formatted explanation instruction.
     """
 
     def load_from_file(self, file_path: str) -> None:
@@ -396,12 +376,9 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
                 raise ValueError("The message at index {} is not an AI "
                                  "message.".format(i + 1))
 
-    def format_instruction(self, **kwargs: Any) -> str:
+    def _format_instruction(self, **kwargs: Any) -> str:
         """
         Formats the instruction of this template.
-
-        This function will set the attribute `formatted_instruction` of this
-        template to the formatted instruction.
 
         :param kwargs: the keyword arguments to be used to format the
             instruction.
@@ -414,15 +391,11 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
             result = self.instruction_template.format(**kwargs)
         if len(result) > 0:
             result = self.instruction_prefix + result + self.instruction_suffix
-        self.formatted_instruction = result
         return result
 
-    def format_context(self, **kwargs: Any) -> str:
+    def _format_context(self, **kwargs: Any) -> str:
         """
         Formats the context of this template.
-
-        This function will set the attribute `formatted_context` of this
-        template to the formatted context.
 
         :param kwargs: the keyword arguments to be used to format the context.
         :return: the formatted context.
@@ -434,15 +407,11 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
             result = self.context_template.format(**kwargs)
         if len(result) > 0:
             result = self.context_prefix + result + self.context_suffix
-        self.formatted_context = result
         return result
 
-    def format_output_requirement(self, **kwargs: Any) -> str:
+    def _format_output_requirement(self, **kwargs: Any) -> str:
         """
         Formats the output requirement of this template.
-
-        This function will set the attribute `formatted_output_requirement` of
-        this template to the formatted output requirement.
 
         :param kwargs: the keyword arguments to be used to format the output
             requirement.
@@ -454,16 +423,14 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
         else:
             result = self.output_requirement_template.format(**kwargs)
         if len(result) > 0:
-            result = self.output_requirement_prefix + result + self.output_requirement_suffix
-        self.formatted_output_requirement = result
+            result = (self.output_requirement_prefix
+                      + result
+                      + self.output_requirement_suffix)
         return result
 
-    def format_input(self, **kwargs: Any) -> str:
+    def _format_input(self, **kwargs: Any) -> str:
         """
         Formats the input of this template.
-
-        This function will set the attribute `formatted_input` of this template
-        to the formatted input.
 
         :param kwargs: the keyword arguments to be used to format the input.
         :return: the formatted input.
@@ -473,30 +440,25 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
             result = ""
         else:
             result = self.input_template.format(**kwargs)
-        self.formatted_input = result
         return result
 
-    def format_explanation_instruction(self, **kwargs: Any) -> str:
+    def _format_explanation_instruction(self, **kwargs: Any) -> str:
         """
         Formats the explanation instruction of this template.
-
-        This function will set the attribute `formatted_explanation_instruction` of
-        this template to the formatted output requirement.
 
         :param kwargs: the keyword arguments to be used to format the output
             requirement.
         :return: the formatted output requirement.
         """
         if (self.explanation_instruction_template == DEFAULT_EXPLANATION_INSTRUCTION_TEMPLATE
-                and ("explanation_instruction_template" not in kwargs)):
-            result = ""
+                and ("explanation_instruction" not in kwargs)):
+            result = DEFAULT_EXPLANATION_INSTRUCTION
         else:
             result = self.explanation_instruction_template.format(**kwargs)
         if len(result) > 0:
             result = (self.explanation_instruction_prefix
                       + result
                       + self.explanation_instruction_suffix)
-        self.formatted_explanation_instruction = result
         return result
 
     @abstractmethod
@@ -508,5 +470,7 @@ class StructuredPromptTemplate(PromptTemplate, ABC):
         model.
 
         :param last_response: the last response from the model.
-        :param kwargs: the optional keyword arguments to be used to format the prompt.
+        :param kwargs: the keyword arguments to be used to format the last prompt.
+        :return: the formatted prompt used to ask the model to explain its last
+            response.
         """

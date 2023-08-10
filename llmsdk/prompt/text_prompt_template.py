@@ -151,12 +151,12 @@ class TextPromptTemplate(StructuredPromptTemplate):
     """
 
     def format_prompt(self, **kwargs: Any) -> str:
-        instruction = self.format_instruction(**kwargs)
-        context = self.format_context(**kwargs)
-        output_requirement = self.format_output_requirement(**kwargs)
-        examples = [self.format_example(e) for e in self.examples]
-        histories = self.format_histories(self.histories)
-        input = self.format_input(**kwargs)
+        instruction = self._format_instruction(**kwargs)
+        context = self._format_context(**kwargs)
+        output_requirement = self._format_output_requirement(**kwargs)
+        examples = [self._format_example(e) for e in self.examples]
+        histories = self._format_histories(self.histories)
+        input = self._format_input(**kwargs)
         result = instruction + context + output_requirement
         if len(examples) > 0 or len(histories) > 0:
             result += self.example_list_prefix
@@ -168,10 +168,15 @@ class TextPromptTemplate(StructuredPromptTemplate):
             result += self.example_output_prefix
         return result.strip()
 
-    def format_explanation_prompt(self, last_response: str, **kwargs: Any) -> Prompt:
-        pass
+    def format_explanation_prompt(self, last_response: str, **kwargs: Any) -> str:
+        last_prompt = self.format_prompt(**kwargs)
+        explanation_instruction = self._format_explanation_instruction(**kwargs)
+        return (last_prompt + " " + last_response + self.example_output_suffix
+                + self.explanation_instruction_prefix
+                + explanation_instruction
+                + self.explanation_instruction_suffix)
 
-    def format_example(self, example: Example) -> str:
+    def _format_example(self, example: Example) -> str:
         """
         Formats the input/output of an example.
         """
@@ -182,7 +187,7 @@ class TextPromptTemplate(StructuredPromptTemplate):
                 + example.output.strip()
                 + self.example_output_suffix)
 
-    def format_histories(self, histories: List[Message]) -> str:
+    def _format_histories(self, histories: List[Message]) -> str:
         """
         Formats the conversation histories as a list of input/output pairs.
         """
