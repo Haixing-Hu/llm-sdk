@@ -92,6 +92,15 @@ class TestOpenAiEmbedding(unittest.TestCase):
         self.assertIsNotNone(embedding.cache)
         print(f"Embedding cache keys: {list(embedding.cache.keys())}")
 
+    def test_progress_bar(self):
+        embedding = OpenAiEmbedding(use_cache=True,
+                                    cache_size=3,
+                                    show_progress=True,
+                                    min_size_to_show_progress=1)
+        docs = [Document("Text " + str(i), id=str(i)) for i in range(10)]
+        points = embedding.embed_documents(docs)
+        print(f"Embedded {len(points)} points.")
+
 
 if __name__ == '__main__':
     unittest.main()

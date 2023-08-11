@@ -7,10 +7,11 @@
 #                                                                              #
 # ##############################################################################
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Any, List, Optional
 from logging import Logger, getLogger
 
 from cachetools import Cache, LRUCache
+from tqdm import tqdm
 
 from ..common.document import Document
 from ..common.vector import Vector
@@ -34,11 +35,24 @@ class Embedding(ABC):
     The default number of text embeddings to be cached.
     """
 
+    DEFAULT_SHOW_PROGRESS: bool = False
+    """
+    The default value of the flag indicating whether to show the progress of 
+    embedding.
+    """
+
+    DEFAULT_MIN_SIZE_TO_SHOW_PROGRESS: int = 100
+    """
+    The default minimum number of embedding texts to show the embedding progress.
+    """
+
     def __init__(self,
                  vector_dimension: int,
                  id_generator: Optional[IdGenerator] = None,
                  use_cache: bool = DEFAULT_USE_CACHE,
-                 cache_size: int = DEFAULT_CACHE_SIZE) -> None:
+                 cache_size: int = DEFAULT_CACHE_SIZE,
+                 show_progress: bool = DEFAULT_SHOW_PROGRESS,
+                 min_size_to_show_progress: int = DEFAULT_MIN_SIZE_TO_SHOW_PROGRESS) -> None:
         """
         Creates an Embedding object.
 
@@ -50,6 +64,10 @@ class Embedding(ABC):
             embedded vectors of texts will not be cached.
         :param cache_size: the number of text embeddings to be cached. This
             argument is ignored if the use_cache argument is False.
+        :param show_progress: indicates whether to show the progress of
+            embedding.
+        :param min_size_to_show_progress: the minimum number of embedding texts
+            to show the embedding progress.
         """
         self._logger = getLogger(self.__class__.__name__)
         self._vector_dimension = vector_dimension
@@ -58,6 +76,8 @@ class Embedding(ABC):
             self._cache = LRUCache(maxsize=cache_size)
         else:
             self._cache = None
+        self._show_progress = show_progress
+        self._min_size_to_show_progress = min_size_to_show_progress
 
     @property
     def logger(self) -> Logger:
@@ -92,6 +112,18 @@ class Embedding(ABC):
     @property
     def cache(self) -> Optional[Cache]:
         return self._cache
+
+    def _get_iterable(self, iterable: Any) -> Any:
+        """
+        Get an iterable or a tqdm progress bar.
+
+        :param iterable: the iterable to be processed.
+        :return: the iterable or the tqdm progress bar.
+        """
+        if self._show_progress and len(iterable) >= self._min_size_to_show_progress:
+            return tqdm(iterable)
+        else:
+            return iterable
 
     def embed_query(self, query: str) -> Vector:
         """
@@ -142,9 +174,10 @@ class Embedding(ABC):
         n = len(documents)
         self._logger.info("Embedding %d documents ...", n)
         self._logger.debug("The documents to be embedded are: %s", documents)
-        vectors = self._embed_texts([doc.content for doc in documents])
+        texts = [doc.content for doc in self._get_iterable(documents)]
+        vectors = self._embed_texts(texts)
         points = []
-        for i in range(n):
+        for i in self._get_iterable(range(n)):
             if not documents[i].id:
                 documents[i].id = self._id_generator.generate()
             p = Point.from_document(documents[i], vectors[i])
@@ -234,7 +267,7 @@ class Embedding(ABC):
             # use a dict to remove duplicated uncached texts
             # the `uncached` dict maps an uncached text to its embedded vector
             uncached = dict()
-            for text in texts:
+            for text in self._get_iterable(texts):
                 if text in self._cache:
                     self._logger.info("The text is found in the cache: %s", text)
                     vector = self._cache[text]
@@ -250,13 +283,13 @@ class Embedding(ABC):
             uncached_texts = list(uncached.keys())
             uncached_vectors = self._embed_impl(uncached_texts)
             # fill the cache and the mapping
-            for i in range(len(uncached_texts)):
+            for i in self._get_iterable(range(len(uncached_texts))):
                 text = uncached_texts[i]
                 vector = uncached_vectors[i]
                 uncached[text] = vector
                 self._cache[text] = vector
             # fill the result vector list
-            for i in range(len(texts)):
+            for i in self._get_iterable(range(len(texts))):
                 if vectors[i] is None:
                     text = texts[i]
                     # note that we cannot use self._cache to replace the `uncached`

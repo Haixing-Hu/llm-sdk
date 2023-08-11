@@ -117,7 +117,8 @@ class OpenAiEmbedding(Embedding):
 
     def _embed_impl(self, texts: List[str]) -> List[Vector]:
         tokens_list = []
-        for i, text in enumerate(texts):
+        for i in self._get_iterable(range(0, len(texts))):
+            text = texts[i]
             tokens = self._tokenizer.encode(text)
             if len(tokens) > self._model_tokens:
                 raise ValueError(f"The text is too long: {len(tokens)} tokens, "
@@ -126,7 +127,7 @@ class OpenAiEmbedding(Embedding):
             tokens_list.append(tokens)
         # batch embedding all token lists
         result = []
-        for i in range(0, len(tokens_list), self._batch_size):
+        for i in self._get_iterable(range(0, len(tokens_list), self._batch_size)):
             input_list = tokens_list[i:i+self._batch_size]
             self._logger.debug("Embed %d chunks with OpenAI: %s",
                                len(input_list), input_list)

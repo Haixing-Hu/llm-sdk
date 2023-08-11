@@ -11,7 +11,7 @@ import threading
 import requests
 import csv
 from io import StringIO
-
+from tqdm import tqdm
 
 def global_init(func):
     """
@@ -194,3 +194,21 @@ def records_to_csv(records: List[Dict[str, Any]]) -> str:
     csv_writer.writerows(rows)
     # Get CSV data
     return csv_file.getvalue()
+
+
+def get_iterable_or_tqdm(iterable: Any,
+                         show_progress: bool,
+                         min_size_to_show: int) -> Any:
+    """
+    Get an iterable or a tqdm progress bar.
+
+    :param iterable: the iterable to be processed.
+    :param show_progress: whether to show the progress bar.
+    :param min_size_to_show: the minimum size of the iterable to show the
+        progress bar.
+    :return: the iterable or the tqdm progress bar.
+    """
+    if show_progress and len(iterable) >= min_size_to_show:
+        return tqdm(iterable)
+    else:
+        return iterable
