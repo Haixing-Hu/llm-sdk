@@ -12,7 +12,7 @@ from typing import List, Optional
 
 from llmsdk.embedding import OpenAiEmbedding
 from llmsdk.common import Document, Distance
-from llmsdk.util.openai_utils import set_openai_debug_mode
+# from llmsdk.util.openai_utils import set_openai_debug_mode
 
 
 class TestOpenAiEmbedding(unittest.TestCase):
@@ -27,35 +27,29 @@ class TestOpenAiEmbedding(unittest.TestCase):
             self.assertAlmostEqual(a, b, places=places, delta=delta, msg=msg)
 
     def setUp(self) -> None:
-        logging.basicConfig(level=logging.DEBUG)
-        set_openai_debug_mode()
+        logging.basicConfig(level=logging.INFO)
+        # set_openai_debug_mode()
 
     def test_embed_query(self) -> None:
         embedding = OpenAiEmbedding()
-        vector = embedding.embed_query("Hello world!")
+        vector = embedding.embed_query("Hello, world!")
         print(vector)
 
     def test_embed_document(self) -> None:
         embedding = OpenAiEmbedding()
-        document = Document("你好，世界！", id="001")
+        document = Document("Hello, world!", id="001")
         point = embedding.embed_document(document)
         print(point)
 
     def test_embed_documents(self) -> None:
         embedding = OpenAiEmbedding()
-        doc1 = Document("你好，世界！", id="001")
-        doc2 = Document("世界，你好！", id="002")
+        doc1 = Document("Hello, world!", id="001")
+        doc2 = Document("World, hello!", id="002")
         points = embedding.embed_documents([doc1, doc2])
         print(points)
 
     def test_embed_consistent(self) -> None:
         embedding = OpenAiEmbedding()
-        # v1 = embedding.embed_text("你好，世界！")
-        # v2 = embedding.embed_text("你好，世界！")
-        # self.assertListAlmostEqual(v1, v2)
-        # vectors = embedding.embed_texts(["你好，世界！", "你好，世界！"])
-        # self.assertListAlmostEqual(vectors[0], vectors[1])
-
         questions = [
             "什么是“南京宁慧保”？",
             "这款产品是哪个保险公司承保的？",
@@ -71,17 +65,32 @@ class TestOpenAiEmbedding(unittest.TestCase):
         ]
         print("Embedding vectors 1")
         vectors1 = embedding.embed_texts(questions)
-        # print(f"vectors1 = {vectors1}")
-        # print("Embedding vectors 2")
-        # vectors2 = embedding.embed_texts(questions)
-        # print(f"vectors2 = {vectors2}")
-        # for i, _ in enumerate(vectors1):
-        #     self.assertListAlmostEqual(vectors1[i], vectors2[i],
-        #                                msg=f"i={i}, text={questions[i]}")
         query = embedding.embed_text("南京宁慧保是什么")
         print(f"query={query}")
         scores = [Distance.COSINE.between(query, v) for v in vectors1]
         print(scores)
+
+    def test_cache(self):
+        embedding = OpenAiEmbedding(use_cache=True, cache_size=3)
+        doc1 = Document("Hello, world!", id="001")
+        doc2 = Document("World, hello!", id="002")
+        doc3 = Document("What's your name?", id="003")
+        doc4 = Document("World, hello!", id="004")
+        doc5 = Document("What's your name?", id="005")
+        points = embedding.embed_documents([doc1, doc2, doc3, doc4, doc5])
+        print(f"Embedded {len(points)} points.")
+        self.assertIsNotNone(embedding.cache)
+        print(f"Embedding cache keys: {list(embedding.cache.keys())}")
+
+        doc6 = Document("World, hello!", id="006")
+        doc7 = Document("What's your name?", id="007")
+        doc8 = Document("World, hello!", id="008")
+        doc9 = Document("Here you are!", id="009")
+        doc10 = Document("Hello, world!", id="010")
+        points = embedding.embed_documents([doc6, doc7, doc8, doc9, doc10])
+        print(f"Embedded {len(points)} points.")
+        self.assertIsNotNone(embedding.cache)
+        print(f"Embedding cache keys: {list(embedding.cache.keys())}")
 
 
 if __name__ == '__main__':

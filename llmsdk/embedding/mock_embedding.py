@@ -21,9 +21,12 @@ class MockEmbedding(Embedding):
     PRECISION: int = 7
 
     def __init__(self) -> None:
-        super().__init__(vector_dimension=10)
+        super().__init__(
+            vector_dimension=10,
+            use_cache=False,
+        )
 
-    def _embed_texts(self, texts: List[str]) -> List[Vector]:
+    def _embed_impl(self, texts: List[str]) -> List[Vector]:
         """
         Return simple embeddings. Embeddings encode each text as its index.
 

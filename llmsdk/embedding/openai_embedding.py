@@ -6,7 +6,7 @@
 #     All rights reserved.                                                     #
 #                                                                              #
 # ##############################################################################
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from ..common.vector import Vector
 from ..llm.tokenizer.tokernizer import Tokenizer
@@ -34,8 +34,23 @@ class OpenAiEmbedding(Embedding):
                  model: str = DEFAULT_MODEL,
                  batch_size: int = DEFAULT_BATCH_SIZE,
                  api_key: Optional[str] = None,
-                 use_proxy: Optional[bool] = None) -> None:
-        super().__init__(vector_dimension=get_embedding_output_dimensions(model))
+                 use_proxy: Optional[bool] = None,
+                 **kwargs: Any) -> None:
+        """
+        Creates an OpenAiEmbedding object.
+
+        :param model: the name of the OpenAI model to be used.
+        :param batch_size: the batch size of the OpenAI API.
+        :param api_key: the API key of the OpenAI API.
+        :param use_proxy: indicates whether to use the proxy to access the
+            OpenAI API.
+        :param kwargs: the extra arguments passed to the constructor of the
+            base class.
+        """
+        super().__init__(
+            vector_dimension=get_embedding_output_dimensions(model),
+            **kwargs,
+        )
         try:
             import openai
         except ImportError:
@@ -100,7 +115,7 @@ class OpenAiEmbedding(Embedding):
     #         result.append(point)
     #     return result
 
-    def _embed_texts(self, texts: List[str]) -> List[Vector]:
+    def _embed_impl(self, texts: List[str]) -> List[Vector]:
         tokens_list = []
         for i, text in enumerate(texts):
             tokens = self._tokenizer.encode(text)

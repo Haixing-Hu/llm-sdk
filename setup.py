@@ -17,5 +17,6 @@ setup(
         "frozendict",
         "requests",
         "tenacity",
+        "cachetools"
     ],
 )
