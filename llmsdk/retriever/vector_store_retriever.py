@@ -122,6 +122,7 @@ class VectorStoreRetriever(Retriever):
     @show_progress.setter
     def show_progress(self, value: bool) -> None:
         self._show_progress = value
+        self._vector_store.show_progress = value
         self._embedding.show_progress = value
         self._splitter.show_progress = value
 
@@ -132,6 +133,7 @@ class VectorStoreRetriever(Retriever):
     @min_size_to_show_progress.setter
     def min_size_to_show_progress(self, value: int) -> None:
         self._min_size_to_show_progress = value
+        self._vector_store.min_size_to_show_progress = value
         self._embedding.min_size_to_show_progress = value
         self._splitter.min_size_to_show_progress = value
 

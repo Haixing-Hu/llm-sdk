@@ -29,7 +29,7 @@ class TestVectorStoreBase(unittest.TestCase):
     """
 
     def setUp(self) -> None:
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.INFO)
 
     def _test_search(self, store: VectorStore, **kwargs: Any):
         texts = ["foo", "bar", "baz"]
@@ -206,6 +206,19 @@ class TestVectorStoreBase(unittest.TestCase):
             store.delete_collection(COLLECTION_NAME)
             store.close()
 
-
-if __name__ == '__main__':
-    unittest.main()
+    def _test_progress_bar(self, store: VectorStore, **kwargs: Any):
+        docs = [Document("Text " + str(i), id=str(i)) for i in range(5000)]
+        embedding = MockEmbedding()
+        points = embedding.embed_documents(docs)
+        store.show_progress = True
+        store.min_size_to_show_progress = 10
+        store.open(**kwargs)
+        try:
+            store.create_collection(collection_name=COLLECTION_NAME,
+                                    vector_size=embedding.vector_dimension)
+            store.open_collection(COLLECTION_NAME)
+            store.add_all(points)
+        finally:
+            store.close_collection()
+            store.delete_collection(COLLECTION_NAME)
+            store.close()

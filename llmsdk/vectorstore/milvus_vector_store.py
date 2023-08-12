@@ -178,6 +178,7 @@ class MilvusVectorStore(VectorStore):
         return ids[0]
 
     def _add_all(self, points: List[Point]) -> List[str]:
+        # FIXME: add progress bar and batch insert data if the data is too large
         fields = self._collection.schema.fields
         data: List[List[Any]] = [] * len(fields)
         for p in points:

@@ -9,7 +9,7 @@
 import unittest
 from llmsdk.vectorstore import QdrantVectorStore
 
-from .test_vector_store_base import TestVectorStoreBase
+from test_vector_store_base import TestVectorStoreBase
 
 
 class TestQdrantVectorStore(TestVectorStoreBase):
@@ -44,6 +44,9 @@ class TestQdrantVectorStore(TestVectorStoreBase):
 
     def test_similarity_search_with_score_threshold(self):
         self._test_similarity_search(store=QdrantVectorStore(), in_memory=True)
+
+    def test_progress_bar(self):
+        self._test_progress_bar(store=QdrantVectorStore(), in_memory=True)
 
 
 if __name__ == '__main__':

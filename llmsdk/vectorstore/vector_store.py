@@ -9,6 +9,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional
 from logging import Logger, getLogger
+from tqdm import tqdm
 
 from ..common.distance import Distance
 from ..common.vector import Vector
@@ -24,18 +25,27 @@ from .vector_store_utils import maximal_marginal_relevance
 
 class VectorStore(ABC):
     """
-    The interface of vector stores.
+    The abstract base class of vector stores.
     """
 
-    def __init__(self, id_generator: Optional[IdGenerator] = None) -> None:
+    def __init__(self,
+                 id_generator: Optional[IdGenerator] = None,
+                 show_progress: bool = False,
+                 min_size_to_show_progress: int = 10) -> None:
         """
         Constructs a vector store.
 
         :param id_generator: the ID generator used to generate ID of documents.
+        :param show_progress: indicates whether to show the progress of
+            embedding.
+        :param min_size_to_show_progress: the minimum number of embedding texts
+            to show the embedding progress.
         """
         self._logger = getLogger(self.__class__.__name__)
         self._store_name = self.__class__.__name__
         self._id_generator = id_generator or DefaultIdGenerator()
+        self._show_progress = show_progress
+        self._min_size_to_show_progress = min_size_to_show_progress
         self._is_opened = False
         self._collection_name = None
 
@@ -62,6 +72,34 @@ class VectorStore(ABC):
     @property
     def id_generator(self) -> IdGenerator:
         return self._id_generator
+
+    @property
+    def show_progress(self) -> bool:
+        return self._show_progress
+
+    @show_progress.setter
+    def show_progress(self, value: bool) -> None:
+        self._show_progress = value
+
+    @property
+    def min_size_to_show_progress(self) -> int:
+        return self._min_size_to_show_progress
+
+    @min_size_to_show_progress.setter
+    def min_size_to_show_progress(self, value: int) -> None:
+        self._min_size_to_show_progress = value
+
+    def _get_iterable(self, iterable: Any) -> Any:
+        """
+        Get an iterable or a tqdm progress bar.
+
+        :param iterable: the iterable to be processed.
+        :return: the iterable or the tqdm progress bar.
+        """
+        if self._show_progress and len(iterable) >= self._min_size_to_show_progress:
+            return tqdm(iterable)
+        else:
+            return iterable
 
     @property
     def is_opened(self) -> bool:
@@ -313,11 +351,11 @@ class VectorStore(ABC):
         self._logger.debug("The point to add is: %s", point)
         self._ensure_store_opened()
         self._ensure_collection_opened()
-        result = self._add(point)
+        id = self._add(point)
         self._logger.info("Successfully added the point to the collection '%s'.",
                           self._collection_name)
-        self._logger.debug("The ID of the point added is: %s", result)
-        return result
+        self._logger.debug("The ID of the point added is: %s", id)
+        return id
 
     @abstractmethod
     def _add(self, point: Point) -> str:
@@ -366,8 +404,8 @@ class VectorStore(ABC):
         :return: the list of IDs of the vectors added into the vector store.
         """
         result = []
-        for point in points:
-            id = self.add(point)
+        for point in self._get_iterable(points):
+            id = self._add(point)
             result.append(id)
         return result
 

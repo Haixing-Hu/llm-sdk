@@ -44,6 +44,7 @@ class QdrantVectorStore(VectorStore):
                  prefix: Optional[str] = None,
                  timeout: Optional[float] = None,
                  id_generator: Optional[IdGenerator] = None,
+                 batch_size: int = 100,
                  **kwargs: Any) -> None:
         """
         Construct a QdrantVectorStore object.
@@ -74,6 +75,10 @@ class QdrantVectorStore(VectorStore):
             use the 5.0 seconds for REST and unlimited for gRPC. Default value
             is `None`.
         :param id_generator: the ID generator used to generate ID of documents.
+            If it is `None`, use the default ID generator. Default value is
+            `None`.
+        :param batch_size: the batch size used for batch insertion operations.
+            Default value is 100.
         :param kwargs: Additional arguments passed directly into REST client
             initialization
         """
@@ -91,6 +96,7 @@ class QdrantVectorStore(VectorStore):
         self._protocol = protocol
         self._prefix = prefix
         self._timeout = timeout
+        self._batch_size = batch_size
         self._kwargs = kwargs
         self._client = None
 
@@ -229,9 +235,14 @@ class QdrantVectorStore(VectorStore):
         return point.id
 
     def _add_all(self, points: List[Point]) -> List[str]:
-        qdrant_points = [to_qdrant_point(pt, self._id_generator) for pt in points]
-        self._client.upsert(collection_name=self._collection_name,
-                            points=qdrant_points)
+        self._logger.info("Constructing %d Qdrant points...", len(points))
+        pts = [to_qdrant_point(pt, self._id_generator)
+               for pt in self._get_iterable(points)]
+        self._logger.info("Upserting %d Qdrant points...", len(pts))
+        for i in self._get_iterable(range(0, len(pts), self._batch_size)):
+            self._client.upsert(collection_name=self._collection_name,
+                                points=pts[i:i+self._batch_size])
+        self._logger.info("Successfully upserting %d Qdrant points.", len(pts))
         return [p.id for p in points]
 
     def _similarity_search(self,
