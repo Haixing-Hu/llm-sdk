@@ -174,8 +174,10 @@ class Embedding(ABC):
         n = len(documents)
         self._logger.info("Embedding %d documents ...", n)
         self._logger.debug("The documents to be embedded are: %s", documents)
-        texts = [doc.content for doc in self._get_iterable(documents)]
+        self._logger.info("Embedding content of documents...")
+        texts = [doc.content for doc in documents]
         vectors = self._embed_texts(texts)
+        self._logger.info("Constructing points from documents and embedded vectors...")
         points = []
         for i in self._get_iterable(range(n)):
             if not documents[i].id:
@@ -267,13 +269,11 @@ class Embedding(ABC):
             # use a dict to remove duplicated uncached texts
             # the `uncached` dict maps an uncached text to its embedded vector
             uncached = dict()
+            self._logger.info("Checking cache for each text to be embedded...")
             for text in self._get_iterable(texts):
                 if text in self._cache:
-                    self._logger.info("The text is found in the cache: %s", text)
                     vector = self._cache[text]
                 else:
-                    if text not in uncached:
-                        self._logger.info("The text is NOT found in the cache: %s", text)
                     uncached[text] = None
                     vector = None
                 vectors.append(vector)
@@ -282,19 +282,21 @@ class Embedding(ABC):
             # delegate to _embed_impl() to embed the uncached texts
             uncached_texts = list(uncached.keys())
             uncached_vectors = self._embed_impl(uncached_texts)
+            self._logger.info("Filling the embedding cache...")
             # fill the cache and the mapping
             for i in self._get_iterable(range(len(uncached_texts))):
                 text = uncached_texts[i]
                 vector = uncached_vectors[i]
                 uncached[text] = vector
                 self._cache[text] = vector
+            self._logger.info("Filling the embedded vector list...")
             # fill the result vector list
+            # note that we cannot use self._cache to replace the `uncached`
+            # dict, since the vectors stored in self._cache may be evicted
+            # if the size of the cache exceeds the capacity.
             for i in self._get_iterable(range(len(texts))):
                 if vectors[i] is None:
                     text = texts[i]
-                    # note that we cannot use self._cache to replace the `uncached`
-                    # dict, since the vectors stored in self._cache may be evicted
-                    # if the size of the cache exceeds the capacity.
                     vectors[i] = uncached[text]
             return vectors
 

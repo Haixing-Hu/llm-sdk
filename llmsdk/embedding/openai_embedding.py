@@ -116,6 +116,7 @@ class OpenAiEmbedding(Embedding):
     #     return result
 
     def _embed_impl(self, texts: List[str]) -> List[Vector]:
+        self._logger.info("Tokenizing all embedded texts...")
         tokens_list = []
         for i in self._get_iterable(range(0, len(texts))):
             text = texts[i]
@@ -125,7 +126,7 @@ class OpenAiEmbedding(Embedding):
                                  f"but the OpenAI model {self._model} only "
                                  f"supports {self._model_tokens} tokens: {text}")
             tokens_list.append(tokens)
-        # batch embedding all token lists
+        self._logger.info("Batch embedding all token lists...")
         result = []
         for i in self._get_iterable(range(0, len(tokens_list), self._batch_size)):
             input_list = tokens_list[i:i+self._batch_size]
