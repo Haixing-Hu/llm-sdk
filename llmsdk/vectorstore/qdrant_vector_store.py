@@ -235,13 +235,12 @@ class QdrantVectorStore(VectorStore):
         return point.id
 
     def _add_all(self, points: List[Point]) -> List[str]:
-        self._logger.info("Constructing %d Qdrant points...", len(points))
-        pts = [to_qdrant_point(pt, self._id_generator)
-               for pt in self._get_iterable(points)]
         self._logger.info("Upserting %d Qdrant points...", len(pts))
         for i in self._get_iterable(range(0, len(pts), self._batch_size)):
+            pts = [to_qdrant_point(pt, self._id_generator)
+                   for pt in points[i:i+self._batch_size]]
             self._client.upsert(collection_name=self._collection_name,
-                                points=pts[i:i+self._batch_size])
+                                points=pts)
         self._logger.info("Successfully upserting %d Qdrant points.", len(pts))
         return [p.id for p in points]
 
