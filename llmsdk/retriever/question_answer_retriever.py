@@ -14,7 +14,6 @@ from ..common.message import Message
 from ..common.search_type import SearchType
 from ..common.faq import Faq, FAQ_PART_ATTRIBUTE
 from ..common.document import Document
-from ..vectorstore.collection_info import CollectionInfo
 from ..vectorstore.vector_store import VectorStore
 from ..embedding.embedding import Embedding
 from ..llm.llm import LargeLanguageModel

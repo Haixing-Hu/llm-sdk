@@ -12,7 +12,6 @@ import json
 
 from ..common.search_type import SearchType
 from ..common.document import Document, RECORD_FIELD_ATTRIBUTE
-from ..vectorstore.collection_info import CollectionInfo
 from ..vectorstore.vector_store import VectorStore
 from ..embedding.embedding import Embedding
 from ..llm.llm import LargeLanguageModel
@@ -156,7 +155,7 @@ class SimilarRecordRetriever(VectorStoreBasedRetriever):
         self._logger.info("Constructing documents from records...")
         docs = []
         for record in self._get_iterable(records):
-            docs.extend(cls.from_record(id_field, record))
+            docs.extend(Document.from_record(self._record_id_field, record))
         self._logger.debug("The records are converted into %d documents: %s",
                            len(docs), docs)
         return self._retriever.add_all(docs)

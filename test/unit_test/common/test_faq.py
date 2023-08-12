@@ -8,7 +8,7 @@
 # ##############################################################################
 import unittest
 
-from llmsdk.common import Faq, Document, Metadata
+from llmsdk.common import Faq, Metadata
 
 
 class TestFaq(unittest.TestCase):

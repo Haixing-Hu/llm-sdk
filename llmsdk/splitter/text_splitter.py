@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from typing import Any, List, Callable
 from logging import Logger, getLogger
 import copy
+from tqdm import tqdm
 
 from ..common.document import Document
 # from .text_splitter_utils import (
@@ -66,6 +67,7 @@ class TextSplitter(ABC):
     @min_size_to_show_progress.setter
     def min_size_to_show_progress(self, value: int) -> None:
         self._min_size_to_show_progress = value
+
     @property
     def logger(self) -> Logger:
         return self._logger
@@ -113,6 +115,7 @@ class TextSplitter(ABC):
             return tqdm(iterable)
         else:
             return iterable
+
     @abstractmethod
     def split_text(self, text: str) -> List[str]:
         """

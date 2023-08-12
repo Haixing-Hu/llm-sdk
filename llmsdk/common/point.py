@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from typing import Optional, List
 import copy
 
-from .document import Document, DOCUMENT_TYPE_ATTRIBUTE
+from .document import Document
 from .metadata import Metadata
 from .vector import Vector
 
@@ -79,7 +79,6 @@ class Point:
         :return: the Document constructed from the point.
         :raise ValueError: if the specified point is not converted from a document.
         """
-        m = point.metadata
         if not cls.is_document(point):
             raise ValueError(f"The point is not converted from a document: {point}")
         metadata = copy.deepcopy(point.metadata)

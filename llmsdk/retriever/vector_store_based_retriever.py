@@ -7,21 +7,15 @@
 #                                                                              #
 # ##############################################################################
 from abc import ABC
-from typing import Any, List, Dict, Optional
-from importlib import import_module
-import json
+from typing import Any
 from tqdm import tqdm
 
 from ..common.search_type import SearchType
-from ..common.document import Document, RECORD_FIELD_ATTRIBUTE
 from ..vectorstore.collection_info import CollectionInfo
 from ..vectorstore.vector_store import VectorStore
 from ..embedding.embedding import Embedding
 from ..llm.llm import LargeLanguageModel
 from ..splitter.text_splitter import TextSplitter
-from ..criterion.criterion_builder import equal
-from ..prompt.structured_prompt_template import StructuredPromptTemplate
-from ..util.common_utils import record_to_csv, records_to_csv
 from .retriever import Retriever
 from .vector_store_retriever import VectorStoreRetriever
 
@@ -33,15 +27,15 @@ class VectorStoreBasedRetriever(Retriever, ABC):
     """
     def __init__(self,
                  vector_store: VectorStore,
-                    collection_name: str,
-                    embedding: Embedding,
-                    splitter: TextSplitter,
+                 collection_name: str,
+                 embedding: Embedding,
+                 splitter: TextSplitter,
                  llm: LargeLanguageModel,
                  search_type: SearchType = SearchType.SIMILARITY,
                  use_cache: bool = True,
                  cache_size: int = 10000,
-                    show_progress: bool = False,
-                    min_size_to_show_progress: int = 10) -> None:
+                 show_progress: bool = False,
+                 min_size_to_show_progress: int = 10) -> None:
         """
         Constructs a `VectorStoreBasedRetriever`.
 
@@ -132,6 +126,7 @@ class VectorStoreBasedRetriever(Retriever, ABC):
         self._use_cache = use_cache
         self._cache_size = cache_size
         self._retriever.set_cache(use_cache, cache_size)
+
     @property
     def show_progress(self) -> bool:
         return self._show_progress

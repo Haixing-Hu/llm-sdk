@@ -13,10 +13,11 @@ import csv
 from io import StringIO
 from tqdm import tqdm
 
+
 def global_init(func):
     """
     A decorator that ensures a function is globally initialized only once, even
-    in a multi-threaded environment.
+    in a multithread environment.
 
     :Examples:
 
@@ -54,7 +55,7 @@ def global_init(func):
         first checks if the function has been initialized without acquiring
         the lock, and if not, it acquires the lock and performs the initialization.
         The use of the lock and the __initialized__ flag provides thread safety
-        in a multi-threaded environment.
+        in a multithread environment.
 
         :param args: Positional arguments passed to the decorated function.
         :param kwargs: Keyword arguments passed to the decorated function.

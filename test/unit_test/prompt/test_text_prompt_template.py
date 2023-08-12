@@ -363,8 +363,8 @@ class TestTextPromptTemplate(unittest.TestCase):
         v8 = p8.format_prompt(instruction="You are a helpful assistant.",
                               input="Where was it played?",
                               context="In the World Series 2020 in Arlington, Texas， "
-                               "Los Angeles Dodgers beat Tampa Bay Rays 4-2 and "
-                               "won the first championship in 32 years.")
+                                      "Los Angeles Dodgers beat Tampa Bay Rays 4-2 and "
+                                      "won the first championship in 32 years.")
         self.assertEqual("You are a helpful assistant.\n\n"
                          "The following are known context:\n"
                          "Context: In the World Series 2020 in Arlington, Texas， "
@@ -383,8 +383,8 @@ class TestTextPromptTemplate(unittest.TestCase):
         v8 = p8.format_prompt(instruction="You are a helpful assistant.",
                               input="Where was it played?",
                               context="In the World Series 2020 in Arlington, Texas， "
-                               "Los Angeles Dodgers beat Tampa Bay Rays 4-2 and "
-                               "won the first championship in 32 years.",
+                                      "Los Angeles Dodgers beat Tampa Bay Rays 4-2 and "
+                                      "won the first championship in 32 years.",
                               output_requirement="The output must be a JSON object.")
         self.assertEqual("You are a helpful assistant.\n\n"
                          "The following are known context:\n"

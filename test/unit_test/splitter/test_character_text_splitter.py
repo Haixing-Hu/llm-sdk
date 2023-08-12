@@ -9,7 +9,7 @@
 import unittest
 
 from llmsdk.splitter import CharacterTextSplitter
-from llmsdk.common import Document
+from llmsdk.common import Document, Metadata
 
 
 class TestCharacterTextSplitter(unittest.TestCase):
@@ -85,74 +85,74 @@ class TestCharacterTextSplitter(unittest.TestCase):
                                          chunk_size=1,
                                          chunk_overlap=0)
         docs = [
-            Document(id="a", content="foo", metadata={"source": "1"}),
-            Document(id="b", content="bar", metadata={"source": "2"}),
-            Document(id="c", content="baz", metadata={"source": "1"}),
+            Document(id="a", content="foo", metadata=Metadata({"source": "1"})),
+            Document(id="b", content="bar", metadata=Metadata({"source": "2"})),
+            Document(id="c", content="baz", metadata=Metadata({"source": "1"})),
         ]
         expected_output = [
             Document(id="a-0",
                      content="f",
-                     metadata={
+                     metadata=Metadata({
                          "source": "1",
                          "__original_document_id__": "a",
                          "__original_document_index__": 0,
-                     }),
+                     })),
             Document(id="a-1",
                      content="o",
-                     metadata={
+                     metadata=Metadata({
                          "source": "1",
                          "__original_document_id__": "a",
                          "__original_document_index__": 1,
-                     }),
+                     })),
             Document(id="a-2",
                      content="o",
-                     metadata={
+                     metadata=Metadata({
                          "source": "1",
                          "__original_document_id__": "a",
                          "__original_document_index__": 2,
-                     }),
+                     })),
             Document(id="b-0",
                      content="b",
-                     metadata={
+                     metadata=Metadata({
                          "source": "2",
                          "__original_document_id__": "b",
                          "__original_document_index__": 0,
-                     }),
+                     })),
             Document(id="b-1",
                      content="a",
-                     metadata={
+                     metadata=Metadata({
                          "source": "2",
                          "__original_document_id__": "b",
                          "__original_document_index__": 1,
-                     }),
+                     })),
             Document(id="b-2",
                      content="r",
-                     metadata={
+                     metadata=Metadata({
                          "source": "2",
                          "__original_document_id__": "b",
                          "__original_document_index__": 2,
-                     }),
+                     })),
             Document(id="c-0",
                      content="b",
-                     metadata={
+                     metadata=Metadata({
                          "source": "1",
                          "__original_document_id__": "c",
                          "__original_document_index__": 0,
-                     }),
+                     })),
             Document(id="c-1",
                      content="a",
-                     metadata={
+                     metadata=Metadata({
                          "source": "1",
                          "__original_document_id__": "c",
                          "__original_document_index__": 1,
-                     }),
+                     })),
             Document(id="c-2",
                      content="z",
-                     metadata={
+                     metadata=Metadata({
                          "source": "1",
                          "__original_document_id__": "c",
                          "__original_document_index__": 2,
-                     }),
+                     })),
         ]
         output = splitter.split_documents(docs)
         self.assertEqual(expected_output, output)

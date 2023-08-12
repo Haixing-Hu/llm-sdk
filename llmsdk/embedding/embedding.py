@@ -53,6 +53,9 @@ class Embedding(ABC):
         self._id_generator = id_generator or DefaultIdGenerator()
         self._show_progress = show_progress
         self._min_size_to_show_progress = min_size_to_show_progress
+        self._use_cache = use_cache
+        self._cache_size = cache_size
+        self._cache = None
         self.set_cache(use_cache, cache_size)
 
     def set_cache(self, use_cache: bool, cache_size: int) -> None:

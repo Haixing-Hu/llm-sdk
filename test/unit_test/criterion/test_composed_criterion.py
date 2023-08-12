@@ -16,6 +16,7 @@ from llmsdk.criterion import (
     Relation,
 )
 
+
 class TestComposedCriterion(unittest.TestCase):
 
     def test_constructor(self):
