@@ -7,7 +7,7 @@
 #                                                                              #
 # ##############################################################################
 from abc import ABC, abstractmethod
-from typing import List, Callable
+from typing import Any, List, Callable
 from logging import Logger, getLogger
 import copy
 
@@ -24,7 +24,9 @@ class TextSplitter(ABC):
     def __init__(self,
                  chunk_size: int = 4000,
                  chunk_overlap: int = 200,
-                 length_function: Callable[[str], int] = len) -> None:
+                 length_function: Callable[[str], int] = len,
+                 show_progress: bool = False,
+                 min_size_to_show_progress: int = 10) -> None:
         """
         Creates a new text splitter.
 
@@ -32,6 +34,10 @@ class TextSplitter(ABC):
         :param chunk_overlap: the number of basic units should overlap in each chunk.
         :param length_function: the function to calculate the length of the text
             in the basic unit.
+        :param show_progress: indicates whether to show the progress of adding
+            records.
+        :param min_size_to_show_progress: the minimum number of records to show
+            the progress.
         """
         if chunk_overlap > chunk_size:
             raise ValueError(
@@ -41,8 +47,25 @@ class TextSplitter(ABC):
         self._chunk_size = chunk_size
         self._chunk_overlap = chunk_overlap
         self._length_function = length_function
+        self._show_progress = show_progress
+        self._min_size_to_show_progress = min_size_to_show_progress
         self._logger = getLogger(self.__class__.__name__)
 
+    @property
+    def show_progress(self) -> bool:
+        return self._show_progress
+
+    @show_progress.setter
+    def show_progress(self, value: bool) -> None:
+        self._show_progress = value
+
+    @property
+    def min_size_to_show_progress(self) -> int:
+        return self._min_size_to_show_progress
+
+    @min_size_to_show_progress.setter
+    def min_size_to_show_progress(self, value: int) -> None:
+        self._min_size_to_show_progress = value
     @property
     def logger(self) -> Logger:
         return self._logger
@@ -59,14 +82,37 @@ class TextSplitter(ABC):
     def chunk_size(self) -> int:
         return self._chunk_size
 
+    @chunk_size.setter
+    def chunk_size(self, value: int) -> None:
+        self._chunk_size = value
+
     @property
     def chunk_overlap(self) -> int:
         return self._chunk_overlap
+
+    @chunk_overlap.setter
+    def chunk_overlap(self, value: int) -> None:
+        self._chunk_overlap = value
 
     @property
     def length_function(self) -> Callable[[str], int]:
         return self._length_function
 
+    @length_function.setter
+    def length_function(self, value: Callable[[str], int]) -> None:
+        self._length_function = value
+
+    def _get_iterable(self, iterable: Any) -> Any:
+        """
+        Get an iterable or a tqdm progress bar.
+
+        :param iterable: the iterable to be processed.
+        :return: the iterable or the tqdm progress bar.
+        """
+        if self._show_progress and len(iterable) >= self._min_size_to_show_progress:
+            return tqdm(iterable)
+        else:
+            return iterable
     @abstractmethod
     def split_text(self, text: str) -> List[str]:
         """
@@ -100,9 +146,10 @@ class TextSplitter(ABC):
         :param documents: the list of documents to be split.
         :return: the list of documents splitted from the specified documents.
         """
+        self._logger.info("Splitting %d documents...", len(documents))
         result = []
-        for document in documents:
-            result.extend(self.split_document(document))
+        for doc in self._get_iterable(documents):
+            result.extend(self.split_document(doc))
         return result
 
     # @abstractmethod

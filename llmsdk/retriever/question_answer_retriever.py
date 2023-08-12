@@ -21,11 +21,10 @@ from ..llm.llm import LargeLanguageModel
 from ..splitter.text_splitter import TextSplitter
 from ..criterion.criterion_builder import equal
 from ..prompt.structured_prompt_template import StructuredPromptTemplate
-from .retriever import Retriever
-from .vector_store_retriever import VectorStoreRetriever
+from .vector_store_based_retriever import VectorStoreBasedRetriever
 
 
-class QuestionAnswerRetriever(Retriever):
+class QuestionAnswerRetriever(VectorStoreBasedRetriever):
     """
     A Question/Answer retriever based on a vector store and a LLM.
     """
@@ -37,14 +36,18 @@ class QuestionAnswerRetriever(Retriever):
                  llm: LargeLanguageModel,
                  default_config: Optional[Dict[str, Any]] = None,
                  language: Optional[str] = "en_US",
-                 unknown_question_answer: Optional[str] = None,
                  prompt_template: Optional[StructuredPromptTemplate] = None,
+                 unknown_question_answer: Optional[str] = None,
                  direct_answer_score_threshold: Optional[float] = None,
                  question_score_threshold: Optional[float] = None,
                  answer_score_threshold: Optional[float] = None,
                  question_limit: Optional[int] = None,
                  answer_limit: Optional[int] = None,
-                 history_limit: Optional[int] = None) -> None:
+                 history_limit: Optional[int] = None,
+                 use_cache: bool = True,
+                 cache_size: int = 10000,
+                 show_progress: bool = False,
+                 min_size_to_show_progress: int = 10) -> None:
         """
         Constructs a `QuestionAnswerRetriever`.
 
@@ -62,12 +65,12 @@ class QuestionAnswerRetriever(Retriever):
             `language` argument.
         :param language: the language of the predefined default configuration.
             Default value is "en_US".
-        :param unknown_question_answer: the answer to be replied when the
-            question of the user is unknown. If this argument is set to `None`,
-            the class will use the default value from the default configuration.
         :param prompt_template: the prompt template used to generate the prompt
             send to the LLM. If this argument is set to `None`, the class will
             use the default prompt template from the default configuration.
+        :param unknown_question_answer: the answer to be replied when the
+            question of the user is unknown. If this argument is set to `None`,
+            the class will use the default value from the default configuration.
         :param direct_answer_score_threshold: the threshold of the scores of the
             direct answers. When user asks a question, the program will embed
             the question to a vector and search for the most similar question in
@@ -101,14 +104,27 @@ class QuestionAnswerRetriever(Retriever):
         :param history_limit: the maximum number of the remembered conversation
             histories. If this argument is set to `None`, the class will use the
             default value from the default configuration.
+        :param use_cache: indicates whether to use the cache to store the
+            embedded vectors of texts. If this argument is True, the embedded
+            vectors of texts will be cached in a LRU cache. Otherwise, the
+            embedded vectors of texts will not be cached.
+        :param cache_size: the number of text embeddings to be cached. This
+            argument is ignored if the use_cache argument is False.
+        :param show_progress: indicates whether to show the progress of adding
+            records.
+        :param min_size_to_show_progress: the minimum number of records to show
+            the progress.
         """
-        super().__init__()
-        self._retriever = VectorStoreRetriever(vector_store=vector_store,
-                                               collection_name=collection_name,
-                                               embedding=embedding,
-                                               splitter=splitter,
-                                               search_type=SearchType.SIMILARITY)
-        self._llm = llm
+        super().__init__(vector_store=vector_store,
+                         collection_name=collection_name,
+                         embedding=embedding,
+                         splitter=splitter,
+                         llm=llm,
+                         search_type=SearchType.SIMILARITY,
+                         use_cache=use_cache,
+                         cache_size=cache_size,
+                         show_progress=show_progress,
+                         min_size_to_show_progress=min_size_to_show_progress)
         self._default_config = default_config
         self._language = language
         self._unknown_question_answer = unknown_question_answer
@@ -131,7 +147,9 @@ class QuestionAnswerRetriever(Retriever):
         if not self._unknown_question_answer:
             self._unknown_question_answer = config["unknown_question_answer"]
         if not self._prompt_template:
-            self._prompt_template = self._llm.model_type.load_prompt_template(config["prompt_template"])
+            model_type = self._llm.model_type
+            template_cfg = config["prompt_template"]
+            self._prompt_template = model_type.load_prompt_template(template_cfg)
         if not self._direct_answer_score_threshold:
             self._direct_answer_score_threshold = config["direct_answer_score_threshold"]
         if not self._question_score_threshold:
@@ -144,32 +162,6 @@ class QuestionAnswerRetriever(Retriever):
             self._answer_limit = config["answer_limit"]
         if not self._history_limit:
             self._history_limit = config["history_limit"]
-
-    def set_logging_level(self, level: int | str) -> None:
-        """
-        Sets the logging level of this object.
-
-        :param level: the logging level to be set.
-        """
-        self._logger.setLevel(level)
-        self._retriever.set_logging_level(level)
-        self._llm.set_logging_level(level)
-
-    def get_store_info(self) -> CollectionInfo:
-        """
-        Gets the information of the collection of underlying vector store.
-
-        :return: the information of the collection of underlying vector store.
-        """
-        return self._retriever.get_store_info()
-
-    def _open(self, **kwargs: Any) -> None:
-        self._retriever.open(**kwargs)
-        self._is_opened = True
-
-    def _close(self) -> None:
-        self._retriever.close()
-        self._is_opened = False
 
     def add_faq(self, faq: Faq) -> List[Document]:
         """
@@ -200,7 +192,10 @@ class QuestionAnswerRetriever(Retriever):
                           self._retriever_name)
         self._logger.debug("The FAQs to add are: %s", faqs)
         self._ensure_opened()
-        docs = Faq.to_documents(faqs)
+        self._logger.info("Converting %d FAQs into documents ...", len(faqs))
+        docs = []
+        for f in self._get_iterable(faqs):
+            docs.extend(Faq.to_documents(f))
         self._logger.debug("The FAQs are converted into %d documents: %s",
                            len(docs), docs)
         return self._retriever.add_all(docs)

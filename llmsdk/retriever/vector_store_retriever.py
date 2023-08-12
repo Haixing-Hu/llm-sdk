@@ -32,7 +32,11 @@ class VectorStoreRetriever(Retriever):
                  collection_name: str,
                  embedding: Embedding,
                  splitter: TextSplitter,
-                 search_type: SearchType = SearchType.SIMILARITY) -> None:
+                 search_type: SearchType = SearchType.SIMILARITY,
+                 use_cache: bool = True,
+                 cache_size: int = 10000,
+                 show_progress: bool = False,
+                 min_size_to_show_progress: int = 10) -> None:
         """
         Creates a VectorStoreRetriever.
 
@@ -41,6 +45,16 @@ class VectorStoreRetriever(Retriever):
         :param embedding: the underlying embedding model.
         :param splitter: the text splitter used to split documents.
         :param search_type: the searching type.
+        :param use_cache: indicates whether to use the cache to store the
+            embedded vectors of texts. If this argument is True, the embedded
+            vectors of texts will be cached in a LRU cache. Otherwise, the
+            embedded vectors of texts will not be cached.
+        :param cache_size: the number of text embeddings to be cached. This
+            argument is ignored if the use_cache argument is False.
+        :param show_progress: indicates whether to show the progress of
+            splitting and embedding.
+        :param min_size_to_show_progress: the minimum number of texts to show
+            the splitting and embedding progress.
         """
         super().__init__()
         self._vector_store = vector_store
@@ -48,18 +62,15 @@ class VectorStoreRetriever(Retriever):
         self._embedding = embedding
         self._splitter = splitter
         self._search_type = search_type
-        self._query_vector_cache = {}
-
-    def set_logging_level(self, level: int | str) -> None:
-        """
-        Sets the logging level of this object.
-
-        :param level: the logging level to be set.
-        """
-        self._logger.setLevel(level)
-        self._vector_store.set_logging_level(level)
-        self._embedding.set_logging_level(level)
-        self._splitter.set_logging_level(level)
+        self._use_cache = use_cache
+        self._cache_size = cache_size
+        self._show_progress = show_progress
+        self._min_size_to_show_progress = min_size_to_show_progress
+        self._embedding.show_progress = show_progress
+        self._splitter.show_progress = show_progress
+        self._embedding.min_size_to_show_progress = min_size_to_show_progress
+        self._splitter.min_size_to_show_progress = min_size_to_show_progress
+        self._embedding.set_cache(use_cache, cache_size)
 
     @property
     def vector_store(self) -> VectorStore:
@@ -74,8 +85,74 @@ class VectorStoreRetriever(Retriever):
         return self._embedding
 
     @property
+    def splitter(self) -> TextSplitter:
+        return self._splitter
+
+    @property
     def search_type(self) -> SearchType:
         return self._search_type
+
+    @property
+    def use_cache(self) -> bool:
+        return self._use_cache
+
+    @property
+    def cache_size(self) -> int:
+        return self._cache_size
+
+    def set_cache(self, use_cache: bool, cache_size: int) -> None:
+        """
+        Sets the caching capacity of this object.
+
+        :param use_cache: indicates whether to use the cache to store the
+            embedded vectors of texts. If this argument is True, the embedded
+            vectors of texts will be cached in a LRU cache. Otherwise, the
+            embedded vectors of texts will not be cached.
+        :param cache_size: the number of text embeddings to be cached. This
+            argument is ignored if the use_cache argument is False.
+        """
+        self._embedding.set_cache(use_cache, cache_size)
+        self._use_cache = use_cache
+        self._cache_size = cache_size
+
+    @property
+    def show_progress(self) -> bool:
+        return self._show_progress
+
+    @show_progress.setter
+    def show_progress(self, value: bool) -> None:
+        self._show_progress = value
+        self._embedding.show_progress = show_progress
+        self._splitter.show_progress = show_progress
+
+    @property
+    def min_size_to_show_progress(self) -> int:
+        return self._min_size_to_show_progress
+
+    @min_size_to_show_progress.setter
+    def min_size_to_show_progress(self, value: int) -> None:
+        self._min_size_to_show_progress = value
+        self._embedding.min_size_to_show_progress = min_size_to_show_progress
+        self._splitter.min_size_to_show_progress = min_size_to_show_progress
+
+    def set_logging_level(self, level: int | str) -> None:
+        """
+        Sets the logging level of this object.
+
+        :param level: the logging level to be set.
+        """
+        self._logger.setLevel(level)
+        self._vector_store.set_logging_level(level)
+        self._embedding.set_logging_level(level)
+        self._splitter.set_logging_level(level)
+
+    def get_store_info(self) -> CollectionInfo:
+        """
+        Gets the information of the collection of underlying vector store.
+
+        :return: the information of the collection of underlying vector store.
+        """
+        return self._vector_store.get_collection_info(self._collection_name)
 
     def _open(self, **kwargs: Any) -> None:
         store = self._vector_store
@@ -84,17 +161,16 @@ class VectorStoreRetriever(Retriever):
             if store.has_collection(self._collection_name):
                 store.open_collection(self._collection_name)
             else:
-                self._logger.warning("No collection '%s' in the vector store '%s'. "
-                                     "It will be automatically created.",
-                                     self._collection_name,
-                                     self._vector_store.store_name)
+                self._logger.info("No collection '%s' in the vector store '%s'. "
+                                  "It will be automatically created.",
+                                  self._collection_name,
+                                  self._vector_store.store_name)
                 store.create_collection(
                     collection_name=self._collection_name,
                     vector_size=self._embedding.vector_dimension,
                     distance=Distance.COSINE
                 )
                 store.open_collection(self._collection_name)
-            self._query_vector_cache = {}
         except Exception:
             store.close()
             raise
@@ -108,15 +184,10 @@ class VectorStoreRetriever(Retriever):
         store, and close the vector store.
         """
         self._vector_store.close()
-        self._query_vector_cache = {}
         self._is_opened = False
 
     def _retrieve(self, query: str, **kwargs: Any) -> List[Document]:
-        if query in self._query_vector_cache:
-            query_vector = self._query_vector_cache[query]
-        else:
-            query_vector = self._embedding.embed_query(query)
-            self._query_vector_cache[query] = query_vector
+        query_vector = self._embedding.embed_query(query)
         self._logger.debug("Query the vector store with: %s", query_vector)
         limit = extract_argument(kwargs, "limit", VectorStoreRetriever.DEFAULT_LIMIT)
         score_threshold = extract_argument(kwargs, "score_threshold", None)
@@ -174,11 +245,3 @@ class VectorStoreRetriever(Retriever):
         self._logger.info("Successfully added all documents to the collection '%s' "
                           "of %s.", self._collection_name, self._retriever_name)
         return docs
-
-    def get_store_info(self) -> CollectionInfo:
-        """
-        Gets the information of the collection of underlying vector store.
-
-        :return: the information of the collection of underlying vector store.
-        """
-        return self._vector_store.get_collection_info(self._collection_name)

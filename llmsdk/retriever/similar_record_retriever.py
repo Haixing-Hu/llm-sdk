@@ -20,11 +20,10 @@ from ..splitter.text_splitter import TextSplitter
 from ..criterion.criterion_builder import equal
 from ..prompt.structured_prompt_template import StructuredPromptTemplate
 from ..util.common_utils import record_to_csv, records_to_csv
-from .retriever import Retriever
-from .vector_store_retriever import VectorStoreRetriever
+from .vector_store_based_retriever import VectorStoreBasedRetriever
 
 
-class SimilarRecordRetriever(Retriever):
+class SimilarRecordRetriever(VectorStoreBasedRetriever):
     """
     A retriever that retrieves semantically similar records from a list of
     known records.
@@ -40,7 +39,11 @@ class SimilarRecordRetriever(Retriever):
                  language: Optional[str] = "en_US",
                  prompt_template: Optional[StructuredPromptTemplate] = None,
                  record_limit: Optional[int] = None,
-                 record_score_threshold: Optional[float] = None) -> None:
+                 record_score_threshold: Optional[float] = None,
+                 use_cache: bool = True,
+                 cache_size: int = 10000,
+                 show_progress: bool = False,
+                 min_size_to_show_progress: int = 10) -> None:
         """
         Constructs a `SimilarRecordRetriever`.
 
@@ -73,14 +76,27 @@ class SimilarRecordRetriever(Retriever):
             the record will be selected as the context of the underlying large
             language model. If this argument is set to `None`, the class will
             use the default value from the default configuration.
+        :param use_cache: indicates whether to use the cache to store the
+            embedded vectors of texts. If this argument is True, the embedded
+            vectors of texts will be cached in a LRU cache. Otherwise, the
+            embedded vectors of texts will not be cached.
+        :param cache_size: the number of text embeddings to be cached. This
+            argument is ignored if the use_cache argument is False.
+        :param show_progress: indicates whether to show the progress of adding
+            records.
+        :param min_size_to_show_progress: the minimum number of records to show
+            the progress.
         """
-        super().__init__()
-        self._retriever = VectorStoreRetriever(vector_store=vector_store,
-                                               collection_name=collection_name,
-                                               embedding=embedding,
-                                               splitter=splitter,
-                                               search_type=SearchType.SIMILARITY)
-        self._llm = llm
+        super().__init__(vector_store=vector_store,
+                         collection_name=collection_name,
+                         embedding=embedding,
+                         splitter=splitter,
+                         llm=llm,
+                         search_type=SearchType.SIMILARITY,
+                         use_cache=use_cache,
+                         cache_size=cache_size,
+                         show_progress=show_progress,
+                         min_size_to_show_progress=min_size_to_show_progress)
         self._record_id_field = record_id_field
         self._default_config = default_config
         self._language = language
@@ -96,40 +112,17 @@ class SimilarRecordRetriever(Retriever):
             config = import_module(name=module, package=__package__).CONFIG
         else:
             config = self._default_config
+
         if not self._prompt_template:
-            self._prompt_template = (self._llm
-                                         .model_type
-                                         .load_prompt_template(config["prompt_template"]))
+            model_type = self._llm.model_type
+            template_cfg = config["prompt_template"]
+            self._prompt_template = model_type.load_prompt_template(template_cfg)
+
         if not self._record_limit:
             self._record_limit = config["record_limit"]
+
         if not self._record_score_threshold:
             self._record_score_threshold = config["record_score_threshold"]
-
-    def set_logging_level(self, level: int | str) -> None:
-        """
-        Sets the logging level of this object.
-
-        :param level: the logging level to be set.
-        """
-        self._logger.setLevel(level)
-        self._retriever.set_logging_level(level)
-        self._llm.set_logging_level(level)
-
-    def get_store_info(self) -> CollectionInfo:
-        """
-        Gets the information of the collection of underlying vector store.
-
-        :return: the information of the collection of underlying vector store.
-        """
-        return self._retriever.get_store_info()
-
-    def _open(self, **kwargs: Any) -> None:
-        self._retriever.open(**kwargs)
-        self._is_opened = True
-
-    def _close(self) -> None:
-        self._retriever.close()
-        self._is_opened = False
 
     def add_record(self, record: Dict[str, Any]) -> List[Document]:
         """
@@ -160,7 +153,10 @@ class SimilarRecordRetriever(Retriever):
                           self._retriever_name)
         self._logger.debug("The records to add are: %s", records)
         self._ensure_opened()
-        docs = Document.from_records(self._record_id_field, records)
+        self._logger.info("Constructing documents from records...")
+        docs = []
+        for record in self._get_iterable(records):
+            docs.extend(cls.from_record(id_field, record))
         self._logger.debug("The records are converted into %d documents: %s",
                            len(docs), docs)
         return self._retriever.add_all(docs)

@@ -22,37 +22,16 @@ from ..generator.default_id_generator import DefaultIdGenerator
 
 class Embedding(ABC):
     """
-    The interface of sentence embedding models.
-    """
-
-    DEFAULT_USE_CACHE: bool = True
-    """
-    The default value of the flag indicating whether to use the cache.
-    """
-
-    DEFAULT_CACHE_SIZE: int = 10000
-    """
-    The default number of text embeddings to be cached.
-    """
-
-    DEFAULT_SHOW_PROGRESS: bool = False
-    """
-    The default value of the flag indicating whether to show the progress of 
-    embedding.
-    """
-
-    DEFAULT_MIN_SIZE_TO_SHOW_PROGRESS: int = 100
-    """
-    The default minimum number of embedding texts to show the embedding progress.
+    The abstract base class of sentence embedding models.
     """
 
     def __init__(self,
                  vector_dimension: int,
                  id_generator: Optional[IdGenerator] = None,
-                 use_cache: bool = DEFAULT_USE_CACHE,
-                 cache_size: int = DEFAULT_CACHE_SIZE,
-                 show_progress: bool = DEFAULT_SHOW_PROGRESS,
-                 min_size_to_show_progress: int = DEFAULT_MIN_SIZE_TO_SHOW_PROGRESS) -> None:
+                 use_cache: bool = True,
+                 cache_size: int = 10000,
+                 show_progress: bool = False,
+                 min_size_to_show_progress: int = 10) -> None:
         """
         Creates an Embedding object.
 
@@ -72,12 +51,29 @@ class Embedding(ABC):
         self._logger = getLogger(self.__class__.__name__)
         self._vector_dimension = vector_dimension
         self._id_generator = id_generator or DefaultIdGenerator()
+        self._show_progress = show_progress
+        self._min_size_to_show_progress = min_size_to_show_progress
+        self.set_cache(use_cache, cache_size)
+
+    def set_cache(self, use_cache: bool, cache_size: int) -> None:
+        """
+        Sets the caching capacity of this object.
+
+        :param use_cache: indicates whether to use the cache to store the
+            embedded vectors of texts. If this argument is True, the embedded
+            vectors of texts will be cached in a LRU cache. Otherwise, the
+            embedded vectors of texts will not be cached.
+        :param cache_size: the number of text embeddings to be cached. This
+            argument is ignored if the use_cache argument is False.
+        """
+        if cache_size <= 0:
+            raise ValueError("The cache size must be positive.")
+        self._use_cache = use_cache
+        self._cache_size = cache_size
         if use_cache:
             self._cache = LRUCache(maxsize=cache_size)
         else:
             self._cache = None
-        self._show_progress = show_progress
-        self._min_size_to_show_progress = min_size_to_show_progress
 
     @property
     def logger(self) -> Logger:
@@ -110,8 +106,32 @@ class Embedding(ABC):
         return self._id_generator
 
     @property
+    def use_cache(self) -> bool:
+        return self._use_cache
+
+    @property
+    def cache_size(self) -> int:
+        return self._cache_size
+
+    @property
     def cache(self) -> Optional[Cache]:
         return self._cache
+
+    @property
+    def show_progress(self) -> bool:
+        return self._show_progress
+
+    @show_progress.setter
+    def show_progress(self, value: bool) -> None:
+        self._show_progress = value
+
+    @property
+    def min_size_to_show_progress(self) -> int:
+        return self._min_size_to_show_progress
+
+    @min_size_to_show_progress.setter
+    def min_size_to_show_progress(self, value: int) -> None:
+        self._min_size_to_show_progress = value
 
     def _get_iterable(self, iterable: Any) -> Any:
         """
@@ -174,8 +194,9 @@ class Embedding(ABC):
         n = len(documents)
         self._logger.info("Embedding %d documents ...", n)
         self._logger.debug("The documents to be embedded are: %s", documents)
+        self._logger.info("Creating list of texts to be embedded from contents of documents...")
+        texts = [doc.content for doc in self._get_iterable(documents)]
         self._logger.info("Embedding content of documents...")
-        texts = [doc.content for doc in documents]
         vectors = self._embed_texts(texts)
         self._logger.info("Constructing points from documents and embedded vectors...")
         points = []
