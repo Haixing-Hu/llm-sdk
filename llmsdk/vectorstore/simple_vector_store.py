@@ -76,7 +76,7 @@ class SimpleVectorStore(VectorStore):
         else:
             raise ValueError(f"No such collection '{collection_name}'.")
 
-    def _add(self, point: Point) -> str:
+    def _add(self, point: Point) -> None:
         collection = self._collections[self._collection_name]
         info = self._collections_info[self._collection_name]
         if not point.id:
@@ -88,7 +88,6 @@ class SimpleVectorStore(VectorStore):
                                   distance=info.distance,
                                   payload_schemas=info.payload_schemas)
         self._collections_info[self._collection_name] = new_info
-        return point.id
 
     def _similarity_search(self,
                            query_vector: Vector,

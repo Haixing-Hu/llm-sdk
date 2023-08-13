@@ -32,15 +32,17 @@ class TokenTextSplitter(TextSplitter):
         return self._tokenizer
 
     def split_text(self, text: str) -> List[str]:
-        splits = []
         tokens = self._tokenizer.encode(
             text,
             allowed_special=self._allowed_special,
             disallowed_special=self._disallowed_special
         )
         n = len(tokens)
+        if n <= self._chunk_size:
+            return  [text]
+        splits = []
         start = 0
-        current = min(start + self._chunk_size, n)
+        current = min(self._chunk_size, n)
         chunk = tokens[start:current]
         while start < n:
             splits.append(self._tokenizer.decode(chunk))

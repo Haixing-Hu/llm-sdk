@@ -173,11 +173,10 @@ class MilvusVectorStore(VectorStore):
         import pymilvus
         return pymilvus.utility.has_collection(collection_name)
 
-    def _add(self, point: Point) -> str:
+    def _add(self, point: Point) -> None:
         ids = self._add_all([point])
-        return ids[0]
 
-    def _add_all(self, points: List[Point]) -> List[str]:
+    def _add_all(self, points: List[Point]) -> None:
         # FIXME: add progress bar and batch insert data if the data is too large
         fields = self._collection.schema.fields
         data: List[List[Any]] = [] * len(fields)
@@ -202,7 +201,6 @@ class MilvusVectorStore(VectorStore):
         if self._auto_id:
             for i, value in enumerate(result.primary_keys):
                 points[i].id = value
-        return [p.id for p in points]
 
     def _similarity_search(self,
                            query_vector: Vector,

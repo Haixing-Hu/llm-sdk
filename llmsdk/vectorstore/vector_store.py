@@ -338,27 +338,25 @@ class VectorStore(ABC):
         :return: the information of the specified collection.
         """
 
-    def add(self, point: Point) -> str:
+    def add(self, point: Point) -> None:
         """
         Adds a point to the vector store.
 
         :param point: the point to be added. After adding this function, the
             `id` field of this point will be set.
-        :return: the ID of the point added into the vector store.
         """
         self._logger.info("Adding a point to the collection '%s'...",
                           self._collection_name)
         self._logger.debug("The point to add is: %s", point)
         self._ensure_store_opened()
         self._ensure_collection_opened()
-        id = self._add(point)
+        self._add(point)
         self._logger.info("Successfully added the point to the collection '%s'.",
                           self._collection_name)
-        self._logger.debug("The ID of the point added is: %s", id)
-        return id
+        self._logger.debug("The ID of the point added is: %s", point.id)
 
     @abstractmethod
-    def _add(self, point: Point) -> str:
+    def _add(self, point: Point) -> None:
         """
         Adds a point to the vector store.
 
@@ -367,10 +365,9 @@ class VectorStore(ABC):
 
         :param point: the point to be added. After adding this function, the
             `id` field of this point will be set.
-        :return: the ID of the point added into the vector store.
         """
 
-    def add_all(self, points: List[Point]) -> List[str]:
+    def add_all(self, points: List[Point]) -> None:
         """
         Adds all points to the vector store.
 
@@ -379,20 +376,17 @@ class VectorStore(ABC):
 
         :param points: the points to be added. After adding this function, the
             `id` field of each point in this argument will be set.
-        :return: the list of IDs of the vectors added into the vector store.
         """
         self._logger.info("Adding %d points to the collection '%s'...",
                           len(points), self._collection_name)
         self._logger.debug("The points to add are: %s", points)
         self._ensure_store_opened()
         self._ensure_collection_opened()
-        result = self._add_all(points)
+        self._add_all(points)
         self._logger.info("Successfully added %d point to the collection '%s'.",
                           len(points), self._collection_name)
-        self._logger.debug("The IDs of the points added are: %s", result)
-        return result
 
-    def _add_all(self, points: List[Point]) -> List[str]:
+    def _add_all(self, points: List[Point]) -> None:
         """
         Adds all points to the vector store.
 
@@ -401,13 +395,9 @@ class VectorStore(ABC):
 
         :param points: the points to be added. After adding this function, the
             `id` field of each point in this argument will be set.
-        :return: the list of IDs of the vectors added into the vector store.
         """
-        result = []
         for point in self._get_iterable(points):
-            id = self._add(point)
-            result.append(id)
-        return result
+            self._add(point)
 
     def search(self,
                query_vector: Vector,

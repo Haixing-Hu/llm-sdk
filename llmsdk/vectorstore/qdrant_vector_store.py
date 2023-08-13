@@ -228,21 +228,19 @@ class QdrantVectorStore(VectorStore):
                               distance=distance,
                               payload_schemas=payload_schemas)
 
-    def _add(self, point: Point) -> str:
-        qdrant_points = [to_qdrant_point(point, self._id_generator)]
-        self._client.upsert(collection_name=self._collection_name,
-                            points=qdrant_points)
-        return point.id
+    def _add(self, point: Point) -> None:
+        pts = [to_qdrant_point(point, self._id_generator)]
+        self._client.upsert(collection_name=self._collection_name,points=pts)
 
-    def _add_all(self, points: List[Point]) -> List[str]:
-        self._logger.info("Upserting %d Qdrant points...", len(pts))
-        for i in self._get_iterable(range(0, len(pts), self._batch_size)):
-            pts = [to_qdrant_point(pt, self._id_generator)
-                   for pt in points[i:i+self._batch_size]]
-            self._client.upsert(collection_name=self._collection_name,
-                                points=pts)
-        self._logger.info("Successfully upserting %d Qdrant points.", len(pts))
-        return [p.id for p in points]
+    def _add_all(self, points: List[Point]) -> None:
+        n = len(points)
+        self._logger.info("Upserting %d Qdrant points...", n)
+        for i in self._get_iterable(range(0, n, self._batch_size)):
+            pts = []
+            for j in range(i, min(i + self._batch_size, n)):
+                pts.append(to_qdrant_point(points[j], self._id_generator))
+            self._client.upsert(collection_name=self._collection_name,points=pts)
+        self._logger.info("Successfully upserting %d Qdrant points.", n)
 
     def _similarity_search(self,
                            query_vector: Vector,

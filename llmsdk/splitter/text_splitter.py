@@ -134,7 +134,7 @@ class TextSplitter(ABC):
         """
         texts = self.split_text(document.content)
         if len(texts) == 1:
-            return [copy.deepcopy(document)]
+            return [document]
         else:
             result = []
             for index, text in enumerate(texts):
