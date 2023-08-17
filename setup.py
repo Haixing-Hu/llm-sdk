@@ -20,4 +20,8 @@ setup(
         "cachetools",
         "tqdm",
     ],
+    author='Haixing Hu',
+    author_email='starfish.hu@gmail.com',
+    description='A toolkit for developing applications with LLM (Large Language Model).',
+    url='https://github.com/Haixing-Hu/llm-sdk',
 )
