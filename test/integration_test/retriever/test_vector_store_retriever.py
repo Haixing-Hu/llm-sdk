@@ -141,15 +141,12 @@ class TestVectorStoreRetriever(unittest.TestCase):
             retriever.add_all(documents)
             result = retriever.retrieve("foo", limit=1)
             self.assertEqual(1, len(result))
-            result[0].id = None
             result[0].score = None
             self.assertEqual(documents[0], result[0])
 
             result = retriever.retrieve("foo", limit=2)
             self.assertEqual(2, len(result))
-            result[0].id = None
             result[0].score = None
-            result[1].id = None
             result[1].score = None
             self.assertEqual(documents[0], result[0])
             self.assertEqual(documents[1], result[1])

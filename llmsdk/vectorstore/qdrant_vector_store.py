@@ -230,7 +230,7 @@ class QdrantVectorStore(VectorStore):
 
     def _add(self, point: Point) -> None:
         pts = [to_qdrant_point(point, self._id_generator)]
-        self._client.upsert(collection_name=self._collection_name,points=pts)
+        self._client.upsert(collection_name=self._collection_name, points=pts)
 
     def _add_all(self, points: List[Point]) -> None:
         n = len(points)
@@ -239,7 +239,7 @@ class QdrantVectorStore(VectorStore):
             pts = []
             for j in range(i, min(i + self._batch_size, n)):
                 pts.append(to_qdrant_point(points[j], self._id_generator))
-            self._client.upsert(collection_name=self._collection_name,points=pts)
+            self._client.upsert(collection_name=self._collection_name, points=pts)
         self._logger.info("Successfully upserting %d Qdrant points.", n)
 
     def _similarity_search(self,

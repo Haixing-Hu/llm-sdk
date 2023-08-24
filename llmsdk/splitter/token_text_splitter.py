@@ -39,7 +39,7 @@ class TokenTextSplitter(TextSplitter):
         )
         n = len(tokens)
         if n <= self._chunk_size:
-            return  [text]
+            return [text]
         splits = []
         start = 0
         current = min(self._chunk_size, n)

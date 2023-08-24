@@ -9,7 +9,7 @@
 import unittest
 from llmsdk.vectorstore import QdrantVectorStore
 
-from test_vector_store_base import TestVectorStoreBase
+from .test_vector_store_base import TestVectorStoreBase
 
 
 class TestQdrantVectorStore(TestVectorStoreBase):

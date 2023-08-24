@@ -9,7 +9,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, List, Callable
 from logging import Logger, getLogger
-import copy
 from tqdm import tqdm
 
 from ..common.document import Document

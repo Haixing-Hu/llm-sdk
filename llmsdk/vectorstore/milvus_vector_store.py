@@ -174,7 +174,7 @@ class MilvusVectorStore(VectorStore):
         return pymilvus.utility.has_collection(collection_name)
 
     def _add(self, point: Point) -> None:
-        ids = self._add_all([point])
+        self._add_all([point])
 
     def _add_all(self, points: List[Point]) -> None:
         # FIXME: add progress bar and batch insert data if the data is too large

@@ -43,7 +43,8 @@ class TestFaq(unittest.TestCase):
             "__faq_id__": "faq-1",
             "__faq_question__": "question1",
             "__faq_answer__": "answer1",
-            "__faq_property__": "question",
+            "__faq_part__": "question",
+            "__type__": "FAQ",
         }), d1[0].metadata)
         self.assertIsNone(d1[0].score)
         self.assertEqual("faq-1-answer", d1[1].id)
@@ -52,7 +53,8 @@ class TestFaq(unittest.TestCase):
             "__faq_id__": "faq-1",
             "__faq_question__": "question1",
             "__faq_answer__": "answer1",
-            "__faq_property__": "answer",
+            "__faq_part__": "answer",
+            "__type__": "FAQ",
         }), d1[1].metadata)
         self.assertIsNone(d1[1].score)
 
@@ -68,7 +70,8 @@ class TestFaq(unittest.TestCase):
             "__faq_id__": "faq-2",
             "__faq_question__": "question2",
             "__faq_answer__": "answer2",
-            "__faq_property__": "question",
+            "__faq_part__": "question",
+            "__type__": "FAQ",
         }), d2[0].metadata)
         self.assertEqual(0.7, d2[0].score)
         self.assertEqual("faq-2-answer", d2[1].id)
@@ -77,7 +80,8 @@ class TestFaq(unittest.TestCase):
             "__faq_id__": "faq-2",
             "__faq_question__": "question2",
             "__faq_answer__": "answer2",
-            "__faq_property__": "answer",
+            "__faq_part__": "answer",
+            "__type__": "FAQ",
         }), d2[1].metadata)
         self.assertEqual(0.7, d2[1].score)
 

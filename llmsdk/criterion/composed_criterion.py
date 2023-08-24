@@ -21,7 +21,7 @@ class ComposedCriterion(Criterion):
 
     For example::
 
-        user.address.city = "New York" AND user.age > 20
+        `user.address.city = "New York" AND user.age > 20`
 
     This class is an immutable class.
     """

@@ -10,10 +10,10 @@ from setuptools import setup, find_packages
 
 setup(
     name="llmsdk",
-    version="0.3.4",
+    version="0.3.5",
     packages=find_packages(),
     install_requires=[
-        "numpy~=1.25.0",
+        "numpy>=1.25.0",
         "frozendict",
         "requests",
         "tenacity",

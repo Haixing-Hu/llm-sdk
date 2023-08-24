@@ -194,7 +194,7 @@ class QuestionAnswerRetriever(VectorStoreBasedRetriever):
         self._logger.info("Converting %d FAQs into documents ...", len(faqs))
         docs = []
         for f in self._get_iterable(faqs):
-            docs.extend(Faq.to_documents(f))
+            docs.extend(Faq.to_document(f))
         self._logger.debug("The FAQs are converted into %d documents: %s",
                            len(docs), docs)
         return self._retriever.add_all(docs)

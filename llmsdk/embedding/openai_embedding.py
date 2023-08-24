@@ -120,7 +120,7 @@ class OpenAiEmbedding(Embedding):
         result = []
         batch_size = self._batch_size
         for i in self._get_iterable(range(0, len(texts), batch_size)):
-            text_list = texts[i:i+self.batch_size]
+            text_list = texts[i:i+self._batch_size]
             token_list = self.__get_token_list(text_list)
             self._logger.debug("Embed %d token chunks with OpenAI: %s",
                                len(token_list), token_list)
