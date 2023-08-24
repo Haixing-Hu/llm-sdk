@@ -401,7 +401,7 @@ class VectorStore(ABC):
 
     def search(self,
                query_vector: Vector,
-               limit: int,
+               limit: int, *,
                score_threshold: Optional[float] = None,
                criterion: Optional[Criterion] = None,
                search_type: SearchType = SearchType.SIMILARITY,
@@ -443,7 +443,7 @@ class VectorStore(ABC):
 
     def similarity_search(self,
                           query_vector: Vector,
-                          limit: int,
+                          limit: int, *,
                           score_threshold: Optional[float] = None,
                           criterion: Optional[Criterion] = None,
                           **kwargs: Any) -> List[Point]:
@@ -480,7 +480,7 @@ class VectorStore(ABC):
     @abstractmethod
     def _similarity_search(self,
                            query_vector: Vector,
-                           limit: int,
+                           limit: int, *,
                            score_threshold: Optional[float] = None,
                            criterion: Optional[Criterion] = None,
                            **kwargs: Any) -> List[Point]:
@@ -504,7 +504,7 @@ class VectorStore(ABC):
         """
     def max_marginal_relevance_search(self,
                                       query_vector: Vector,
-                                      limit: int,
+                                      limit: int, *,
                                       score_threshold: Optional[float] = None,
                                       criterion: Optional[Criterion] = None,
                                       fetch_limit: int = None,
@@ -554,7 +554,7 @@ class VectorStore(ABC):
 
     def _max_marginal_relevance_search(self,
                                        query_vector: Vector,
-                                       limit: int,
+                                       limit: int, *,
                                        score_threshold: Optional[float] = None,
                                        criterion: Optional[Criterion] = None,
                                        fetch_limit: int = None,
