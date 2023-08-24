@@ -18,7 +18,7 @@ class SpacySentenceTextSplitter(TextSplitter):
     """
 
     def __init__(self,
-                 separator: str = "\n\n",
+                 separator: str = "\n\n", *,
                  pipeline: str = "en_core_web_sm",
                  **kwargs: Any):
         super().__init__(**kwargs)

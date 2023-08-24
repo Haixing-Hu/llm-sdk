@@ -19,7 +19,7 @@ class OpenAiModel(LargeLanguageModel, ABC):
     The base class of models from OpenAI.
     """
 
-    def __init__(self,
+    def __init__(self, *,
                  model: str,
                  model_type: ModelType,
                  max_tokens: int,

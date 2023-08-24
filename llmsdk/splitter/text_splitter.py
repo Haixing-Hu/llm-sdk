@@ -21,7 +21,7 @@ from ..common.document import Document
 
 class TextSplitter(ABC):
 
-    def __init__(self,
+    def __init__(self, *,
                  chunk_size: int = 4000,
                  chunk_overlap: int = 200,
                  length_function: Callable[[str], int] = len,

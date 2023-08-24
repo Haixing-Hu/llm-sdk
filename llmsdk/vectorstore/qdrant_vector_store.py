@@ -34,7 +34,7 @@ class QdrantVectorStore(VectorStore):
     The vector store based on the Qdrant vector database.
     """
 
-    def __init__(self,
+    def __init__(self, *,
                  in_memory: bool = False,
                  path: Optional[str] = None,
                  url: Optional[str] = None,

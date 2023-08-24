@@ -28,7 +28,7 @@ class VectorStore(ABC):
     The abstract base class of vector stores.
     """
 
-    def __init__(self,
+    def __init__(self, *,
                  id_generator: Optional[IdGenerator] = None,
                  show_progress: bool = False,
                  min_size_to_show_progress: int = 10) -> None:

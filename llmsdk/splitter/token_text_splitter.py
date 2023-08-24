@@ -18,7 +18,7 @@ class TokenTextSplitter(TextSplitter):
     """
 
     def __init__(self,
-                 tokenizer: Tokenizer,
+                 tokenizer: Tokenizer, *,
                  allowed_special: SpecialTokenSet = None,
                  disallowed_special: SpecialTokenSet = "all",
                  **kwargs: Any) -> None:

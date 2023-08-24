@@ -38,7 +38,7 @@ class MilvusVectorStore(VectorStore):
     The vector store based on the Milvus vector database.
     """
 
-    def __init__(self,
+    def __init__(self, *,
                  connection_args: Optional[Dict] = None,
                  id_generator: Optional[IdGenerator] = None) -> None:
         """

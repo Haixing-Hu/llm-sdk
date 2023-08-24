@@ -36,7 +36,7 @@ class ChatGpt(OpenAiModel):
     """
     The class of chatGPT models from OpenAI.
     """
-    def __init__(self,
+    def __init__(self, *,
                  model: str = DEFAULT_MODEL,
                  max_tokens: Optional[int] = None,
                  temperature: float = 1.0,

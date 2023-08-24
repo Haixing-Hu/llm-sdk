@@ -27,7 +27,7 @@ class VectorStoreRetriever(Retriever):
 
     DEFAULT_LIMIT = 10
 
-    def __init__(self,
+    def __init__(self, *,
                  vector_store: VectorStore,
                  collection_name: str,
                  embedding: Embedding,

@@ -17,7 +17,7 @@ class NltkSentenceTextSplitter(TextSplitter):
     A text splitter which splits text that looks at sentences using NLTK.
     """
 
-    def __init__(self,
+    def __init__(self, *,
                  separator: str = "\n\n",
                  language: str = "english",
                  **kwargs: Any):

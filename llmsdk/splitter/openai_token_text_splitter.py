@@ -20,10 +20,19 @@ class OpenAiTokenTextSplitter(TokenTextSplitter):
     """
 
     def __init__(self,
-                 model: str = OpenAiEmbedding.DEFAULT_MODEL,
+                 model: str = OpenAiEmbedding.DEFAULT_MODEL, *,
                  allowed_special: SpecialTokenSet = None,
                  disallowed_special: SpecialTokenSet = "all",
                  **kwargs: Any) -> None:
+        """
+        Constructs a OpenAiTokenTextSplitter.
+
+        :param model: the name of the OpenAI's model.
+        :param allowed_special: the allowed special tokens.
+        :param disallowed_special: the disallowed special tokens. Default value
+            is "all", which means all special tokens are disallowed.
+        :param kwargs: the extra arguments for the TokenTextSplitter.
+        """
         super().__init__(tokenizer=OpenAiTokenizer(model),
                          allowed_special=allowed_special,
                          disallowed_special=disallowed_special,

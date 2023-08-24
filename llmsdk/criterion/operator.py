@@ -64,19 +64,19 @@ class Operator(Enum):
             case Operator.GREATER_EQUAL:
                 return lhs >= rhs
             case Operator.IN:
-                Operator._ensure_type("rhs", rhs, list)
+                Operator.__ensure_type("rhs", rhs, list)
                 return lhs in rhs
             case Operator.NOT_IN:
-                Operator._ensure_type("rhs", rhs, list)
+                Operator.__ensure_type("rhs", rhs, list)
                 return lhs not in rhs
             case Operator.LIKE:
-                Operator._ensure_type("lhs", lhs, str)
-                Operator._ensure_type("rhs", rhs, str)
+                Operator.__ensure_type("lhs", lhs, str)
+                Operator.__ensure_type("rhs", rhs, str)
                 pattern = re.escape(rhs).replace("%", ".*")
                 return re.search(pattern, lhs) is not None
             case Operator.NOT_LIKE:
-                Operator._ensure_type("lhs", lhs, str)
-                Operator._ensure_type("rhs", rhs, str)
+                Operator.__ensure_type("lhs", lhs, str)
+                Operator.__ensure_type("rhs", rhs, str)
                 pattern = re.escape(rhs).replace("%", ".*")
                 return re.search(pattern, lhs) is None
             case Operator.IS_NULL:
@@ -87,6 +87,6 @@ class Operator(Enum):
                 raise ValueError(f"Unsupported operator: {self}")
 
     @classmethod
-    def _ensure_type(cls, name: str, value: Any, data_type: Type):
+    def __ensure_type(cls, name: str, value: Any, data_type: Type):
         if type(value) != data_type:
             raise ValueError(f"The argument {name} must be a {data_type}: {value}")

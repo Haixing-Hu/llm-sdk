@@ -27,7 +27,7 @@ class SimilarRecordRetriever(VectorStoreBasedRetriever):
     A retriever that retrieves semantically similar records from a list of
     known records.
     """
-    def __init__(self,
+    def __init__(self, *,
                  record_id_field: str,
                  vector_store: VectorStore,
                  collection_name: str,

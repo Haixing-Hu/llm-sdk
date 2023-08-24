@@ -30,7 +30,7 @@ class OpenAiEmbedding(Embedding):
 
     DEFAULT_BATCH_SIZE = 1000
 
-    def __init__(self,
+    def __init__(self, *,
                  model: str = DEFAULT_MODEL,
                  batch_size: int = DEFAULT_BATCH_SIZE,
                  api_key: Optional[str] = None,

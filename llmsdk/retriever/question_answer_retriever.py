@@ -27,7 +27,7 @@ class QuestionAnswerRetriever(VectorStoreBasedRetriever):
     """
     A Question/Answer retriever based on a vector store and a LLM.
     """
-    def __init__(self,
+    def __init__(self, *,
                  vector_store: VectorStore,
                  collection_name: str,
                  embedding: Embedding,

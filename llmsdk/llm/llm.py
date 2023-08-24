@@ -20,7 +20,7 @@ class LargeLanguageModel(ABC):
     """
     The abstract base class for large language models.
     """
-    def __init__(self,
+    def __init__(self, *,
                  model_type: ModelType,
                  tokenizer: Tokenizer,
                  max_tokens: Optional[int] = None,

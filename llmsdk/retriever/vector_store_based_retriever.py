@@ -25,7 +25,7 @@ class VectorStoreBasedRetriever(Retriever, ABC):
     The abstract base class of retrievers that based on a VectorStoreRetriever
     and a LargeLanguageModel.
     """
-    def __init__(self,
+    def __init__(self, *,
                  vector_store: VectorStore,
                  collection_name: str,
                  embedding: Embedding,

@@ -143,29 +143,29 @@ class Example:
                      or metadata[EXAMPLE_PART_ATTRIBUTE] != "output"))
 
     @classmethod
-    def from_document(cls, doc: Document) -> Example:
+    def from_document(cls, document: Document) -> Example:
         """
         Converts the specified document to an example.
 
-        :param doc: the specified document.
+        :param document: the specified document.
         :return: the example the specified document is converted from.
         :raise ValueError: if the specified document is not converted from an
             example.
         """
-        if not cls.is_example(doc):
-            raise ValueError(f"The document is not converted from an example: {doc}")
-        return Example(id=doc.metadata[EXAMPLE_ID_ATTRIBUTE],
-                       input=doc.metadata[EXAMPLE_INPUT_ATTRIBUTE],
-                       output=doc.metadata[EXAMPLE_OUTPUT_ATTRIBUTE],
-                       score=doc.score)
+        if not cls.is_example(document):
+            raise ValueError(f"The document is not converted from an example: {document}")
+        return Example(id=document.metadata[EXAMPLE_ID_ATTRIBUTE],
+                       input=document.metadata[EXAMPLE_INPUT_ATTRIBUTE],
+                       output=document.metadata[EXAMPLE_OUTPUT_ATTRIBUTE],
+                       score=document.score)
 
     @classmethod
-    def from_documents(cls, docs: List[Document]) -> List[Example]:
+    def from_documents(cls, documents: List[Document]) -> List[Example]:
         """
         Converts the specified list of documents to a list of examples.
 
-        :param docs: the specified list of documents.
+        :param documents: the specified list of documents.
         :return: the list of examples the specified documents are converted from.
         :raise ValueError: if any document is not converted from an example.
         """
-        return [Example.from_document(doc) for doc in docs]
+        return [Example.from_document(doc) for doc in documents]
