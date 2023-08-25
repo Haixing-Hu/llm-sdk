@@ -7,20 +7,19 @@
 #                                                                              #
 # ##############################################################################
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional
-from logging import Logger, getLogger
-
-from cachetools import Cache, LRUCache
-from tqdm import tqdm
+from typing import List, Optional
 
 from ..common.document import Document
-from ..common.vector import Vector
 from ..common.point import Point
+from ..common.vector import Vector
+from ..common.mixin.with_progress_mixin import WithProgressMixin
+from ..common.mixin.with_cache_mixin import WithCacheMixin
+from ..common.mixin.with_logger_mixin import WithLoggerMixin
 from ..generator.id_generator import IdGenerator
 from ..generator.default_id_generator import DefaultIdGenerator
 
 
-class Embedding(ABC):
+class Embedding(WithLoggerMixin, WithCacheMixin, WithProgressMixin, ABC):
     """
     The abstract base class of sentence embedding models.
     """
@@ -28,10 +27,7 @@ class Embedding(ABC):
     def __init__(self,
                  vector_dimension: int,
                  id_generator: Optional[IdGenerator] = None,
-                 use_cache: bool = True,
-                 cache_size: int = 10000,
-                 show_progress: bool = False,
-                 min_size_to_show_progress: int = 10) -> None:
+                 **kwargs) -> None:
         """
         Creates an Embedding object.
 
@@ -45,55 +41,14 @@ class Embedding(ABC):
             argument is ignored if the use_cache argument is False.
         :param show_progress: indicates whether to show the progress of
             embedding.
-        :param min_size_to_show_progress: the minimum number of embedding texts
+        :param show_progress_threshold: the minimum number of embedding texts
             to show the embedding progress.
+        :param kwargs: the extra arguments passed to the constructor of the
+            base class.
         """
-        self._logger = getLogger(self.__class__.__name__)
+        super().__init__(**kwargs)
         self._vector_dimension = vector_dimension
         self._id_generator = id_generator or DefaultIdGenerator()
-        self._show_progress = show_progress
-        self._min_size_to_show_progress = min_size_to_show_progress
-        self._use_cache = use_cache
-        self._cache_size = cache_size
-        self._cache = None
-        self.set_cache(use_cache, cache_size)
-
-    def set_cache(self, use_cache: bool, cache_size: int) -> None:
-        """
-        Sets the caching capacity of this object.
-
-        :param use_cache: indicates whether to use the cache to store the
-            embedded vectors of texts. If this argument is True, the embedded
-            vectors of texts will be cached in a LRU cache. Otherwise, the
-            embedded vectors of texts will not be cached.
-        :param cache_size: the number of text embeddings to be cached. This
-            argument is ignored if the use_cache argument is False.
-        """
-        if cache_size <= 0:
-            raise ValueError("The cache size must be positive.")
-        self._use_cache = use_cache
-        self._cache_size = cache_size
-        if use_cache:
-            self._cache = LRUCache(maxsize=cache_size)
-        else:
-            self._cache = None
-
-    @property
-    def logger(self) -> Logger:
-        """
-        Gets the logger of this object.
-
-        :return: the logger of this object.
-        """
-        return self._logger
-
-    def set_logging_level(self, level: int | str) -> None:
-        """
-        Sets the logging level of this object.
-
-        :param level: the logging level to be set.
-        """
-        self._logger.setLevel(level)
 
     @property
     def vector_dimension(self) -> int:
@@ -107,46 +62,6 @@ class Embedding(ABC):
     @property
     def id_generator(self) -> IdGenerator:
         return self._id_generator
-
-    @property
-    def use_cache(self) -> bool:
-        return self._use_cache
-
-    @property
-    def cache_size(self) -> int:
-        return self._cache_size
-
-    @property
-    def cache(self) -> Optional[Cache]:
-        return self._cache
-
-    @property
-    def show_progress(self) -> bool:
-        return self._show_progress
-
-    @show_progress.setter
-    def show_progress(self, value: bool) -> None:
-        self._show_progress = value
-
-    @property
-    def min_size_to_show_progress(self) -> int:
-        return self._min_size_to_show_progress
-
-    @min_size_to_show_progress.setter
-    def min_size_to_show_progress(self, value: int) -> None:
-        self._min_size_to_show_progress = value
-
-    def _get_iterable(self, iterable: Any) -> Any:
-        """
-        Get an iterable or a tqdm progress bar.
-
-        :param iterable: the iterable to be processed.
-        :return: the iterable or the tqdm progress bar.
-        """
-        if self._show_progress and len(iterable) >= self._min_size_to_show_progress:
-            return tqdm(iterable)
-        else:
-            return iterable
 
     def embed_query(self, query: str) -> Vector:
         """

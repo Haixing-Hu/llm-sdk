@@ -44,6 +44,16 @@ class OpenAiEmbedding(Embedding):
         :param api_key: the API key of the OpenAI API.
         :param use_proxy: indicates whether to use the proxy to access the
             OpenAI API.
+        :param use_cache: indicates whether to use the cache to store the
+            embedded vectors of texts. If this argument is True, the embedded
+            vectors of texts will be cached in a LRU cache. Otherwise, the
+            embedded vectors of texts will not be cached.
+        :param cache_size: the number of text embeddings to be cached. This
+            argument is ignored if the use_cache argument is False.
+        :param show_progress: indicates whether to show the progress of
+            embedding.
+        :param show_progress_threshold: the minimum number of embedding texts
+            to show the embedding progress.
         :param kwargs: the extra arguments passed to the constructor of the
             base class.
         """
