@@ -37,7 +37,7 @@ class Message:
         """
         Converts this message to a dictionary.
 
-        :param role_names_map: the map which maps a enumerator of Role into its
+        :param role_names_map: the map which maps an enumerator of Role into its
           name. Default value is `ROLE_NAMES_MAP`
         :return: the dictionary converted from this message.
         """

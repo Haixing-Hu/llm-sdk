@@ -79,6 +79,10 @@ class QdrantVectorStore(VectorStore):
             `None`.
         :param batch_size: the batch size used for batch insertion operations.
             Default value is 100.
+        :param show_progress: indicates whether to show the progress of
+            embedding.
+        :param show_progress_threshold: the minimum number of embedding texts
+            to show the embedding progress.
         :param kwargs: Additional arguments passed directly into REST client
             initialization
         """

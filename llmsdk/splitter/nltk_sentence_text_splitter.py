@@ -21,13 +21,13 @@ class NltkSentenceTextSplitter(TextSplitter):
                  separator: str = "\n\n",
                  language: str = "english",
                  **kwargs: Any):
-        super().__init__(**kwargs)
         try:
             from nltk.tokenize import sent_tokenize
         except ImportError:
             raise ImportError(
                 "NLTK is not installed, please install it with `pip install nltk`."
             )
+        super().__init__(**kwargs)
         self._tokenize = sent_tokenize
         self._separator = separator
         self._language = language

@@ -48,6 +48,10 @@ class MilvusVectorStore(VectorStore):
 
         :param connection_args: the arguments for the database connection.
         :param id_generator: the ID generator used to generate ID of documents.
+        :param show_progress: indicates whether to show the progress of
+            embedding.
+        :param show_progress_threshold: the minimum number of embedding texts
+            to show the embedding progress.
         """
         try:
             import pymilvus

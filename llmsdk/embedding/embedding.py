@@ -12,9 +12,9 @@ from typing import List, Optional
 from ..common.document import Document
 from ..common.point import Point
 from ..common.vector import Vector
-from ..common.mixin.with_progress_mixin import WithProgressMixin
-from ..common.mixin.with_cache_mixin import WithCacheMixin
-from ..common.mixin.with_logger_mixin import WithLoggerMixin
+from ..mixin.with_progress_mixin import WithProgressMixin
+from ..mixin.with_cache_mixin import WithCacheMixin
+from ..mixin.with_logger_mixin import WithLoggerMixin
 from ..generator.id_generator import IdGenerator
 from ..generator.default_id_generator import DefaultIdGenerator
 
@@ -24,7 +24,7 @@ class Embedding(WithLoggerMixin, WithCacheMixin, WithProgressMixin, ABC):
     The abstract base class of sentence embedding models.
     """
 
-    def __init__(self,
+    def __init__(self, *,
                  vector_dimension: int,
                  id_generator: Optional[IdGenerator] = None,
                  **kwargs) -> None:

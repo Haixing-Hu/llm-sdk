@@ -8,15 +8,15 @@
 # ##############################################################################
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
-from logging import Logger, getLogger
 
 from ..common.message import Message
 from ..common.prompt import Prompt
+from ..mixin.with_logger_mixin import WithLoggerMixin
 from .model_type import ModelType
 from .tokenizer import Tokenizer
 
 
-class LargeLanguageModel(ABC):
+class LargeLanguageModel(WithLoggerMixin, ABC):
     """
     The abstract base class for large language models.
     """
@@ -25,7 +25,8 @@ class LargeLanguageModel(ABC):
                  tokenizer: Tokenizer,
                  max_tokens: Optional[int] = None,
                  temperature: float = 1.0,
-                 top_p: int = 1) -> None:
+                 top_p: int = 1,
+                 **kwargs) -> None:
         """
         Constructs a LargeLanguageModel.
 
@@ -42,30 +43,15 @@ class LargeLanguageModel(ABC):
             tokens with top_p probability mass. So 0.1 means only the tokens
             comprising the top 10% probability mass are considered. We generally
             recommend altering this or temperature but not both.
+        :param kwargs: the extra arguments passed to the constructor of the
+            base class.
         """
+        super().__init__(**kwargs)
         self._model_type = model_type
         self._tokenizer = tokenizer
         self._max_tokens = max_tokens
         self._temperature = temperature
         self._top_p = top_p
-        self._logger = getLogger(self.__class__.__name__)
-
-    @property
-    def logger(self) -> Logger:
-        """
-        Gets the logger of this object.
-
-        :return: the logger of this object.
-        """
-        return self._logger
-
-    def set_logging_level(self, level: int | str) -> None:
-        """
-        Sets the logging level of this object.
-
-        :param level: the logging level to be set.
-        """
-        self._logger.setLevel(level)
 
     @property
     def model_type(self) -> ModelType:

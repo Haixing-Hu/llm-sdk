@@ -7,11 +7,11 @@
 #                                                                              #
 # ##############################################################################
 from abc import ABC, abstractmethod
-from typing import Any, List, Callable
-from logging import Logger, getLogger
-from tqdm import tqdm
+from typing import List, Callable
 
 from ..common.document import Document
+from ..mixin.with_progress_mixin import WithProgressMixin
+from ..mixin.with_logger_mixin import WithLoggerMixin
 # from .text_splitter_utils import (
 #     sort_splitted_documents,
 #     check_original_document_id,
@@ -19,14 +19,13 @@ from ..common.document import Document
 # )
 
 
-class TextSplitter(ABC):
+class TextSplitter(WithLoggerMixin, WithProgressMixin, ABC):
 
     def __init__(self, *,
                  chunk_size: int = 4000,
                  chunk_overlap: int = 200,
                  length_function: Callable[[str], int] = len,
-                 show_progress: bool = False,
-                 min_size_to_show_progress: int = 10) -> None:
+                 **kwargs) -> None:
         """
         Creates a new text splitter.
 
@@ -34,11 +33,14 @@ class TextSplitter(ABC):
         :param chunk_overlap: the number of basic units should overlap in each chunk.
         :param length_function: the function to calculate the length of the text
             in the basic unit.
-        :param show_progress: indicates whether to show the progress of adding
-            records.
-        :param min_size_to_show_progress: the minimum number of records to show
-            the progress.
+        :param show_progress: indicates whether to show the progress of
+            embedding.
+        :param show_progress_threshold: the minimum number of embedding texts
+            to show the embedding progress.
+        :param kwargs: the extra arguments passed to the constructor of the
+            base class.
         """
+        super().__init__(**kwargs)
         if chunk_overlap > chunk_size:
             raise ValueError(
                 f"Got a larger chunk overlap ({chunk_overlap}) than chunk size "
@@ -47,37 +49,6 @@ class TextSplitter(ABC):
         self._chunk_size = chunk_size
         self._chunk_overlap = chunk_overlap
         self._length_function = length_function
-        self._show_progress = show_progress
-        self._min_size_to_show_progress = min_size_to_show_progress
-        self._logger = getLogger(self.__class__.__name__)
-
-    @property
-    def show_progress(self) -> bool:
-        return self._show_progress
-
-    @show_progress.setter
-    def show_progress(self, value: bool) -> None:
-        self._show_progress = value
-
-    @property
-    def min_size_to_show_progress(self) -> int:
-        return self._min_size_to_show_progress
-
-    @min_size_to_show_progress.setter
-    def min_size_to_show_progress(self, value: int) -> None:
-        self._min_size_to_show_progress = value
-
-    @property
-    def logger(self) -> Logger:
-        return self._logger
-
-    def set_logging_level(self, level: int | str) -> None:
-        """
-        Sets the logging level of this object.
-
-        :param level: the logging level to be set.
-        """
-        self._logger.setLevel(level)
 
     @property
     def chunk_size(self) -> int:
@@ -102,18 +73,6 @@ class TextSplitter(ABC):
     @length_function.setter
     def length_function(self, value: Callable[[str], int]) -> None:
         self._length_function = value
-
-    def _get_iterable(self, iterable: Any) -> Any:
-        """
-        Get an iterable or a tqdm progress bar.
-
-        :param iterable: the iterable to be processed.
-        :return: the iterable or the tqdm progress bar.
-        """
-        if self._show_progress and len(iterable) >= self._min_size_to_show_progress:
-            return tqdm(iterable)
-        else:
-            return iterable
 
     @abstractmethod
     def split_text(self, text: str) -> List[str]:

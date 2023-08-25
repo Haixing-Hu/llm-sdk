@@ -8,13 +8,13 @@
 # ##############################################################################
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional
-from logging import Logger, getLogger
-from tqdm import tqdm
 
 from ..common.distance import Distance
-from ..common.vector import Vector
 from ..common.point import Point
 from ..common.search_type import SearchType
+from ..common.vector import Vector
+from ..mixin.with_progress_mixin import WithProgressMixin
+from ..mixin.with_logger_mixin import WithLoggerMixin
 from ..criterion.criterion import Criterion
 from ..generator.id_generator import IdGenerator
 from ..generator.default_id_generator import DefaultIdGenerator
@@ -23,43 +23,30 @@ from .collection_info import CollectionInfo
 from .vector_store_utils import maximal_marginal_relevance
 
 
-class VectorStore(ABC):
+class VectorStore(WithLoggerMixin, WithProgressMixin, ABC):
     """
     The abstract base class of vector stores.
     """
 
     def __init__(self, *,
                  id_generator: Optional[IdGenerator] = None,
-                 show_progress: bool = False,
-                 min_size_to_show_progress: int = 10) -> None:
+                 **kwargs) -> None:
         """
         Constructs a vector store.
 
         :param id_generator: the ID generator used to generate ID of documents.
         :param show_progress: indicates whether to show the progress of
             embedding.
-        :param min_size_to_show_progress: the minimum number of embedding texts
+        :param show_progress_threshold: the minimum number of embedding texts
             to show the embedding progress.
+        :param kwargs: the extra arguments passed to the constructor of the
+            base class.
         """
-        self._logger = getLogger(self.__class__.__name__)
+        super().__init__(**kwargs)
         self._store_name = self.__class__.__name__
         self._id_generator = id_generator or DefaultIdGenerator()
-        self._show_progress = show_progress
-        self._min_size_to_show_progress = min_size_to_show_progress
         self._is_opened = False
         self._collection_name = None
-
-    @property
-    def logger(self) -> Logger:
-        return self._logger
-
-    def set_logging_level(self, level: int | str) -> None:
-        """
-        Sets the logging level of this object.
-
-        :param level: the logging level to be set.
-        """
-        self._logger.setLevel(level)
 
     @property
     def store_name(self) -> str:
@@ -72,34 +59,6 @@ class VectorStore(ABC):
     @property
     def id_generator(self) -> IdGenerator:
         return self._id_generator
-
-    @property
-    def show_progress(self) -> bool:
-        return self._show_progress
-
-    @show_progress.setter
-    def show_progress(self, value: bool) -> None:
-        self._show_progress = value
-
-    @property
-    def min_size_to_show_progress(self) -> int:
-        return self._min_size_to_show_progress
-
-    @min_size_to_show_progress.setter
-    def min_size_to_show_progress(self, value: int) -> None:
-        self._min_size_to_show_progress = value
-
-    def _get_iterable(self, iterable: Any) -> Any:
-        """
-        Get an iterable or a tqdm progress bar.
-
-        :param iterable: the iterable to be processed.
-        :return: the iterable or the tqdm progress bar.
-        """
-        if self._show_progress and len(iterable) >= self._min_size_to_show_progress:
-            return tqdm(iterable)
-        else:
-            return iterable
 
     @property
     def is_opened(self) -> bool:
