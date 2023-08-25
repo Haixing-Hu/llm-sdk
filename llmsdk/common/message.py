@@ -7,7 +7,7 @@
 #                                                                              #
 # ##############################################################################
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TypeAlias
 
 from .role import Role, ROLE_NAMES_MAP
 
@@ -33,18 +33,16 @@ class Message:
     The optional name of the speaker.
     """
 
-    def to_dict(
-            self,
-            role_names_map: Dict[Role, str] = ROLE_NAMES_MAP
-    ) -> Dict[str, str]:
+    def to_dict(self, role_names_map: Dict[Role, str] = None) -> Dict[str, str]:
         """
         Converts this message to a dictionary.
 
         :param role_names_map: the map which maps a enumerator of Role into its
-          name.
+          name. Default value is `ROLE_NAMES_MAP`
         :return: the dictionary converted from this message.
         """
-        role_name = role_names_map[self.role]
+        names_map = role_names_map or ROLE_NAMES_MAP
+        role_name = names_map[self.role]
         result = {
             "role": role_name,
             "content": self.content,
@@ -54,7 +52,7 @@ class Message:
         return result
 
 
-MessageList = List[Message]
+MessageList: TypeAlias = List[Message]
 """
 The type of list of chatting messages.
 """
