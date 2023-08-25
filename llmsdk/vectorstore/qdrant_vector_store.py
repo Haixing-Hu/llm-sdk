@@ -87,7 +87,7 @@ class QdrantVectorStore(VectorStore):
         except ImportError:
             raise ImportError("Qdrant is not installed, please install it with "
                               "`pip install qdrant_client`.")
-        super().__init__(id_generator=id_generator)
+        super().__init__(id_generator=id_generator, **kwargs)
         self._in_memory = in_memory
         self._path = path
         self._url = url

@@ -23,8 +23,8 @@ class SimpleVectorStore(VectorStore):
     A simple implementation of vector store.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs: Any):
+        super().__init__(**kwargs)
         self._collections: Dict[str, List[Point]] = {}
         self._collections_info: Dict[str, CollectionInfo] = {}
 

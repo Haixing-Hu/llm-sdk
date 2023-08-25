@@ -40,7 +40,8 @@ class MilvusVectorStore(VectorStore):
 
     def __init__(self, *,
                  connection_args: Optional[Dict] = None,
-                 id_generator: Optional[IdGenerator] = None) -> None:
+                 id_generator: Optional[IdGenerator] = None,
+                 **kwargs) -> None:
         """
         Construct a vector store based on a collection of a Milvus vector
         database.
@@ -53,7 +54,7 @@ class MilvusVectorStore(VectorStore):
         except ImportError:
             raise ImportError("Milvus is not installed, please install it with "
                               "`pip install pymilvus`.")
-        super().__init__(id_generator=id_generator)
+        super().__init__(id_generator=id_generator, **kwargs)
         if connection_args is None:
             self._connection_args = {}
             self._connection_alias = "default"

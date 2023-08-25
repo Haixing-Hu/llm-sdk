@@ -47,15 +47,13 @@ class OpenAiEmbedding(Embedding):
         :param kwargs: the extra arguments passed to the constructor of the
             base class.
         """
-        super().__init__(
-            vector_dimension=get_embedding_output_dimensions(model),
-            **kwargs,
-        )
         try:
             import openai
         except ImportError:
             raise ImportError("Openai Python package is not installed, please "
                               "install it with `pip install openai`.")
+        vector_dimension = get_embedding_output_dimensions(model)
+        super().__init__(vector_dimension=vector_dimension, **kwargs)
         check_model_compatibility(model=model, endpoint="embeddings")
         self._model = model
         self._model_tokens = get_model_tokens(model)
