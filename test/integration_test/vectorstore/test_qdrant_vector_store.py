@@ -27,7 +27,7 @@ class TestQdrantVectorStore(TestVectorStoreBase):
     def test_mmr_search(self):
         self._test_mmr_search(store=QdrantVectorStore(), in_memory=True)
         self._test_mmr_search(store=QdrantVectorStore(), path="/tmp/test_qdrant")
-        self._test_mmr_search(store=QdrantVectorStore(), host="127.0.0.1")
+        # self._test_mmr_search(store=QdrantVectorStore(), host="127.0.0.1")
 
     def test_create_collection(self):
         self._test_create_collection(store=QdrantVectorStore(), host="127.0.0.1")

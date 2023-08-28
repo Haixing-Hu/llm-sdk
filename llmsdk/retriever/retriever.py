@@ -8,36 +8,24 @@
 # ##############################################################################
 from abc import ABC, abstractmethod
 from typing import Any, List
-from logging import Logger, getLogger
 
 from ..common.document import Document
+from ..mixin.with_logger_mixin import WithLoggerMixin
 
 
-class Retriever(ABC):
+class Retriever(WithLoggerMixin, ABC):
     """
     The interface of document retrievers.
     """
 
-    def __init__(self):
-        self._logger = getLogger(self.__class__.__name__)
-        self._retriever_name = self.__class__.__name__
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._name = self.__class__.__name__
         self._is_opened = False
 
     @property
-    def logger(self) -> Logger:
-        return self._logger
-
-    def set_logging_level(self, level: int | str) -> None:
-        """
-        Sets the logging level of this object.
-
-        :param level: the logging level to be set.
-        """
-        self._logger.setLevel(level)
-
-    @property
-    def retriever_name(self) -> str:
-        return self._retriever_name
+    def name(self) -> str:
+        return self._name
 
     @property
     def is_opened(self) -> bool:
@@ -58,10 +46,10 @@ class Retriever(ABC):
 
         :param kwargs: the arguments used to open this retriever.
         """
-        self._logger.info("Opening the %s...", self._retriever_name)
+        self._logger.info("Opening the %s...", self._name)
         self._ensure_closed()
         self._open(**kwargs)
-        self._logger.info("Successfully opened the %s.", self._retriever_name)
+        self._logger.info("Successfully opened the %s.", self._name)
         self._is_opened = True
 
     @abstractmethod
@@ -86,9 +74,9 @@ class Retriever(ABC):
         store, and close the vector store.
         """
         if self.is_opened:
-            self._logger.info("Closing the %s...", self._retriever_name)
+            self._logger.info("Closing the %s...", self._name)
             self._close()
-            self._logger.info("Successfully closed the %s.", self._retriever_name)
+            self._logger.info("Successfully closed the %s.", self._name)
 
     @abstractmethod
     def _close(self) -> None:
@@ -113,13 +101,12 @@ class Retriever(ABC):
         :return: the list of documents relevant to the query.
         """
         self._logger.info("Retrieving documents from '%s' with query: %s",
-                          self._retriever_name, query)
+                          self._name, query)
         if len(kwargs) > 0:
             self._logger.debug("kwargs = %s", kwargs)
         self._ensure_opened()
         result = self._retrieve(query, **kwargs)
-        self._logger.info("Successfully retrieve documents from '%s'.",
-                          self._retriever_name)
+        self._logger.info("Successfully retrieve documents from '%s'.", self._name)
         self._logger.debug("The retrieved documents are: %s", result)
         return result
 

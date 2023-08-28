@@ -32,7 +32,9 @@ class WithCacheMixin:
         self._use_cache = use_cache
         self._cache_size = cache_size
         self._cache = None
-        self.set_cache(use_cache, cache_size)
+        # We must call the private implementation method here since the public
+        # method `set_cache` may be overridden by the derived class.
+        self.__set_cache_impl(use_cache, cache_size)
 
     @property
     def use_cache(self) -> bool:
@@ -56,6 +58,9 @@ class WithCacheMixin:
         :param cache_size: the number of items to be cached. This argument is
             ignored if the `use_cache` argument is False.
         """
+        self.__set_cache_impl(use_cache, cache_size)
+
+    def __set_cache_impl(self, use_cache: bool, cache_size: int) -> None:
         if cache_size <= 0:
             raise ValueError("The cache size must be positive.")
         self._use_cache = use_cache

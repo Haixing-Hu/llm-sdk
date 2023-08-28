@@ -8,9 +8,10 @@
 # ##############################################################################
 from abc import ABC
 from typing import Any
-from tqdm import tqdm
 
 from ..common.search_type import SearchType
+from ..mixin.with_progress_mixin import WithProgressMixin
+from ..mixin.with_cache_mixin import WithCacheMixin
 from ..vectorstore.collection_info import CollectionInfo
 from ..vectorstore.vector_store import VectorStore
 from ..embedding.embedding import Embedding
@@ -20,7 +21,7 @@ from .retriever import Retriever
 from .vector_store_retriever import VectorStoreRetriever
 
 
-class VectorStoreBasedRetriever(Retriever, ABC):
+class VectorStoreBasedRetriever(WithProgressMixin, WithCacheMixin, Retriever, ABC):
     """
     The abstract base class of retrievers that based on a VectorStoreRetriever
     and a LargeLanguageModel.
@@ -32,10 +33,7 @@ class VectorStoreBasedRetriever(Retriever, ABC):
                  splitter: TextSplitter,
                  llm: LargeLanguageModel,
                  search_type: SearchType = SearchType.SIMILARITY,
-                 use_cache: bool = True,
-                 cache_size: int = 10000,
-                 show_progress: bool = False,
-                 min_size_to_show_progress: int = 10) -> None:
+                 **kwargs) -> None:
         """
         Constructs a `VectorStoreBasedRetriever`.
 
@@ -53,48 +51,39 @@ class VectorStoreBasedRetriever(Retriever, ABC):
             embedded vectors of texts will not be cached.
         :param cache_size: the number of text embeddings to be cached. This
             argument is ignored if the use_cache argument is False.
-        :param show_progress: indicates whether to show the progress of adding
-            records.
-        :param min_size_to_show_progress: the minimum number of records to show
-            the progress.
+        :param show_progress: indicates whether to show the progress of
+            splitting and embedding.
+        :param show_progress_threshold: the minimum number of texts to show the
+            splitting and embedding progress.
+        :param kwargs: the extra arguments passed to the constructor of the
+            base class.
         """
-        super().__init__()
-        self._vector_store = vector_store
-        self._collection_name = collection_name
-        self._embedding = embedding
-        self._splitter = splitter
+        super().__init__(**kwargs)
+        self._llm = llm
         self._retriever = VectorStoreRetriever(
-            vector_store=vector_store,
             collection_name=collection_name,
+            vector_store=vector_store,
             embedding=embedding,
             splitter=splitter,
             search_type=search_type,
-            use_cache=use_cache,
-            cache_size=cache_size,
-            show_progress=show_progress,
-            min_size_to_show_progress=min_size_to_show_progress,
+            **kwargs,
         )
-        self._llm = llm
-        self._use_cache = use_cache
-        self._cache_size = cache_size
-        self._show_progress = show_progress
-        self._min_size_to_show_progress = min_size_to_show_progress
 
     @property
     def vector_store(self) -> VectorStore:
-        return self._vector_store
+        return self._retriever.vector_store
 
     @property
     def collection_name(self) -> str:
-        return self._collection_name
+        return self._retriever.collection_name
 
     @property
     def embedding(self) -> Embedding:
-        return self._embedding
+        return self._retriever.embedding
 
     @property
     def splitter(self) -> TextSplitter:
-        return self._splitter
+        return self._retriever.splitter
 
     @property
     def vector_store_retriever(self) -> VectorStoreRetriever:
@@ -104,15 +93,9 @@ class VectorStoreBasedRetriever(Retriever, ABC):
     def large_language_model(self) -> LargeLanguageModel:
         return self._llm
 
-    @property
-    def use_cache(self) -> bool:
-        return self._use_cache
-
-    @property
-    def cache_size(self) -> int:
-        return self._cache_size
-
-    def set_cache(self, use_cache: bool, cache_size: int) -> None:
+    def set_cache(self,
+                  use_cache: bool,
+                  cache_size: int = WithCacheMixin.DEFAULT_CACHE_SIZE) -> None:
         """
         Sets the caching capacity of this object.
 
@@ -123,27 +106,26 @@ class VectorStoreBasedRetriever(Retriever, ABC):
         :param cache_size: the number of text embeddings to be cached. This
             argument is ignored if the use_cache argument is False.
         """
-        self._use_cache = use_cache
-        self._cache_size = cache_size
+        super().set_cache(use_cache, cache_size)
         self._retriever.set_cache(use_cache, cache_size)
 
     @property
     def show_progress(self) -> bool:
-        return self._show_progress
+        return super().show_progress
 
     @show_progress.setter
     def show_progress(self, value: bool) -> None:
-        self._show_progress = value
+        super().show_progress = value
         self._retriever.show_progress = value
 
     @property
-    def min_size_to_show_progress(self) -> int:
-        return self._min_size_to_show_progress
+    def show_progress_threshold(self) -> int:
+        return super().show_progress_threshold
 
-    @min_size_to_show_progress.setter
-    def min_size_to_show_progress(self, value: int) -> None:
-        self._min_size_to_show_progress = value
-        self._retriever.min_size_to_show_progress = value
+    @show_progress_threshold.setter
+    def show_progress_threshold(self, value: int) -> None:
+        super().show_progress_threshold = value
+        self._retriever.show_progress_threshold = value
 
     def set_logging_level(self, level: int | str) -> None:
         """
@@ -151,9 +133,9 @@ class VectorStoreBasedRetriever(Retriever, ABC):
 
         :param level: the logging level to set.
         """
-        self._logger.setLevel(level)
-        self._retriever.set_logging_level(level)
+        super().set_logging_level(level)
         self._llm.set_logging_level(level)
+        self._retriever.set_logging_level(level)
 
     def get_store_info(self) -> CollectionInfo:
         """
@@ -162,18 +144,6 @@ class VectorStoreBasedRetriever(Retriever, ABC):
         :return: the information of the collection of underlying vector store.
         """
         return self._retriever.get_store_info()
-
-    def _get_iterable(self, iterable: Any) -> Any:
-        """
-        Get an iterable or a tqdm progress bar.
-
-        :param iterable: the iterable to be processed.
-        :return: the iterable or the tqdm progress bar.
-        """
-        if self._show_progress and len(iterable) >= self._min_size_to_show_progress:
-            return tqdm(iterable)
-        else:
-            return iterable
 
     def _open(self, **kwargs: Any) -> None:
         self._retriever.open(**kwargs)

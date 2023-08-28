@@ -39,10 +39,7 @@ class SimilarRecordRetriever(VectorStoreBasedRetriever):
                  prompt_template: Optional[StructuredPromptTemplate] = None,
                  record_limit: Optional[int] = None,
                  record_score_threshold: Optional[float] = None,
-                 use_cache: bool = True,
-                 cache_size: int = 10000,
-                 show_progress: bool = False,
-                 min_size_to_show_progress: int = 10) -> None:
+                 **kwargs) -> None:
         """
         Constructs a `SimilarRecordRetriever`.
 
@@ -83,8 +80,10 @@ class SimilarRecordRetriever(VectorStoreBasedRetriever):
             argument is ignored if the use_cache argument is False.
         :param show_progress: indicates whether to show the progress of adding
             records.
-        :param min_size_to_show_progress: the minimum number of records to show
+        :param show_progress_threshold: the minimum number of records to show
             the progress.
+        :param kwargs: the extra arguments passed to the constructor of the
+            base class.
         """
         super().__init__(vector_store=vector_store,
                          collection_name=collection_name,
@@ -92,10 +91,7 @@ class SimilarRecordRetriever(VectorStoreBasedRetriever):
                          splitter=splitter,
                          llm=llm,
                          search_type=SearchType.SIMILARITY,
-                         use_cache=use_cache,
-                         cache_size=cache_size,
-                         show_progress=show_progress,
-                         min_size_to_show_progress=min_size_to_show_progress)
+                         **kwargs)
         self._record_id_field = record_id_field
         self._default_config = default_config
         self._language = language
@@ -132,7 +128,7 @@ class SimilarRecordRetriever(VectorStoreBasedRetriever):
             be the sub-documents split from the original document.
         """
         self._logger.info("Adding a record to the retriever %s ...",
-                          self._retriever_name)
+                          self._name)
         self._logger.debug("The record to add is: %s", record)
         self._ensure_opened()
         docs = Document.from_record(self._record_id_field, record)
@@ -149,7 +145,7 @@ class SimilarRecordRetriever(VectorStoreBasedRetriever):
             be the sub-documents split from the original document.
         """
         self._logger.info("Adding a list of records to the retriever %s ...",
-                          self._retriever_name)
+                          self._name)
         self._logger.debug("The records to add are: %s", records)
         self._ensure_opened()
         self._logger.info("Constructing documents from records...")
@@ -170,7 +166,7 @@ class SimilarRecordRetriever(VectorStoreBasedRetriever):
             given query record, or `None` if no similar record is found.
         """
         self._logger.info("Finding the most similar record to the query record "
-                          "in the retriever %s ...", self._retriever_name)
+                          "in the retriever %s ...", self._name)
         self._logger.debug("The query record is: %s", record)
         self._ensure_opened()
         result = self._find(record)

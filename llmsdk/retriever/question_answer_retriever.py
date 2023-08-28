@@ -43,10 +43,7 @@ class QuestionAnswerRetriever(VectorStoreBasedRetriever):
                  question_limit: Optional[int] = None,
                  answer_limit: Optional[int] = None,
                  history_limit: Optional[int] = None,
-                 use_cache: bool = True,
-                 cache_size: int = 10000,
-                 show_progress: bool = False,
-                 min_size_to_show_progress: int = 10) -> None:
+                 **kwargs) -> None:
         """
         Constructs a `QuestionAnswerRetriever`.
 
@@ -111,8 +108,10 @@ class QuestionAnswerRetriever(VectorStoreBasedRetriever):
             argument is ignored if the use_cache argument is False.
         :param show_progress: indicates whether to show the progress of adding
             records.
-        :param min_size_to_show_progress: the minimum number of records to show
+        :param show_progress_threshold: the minimum number of records to show
             the progress.
+        :param kwargs: the extra arguments passed to the constructor of the
+            base class.
         """
         super().__init__(vector_store=vector_store,
                          collection_name=collection_name,
@@ -120,10 +119,7 @@ class QuestionAnswerRetriever(VectorStoreBasedRetriever):
                          splitter=splitter,
                          llm=llm,
                          search_type=SearchType.SIMILARITY,
-                         use_cache=use_cache,
-                         cache_size=cache_size,
-                         show_progress=show_progress,
-                         min_size_to_show_progress=min_size_to_show_progress)
+                         **kwargs)
         self._default_config = default_config
         self._language = language
         self._unknown_question_answer = unknown_question_answer
@@ -171,7 +167,7 @@ class QuestionAnswerRetriever(VectorStoreBasedRetriever):
             be the sub-documents split from the original document.
         """
         self._logger.info("Adding a FAQ to the retriever %s ...",
-                          self._retriever_name)
+                          self._name)
         self._logger.debug("The FAQ to add is: %s", faq)
         self._ensure_opened()
         docs = Faq.to_document(faq)
@@ -188,7 +184,7 @@ class QuestionAnswerRetriever(VectorStoreBasedRetriever):
             be the sub-documents split from the original document.
         """
         self._logger.info("Adding a list of FAQs to the retriever %s ...",
-                          self._retriever_name)
+                          self._name)
         self._logger.debug("The FAQs to add are: %s", faqs)
         self._ensure_opened()
         self._logger.info("Converting %d FAQs into documents ...", len(faqs))
@@ -208,7 +204,7 @@ class QuestionAnswerRetriever(VectorStoreBasedRetriever):
             be the sub-documents split from the original document.
         """
         self._logger.info("Adding a document to the retriever %s ...",
-                          self._retriever_name)
+                          self._name)
         self._logger.debug("The document to add is: %s", doc)
         self._ensure_opened()
         return self._retriever.add(doc)
@@ -222,7 +218,7 @@ class QuestionAnswerRetriever(VectorStoreBasedRetriever):
             be the sub-documents split from the original document.
         """
         self._logger.info("Adding a list of documents to the retriever %s ...",
-                          self._retriever_name)
+                          self._name)
         self._logger.debug("The documents to add are: %s", docs)
         self._ensure_opened()
         return self._retriever.add_all(docs)
