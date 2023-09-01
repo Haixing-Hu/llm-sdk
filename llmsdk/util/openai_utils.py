@@ -57,7 +57,7 @@ MODEL_TOKEN_MAPPING = {
     # embedding models: https://platform.openai.com/docs/guides/embeddings/second-generation-models
     "text-embedding-ada-002": 8191,
 }
-EMBEDDING_OUTPUT_DIMENSIONS = {
+EMBEDDING_DIMENSIONS = {
     # https://platform.openai.com/docs/guides/embeddings/what-are-embeddings
     "text-embedding-ada-002": 1536,
 }
@@ -77,6 +77,7 @@ logger = logging.getLogger(__name__)
 
 def call_with_retries(openai_api: Callable[[Any], Any],
                       max_retries: int = DEFAULT_MAX_RETRIES,
+                      *,
                       wait_min_seconds: int = DEFAULT_WAIT_MIN_SECONDS,
                       wait_max_seconds: int = DEFAULT_WAIT_MAX_SECONDS,
                       **kwargs: Any) -> Any:
@@ -127,7 +128,7 @@ def get_model_tokens(model: str) -> int:
     return result
 
 
-def get_embedding_output_dimensions(model: str) -> int:
+def get_embedding_dimensions(model: str) -> int:
     """
     Gets the number of dimensions of the output vectors of the specified model.
 
@@ -135,10 +136,11 @@ def get_embedding_output_dimensions(model: str) -> int:
     :return: the number of dimensions of the output vectors of the specified model,
         or 0 if unknown.
     """
-    if model in EMBEDDING_OUTPUT_DIMENSIONS:
-        return EMBEDDING_OUTPUT_DIMENSIONS[model]
+    if model in EMBEDDING_DIMENSIONS:
+        return EMBEDDING_DIMENSIONS[model]
     else:
-        return 0
+        raise ValueError(f"The number of dimensions of the output vectors of "
+                         f"the OpenAI's model {model} is unknown.")
 
 
 def check_model_compatibility(model: str, endpoint: str) -> None:

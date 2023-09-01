@@ -6,14 +6,14 @@
 #     All rights reserved.                                                     #
 #                                                                              #
 # ##############################################################################
-from typing import Any, List, Optional
+from typing import Any, Iterable, Optional
 
 from ..common.vector import Vector
 from ..llm.tokenizer.tokernizer import Tokenizer
 from ..llm.tokenizer.openai_tokenizer import OpenAiTokenizer
 from ..util.openai_utils import (
     get_model_tokens,
-    get_embedding_output_dimensions,
+    get_embedding_dimensions,
     check_model_compatibility,
     call_with_retries,
     init_openai,
@@ -62,7 +62,7 @@ class OpenAiEmbedding(Embedding):
         except ImportError:
             raise ImportError("Openai Python package is not installed, please "
                               "install it with `pip install openai`.")
-        vector_dimension = get_embedding_output_dimensions(model)
+        vector_dimension = get_embedding_dimensions(model)
         super().__init__(vector_dimension=vector_dimension, **kwargs)
         check_model_compatibility(model=model, endpoint="embeddings")
         self._model = model
@@ -71,6 +71,18 @@ class OpenAiEmbedding(Embedding):
         self._tokenizer = OpenAiTokenizer(model)
         self._api = openai.Embedding.create
         init_openai(api_key=api_key, use_proxy=use_proxy)
+
+    @property
+    def model(self) -> str:
+        return self._model
+
+    @property
+    def model_tokens(self) -> int:
+        return self._model_tokens
+
+    @property
+    def batch_size(self) -> int:
+        return self._batch_size
 
     @property
     def tokenizer(self) -> Tokenizer:
@@ -123,8 +135,7 @@ class OpenAiEmbedding(Embedding):
     #         result.append(point)
     #     return result
 
-    def _embed_impl(self, texts: List[str]) -> List[Vector]:
-        self._logger.info("Batch embedding %d texts...", len(texts))
+    def _embed_impl(self, texts: Iterable[str]) -> Iterable[Vector]:
         result = []
         batch_size = self._batch_size
         for i in self._get_iterable(range(0, len(texts), batch_size)):

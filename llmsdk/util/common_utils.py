@@ -6,12 +6,14 @@
 #     All rights reserved.                                                     #
 #                                                                              #
 # ##############################################################################
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Iterable, Iterator, Callable
 import threading
 import requests
+
 import csv
 from io import StringIO
 from tqdm import tqdm
+from cachetools import Cache
 
 
 def global_init(func):
@@ -213,3 +215,112 @@ def get_iterable_or_tqdm(iterable: Any,
         return tqdm(iterable)
     else:
         return iterable
+
+
+def generate_uncached_items(items: Iterable[Any],
+                            cache: Cache) -> Iterable[Any]:
+    """
+    Generates the items in an iterable that are not in the cache.
+
+    :param items: the iterable to be processed.
+    :param cache: the cache to be checked.
+    :return: the generator of the items in the iterable that are not in
+        the cache.
+    """
+    for item in items:
+        if item not in cache:
+            yield item
+
+
+def generate_uncached_unique_items(items: Iterable[Any],
+                                   cache: Cache) -> Iterable[Any]:
+    """
+    Generates the unique items in an iterable that are not in the cache.
+
+    :param items: the iterable to be processed.
+    :param cache: the cache to be checked.
+    :return: the generator of the unique items in the iterable that are not in
+        the cache.
+    """
+    unique_uncached_items = set()
+    for item in items:
+        print(f"generate_uncached_unique_items: item = {item}")
+        if (item not in cache) and (item not in unique_uncached_items):
+            unique_uncached_items.add(item)
+            print(f"generate_uncached_unique_items: yield {item}")
+            yield item
+
+
+def generate_result_with_cache(
+        items: Iterable[Any],
+        cache: Cache,
+        processor: Callable[[Iterable[Any]], Iterable[Any]]) -> Iterable[Any]:
+    """
+    Generates the processing results for the items in an iterable inputs, with
+    the help of a cache to avoid processing duplicated items.
+
+    :param items: the iterable items to be processed.
+    :param cache: the cache to be checked.
+    :param processor: the processor to be used to process the items in the
+        iterable.
+    :return: the generator of the processing results for the items in the iterable
+        inputs.
+    """
+    class Input:
+        def __init__(self, items_iter, cache, queue) -> None:
+            self._items_iter = items_iter
+            self._cache = cache
+            self._queue = queue
+            self._unique_set = set()
+
+        def __iter__(self):
+            index = 0
+            while index < len(self._queue):
+                val = self._queue[index]
+                if val not in self._unique_set:
+                    self._unique_set.add(val)
+                    yield val
+                index = index + 1
+
+    items_iter = iter(items)
+    queue = []
+    input = Input(items_iter, cache, queue)
+    output = processor(input)
+    output_iter = iter(output)
+    for item in items_iter:
+        print(f"generate_result_with_cache: item = {item}")
+        queue.append(item)
+        while len(queue) > 0:
+            print(f"generate_result_with_cache: queue = {queue}")
+            top = queue[0]
+            print(f"generate_result_with_cache: top = {top}")
+            if top in cache:
+                print(f"generate_result_with_cache: {top} in cache")
+                value = cache[top]
+            else:
+                print(f"generate_result_with_cache: {top} NOT in cache, generate next result")
+                value = next(output_iter)
+                cache[top] = value
+            print(f"generate_result_with_cache: yield {value}")
+            queue.pop(0)
+            yield value
+
+
+def batch_generator(items: Iterable[Any], batch_size: int) -> Iterable[List[Any]]:
+    """
+    Generates batches of items from an iterable.
+
+    :param items: the iterable items to be processed.
+    :param batch_size: the size of each batch.
+    :return: the generator of batches of items.
+    """
+    if batch_size <= 0:
+        raise ValueError(f"The batch size must be positive: {batch_size}")
+    batch = []
+    for item in items:
+        batch.append(item)
+        if len(batch) == batch_size:
+            yield batch
+            batch = []
+    if batch:
+        yield batch

@@ -62,7 +62,10 @@ class WithProgressMixin:
         """
         if self._show_progress:
             if total is None:
-                total = len(iterable)
-            if total >= self._show_progress_threshold:
+                if hasattr(iterable, '__len__'):
+                    total = len(iterable)
+            if total is None:
+                return tqdm(iterable, desc=desc)
+            elif total >= self._show_progress_threshold:
                 return tqdm(iterable, desc=desc, total=total)
         return iterable

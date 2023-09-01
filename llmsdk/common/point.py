@@ -15,6 +15,7 @@ import copy
 from .document import Document
 from .metadata import Metadata
 from .vector import Vector
+from ..generator.id_generator import IdGenerator
 
 DOCUMENT_ID_ATTRIBUTE: str = "__document_id__"
 """The name of the metadata attribute storing the ID of the document."""
@@ -102,17 +103,25 @@ class Point:
         return [Point.to_document(p) for p in points]
 
     @classmethod
-    def from_document(cls, doc: Document, vector: Vector) -> Point:
+    def from_document(cls,
+                      doc: Document,
+                      vector: Vector,
+                      id_generator: IdGenerator = None) -> Point:
         """
         Constructs a point from the specified document and its embedded vector.
 
         :param doc: the specified document.
         :param vector: the embedded vector of the content of the specified
             document.
+        :param id_generator: the ID generator used to generate the ID of the
+            document.
         :return: the constructed Point.
         """
         if doc.id is None or len(doc.id) == 0:
-            raise ValueError(f"The document must have a non-empty ID: {doc}")
+            if id_generator:
+                doc.id = id_generator.generate()
+            else:
+                raise ValueError(f"The document must have a non-empty ID: {doc}")
         metadata = Metadata({
             DOCUMENT_ID_ATTRIBUTE: doc.id,
             DOCUMENT_CONTENT_ATTRIBUTE: doc.content,
