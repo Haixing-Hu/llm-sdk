@@ -6,7 +6,7 @@
 #     All rights reserved.                                                     #
 #                                                                              #
 # ##############################################################################
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable, List, Optional
 
 from ..common.vector import Vector
 from ..llm.tokenizer.tokernizer import Tokenizer
@@ -135,7 +135,7 @@ class OpenAiEmbedding(Embedding):
     #         result.append(point)
     #     return result
 
-    def _embed_impl(self, texts: Iterable[str]) -> Iterable[Vector]:
+    def _embed_impl(self, texts: List[str]) -> Iterable[Vector]:
         result = []
         batch_size = self._batch_size
         for i in self._get_iterable(range(0, len(texts), batch_size)):
