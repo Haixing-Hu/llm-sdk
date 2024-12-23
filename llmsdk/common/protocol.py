@@ -15,6 +15,6 @@ class Protocol(Enum):
     """
     HTTP = "http"
 
-    HTTPS = "HTTPS"
+    HTTPS = "https"
 
     GRPC = "gRPC"

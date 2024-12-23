@@ -11,26 +11,26 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, List
 
-from .document import Document, DOCUMENT_TYPE_ATTRIBUTE
+from .document import Document, ATTRIBUTE_DOCUMENT_TYPE
 from .metadata import Metadata
 
 
-EXAMPLE_ID_ATTRIBUTE: str = "__example_id__"
+ATTRIBUTE_EXAMPLE_ID: str = "__example_id__"
 """
 The name of the metadata attribute storing the ID of an Example. 
 """
 
-EXAMPLE_INPUT_ATTRIBUTE: str = "__example_input__"
+ATTRIBUTE_EXAMPLE_INPUT: str = "__example_input__"
 """
 The name of the metadata attribute storing the original input of an Example.
 """
 
-EXAMPLE_OUTPUT_ATTRIBUTE: str = "__example_output__"
+ATTRIBUTE_EXAMPLE_OUTPUT: str = "__example_output__"
 """
 The name of the metadata attribute storing the original output of an Example.
 """
 
-EXAMPLE_PART_ATTRIBUTE: str = "__example_part__"
+ATTRIBUTE_EXAMPLE_PART: str = "__example_part__"
 """
 The name of the metadata attribute storing the name of the part of an Example.
 """
@@ -90,21 +90,21 @@ class Example:
         input_doc = Document(id=example.id + "-input",
                              content=example.input,
                              metadata=Metadata({
-                                 DOCUMENT_TYPE_ATTRIBUTE: "EXAMPLE",
-                                 EXAMPLE_ID_ATTRIBUTE: example.id,
-                                 EXAMPLE_PART_ATTRIBUTE: "input",
-                                 EXAMPLE_INPUT_ATTRIBUTE: example.input,
-                                 EXAMPLE_OUTPUT_ATTRIBUTE: example.output,
+                                 ATTRIBUTE_DOCUMENT_TYPE: "EXAMPLE",
+                                 ATTRIBUTE_EXAMPLE_PART: "INPUT",
+                                 ATTRIBUTE_EXAMPLE_ID: example.id,
+                                 ATTRIBUTE_EXAMPLE_INPUT: example.input,
+                                 ATTRIBUTE_EXAMPLE_OUTPUT: example.output,
                              }),
                              score=example.score)
         output_doc = Document(id=example.id + "-output",
                               content=example.output,
                               metadata=Metadata({
-                                  DOCUMENT_TYPE_ATTRIBUTE: "EXAMPLE",
-                                  EXAMPLE_ID_ATTRIBUTE: example.id,
-                                  EXAMPLE_PART_ATTRIBUTE: "output",
-                                  EXAMPLE_INPUT_ATTRIBUTE: example.input,
-                                  EXAMPLE_OUTPUT_ATTRIBUTE: example.output,
+                                  ATTRIBUTE_DOCUMENT_TYPE: "EXAMPLE",
+                                  ATTRIBUTE_EXAMPLE_PART: "OUTPUT",
+                                  ATTRIBUTE_EXAMPLE_ID: example.id,
+                                  ATTRIBUTE_EXAMPLE_INPUT: example.input,
+                                  ATTRIBUTE_EXAMPLE_OUTPUT: example.output,
                               }),
                               score=example.score)
         return [input_doc, output_doc]
@@ -133,14 +133,14 @@ class Example:
         """
         metadata = doc.metadata
         return (metadata is not None
-                and metadata.has_value_of_type(DOCUMENT_TYPE_ATTRIBUTE, str)
-                and metadata[DOCUMENT_TYPE_ATTRIBUTE] == "EXAMPLE"
-                and metadata.has_value_of_type(EXAMPLE_ID_ATTRIBUTE, str)
-                and metadata.has_value_of_type(EXAMPLE_INPUT_ATTRIBUTE, str)
-                and metadata.has_value_of_type(EXAMPLE_OUTPUT_ATTRIBUTE, str)
-                and metadata.has_value_of_type(EXAMPLE_PART_ATTRIBUTE, str)
-                and (metadata[EXAMPLE_PART_ATTRIBUTE] != "input"
-                     or metadata[EXAMPLE_PART_ATTRIBUTE] != "output"))
+                and metadata.has_value_of_type(ATTRIBUTE_DOCUMENT_TYPE, str)
+                and metadata[ATTRIBUTE_DOCUMENT_TYPE] == "EXAMPLE"
+                and metadata.has_value_of_type(ATTRIBUTE_EXAMPLE_ID, str)
+                and metadata.has_value_of_type(ATTRIBUTE_EXAMPLE_INPUT, str)
+                and metadata.has_value_of_type(ATTRIBUTE_EXAMPLE_OUTPUT, str)
+                and metadata.has_value_of_type(ATTRIBUTE_EXAMPLE_PART, str)
+                and (metadata[ATTRIBUTE_EXAMPLE_PART] == "INPUT"
+                     or metadata[ATTRIBUTE_EXAMPLE_PART] == "OUTPUT"))
 
     @classmethod
     def from_document(cls, document: Document) -> Example:
@@ -154,9 +154,9 @@ class Example:
         """
         if not cls.is_example(document):
             raise ValueError(f"The document is not converted from an example: {document}")
-        return Example(id=document.metadata[EXAMPLE_ID_ATTRIBUTE],
-                       input=document.metadata[EXAMPLE_INPUT_ATTRIBUTE],
-                       output=document.metadata[EXAMPLE_OUTPUT_ATTRIBUTE],
+        return Example(id=document.metadata[ATTRIBUTE_EXAMPLE_ID],
+                       input=document.metadata[ATTRIBUTE_EXAMPLE_INPUT],
+                       output=document.metadata[ATTRIBUTE_EXAMPLE_OUTPUT],
                        score=document.score)
 
     @classmethod

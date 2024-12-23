@@ -17,10 +17,10 @@ from .metadata import Metadata
 from .vector import Vector
 from ..generator.id_generator import IdGenerator
 
-DOCUMENT_ID_ATTRIBUTE: str = "__document_id__"
+ATTRIBUTE_DOCUMENT_ID: str = "__document_id__"
 """The name of the metadata attribute storing the ID of the document."""
 
-DOCUMENT_CONTENT_ATTRIBUTE: str = "__document_content__"
+ATTRIBUTE_DOCUMENT_CONTENT: str = "__document_content__"
 """The name of the metadata attribute storing the original content of the document."""
 
 
@@ -67,8 +67,8 @@ class Point:
         """
         metadata = point.metadata
         return (metadata is not None
-                and metadata.has_value_of_type(DOCUMENT_ID_ATTRIBUTE, str)
-                and metadata.has_value_of_type(DOCUMENT_CONTENT_ATTRIBUTE, str))
+                and metadata.has_value_of_type(ATTRIBUTE_DOCUMENT_ID, str)
+                and metadata.has_value_of_type(ATTRIBUTE_DOCUMENT_CONTENT, str))
 
     @classmethod
     def to_document(cls, point: Point) -> Document:
@@ -83,10 +83,10 @@ class Point:
         if not cls.is_document(point):
             raise ValueError(f"The point is not converted from a document: {point}")
         metadata = copy.deepcopy(point.metadata)
-        id = metadata[DOCUMENT_ID_ATTRIBUTE]
-        metadata.pop(DOCUMENT_ID_ATTRIBUTE)
-        content = metadata[DOCUMENT_CONTENT_ATTRIBUTE]
-        metadata.pop(DOCUMENT_CONTENT_ATTRIBUTE)
+        id = metadata[ATTRIBUTE_DOCUMENT_ID]
+        metadata.pop(ATTRIBUTE_DOCUMENT_ID)
+        content = metadata[ATTRIBUTE_DOCUMENT_CONTENT]
+        metadata.pop(ATTRIBUTE_DOCUMENT_CONTENT)
         return Document(id=id,
                         content=content,
                         metadata=metadata,
@@ -123,8 +123,8 @@ class Point:
             else:
                 raise ValueError(f"The document must have a non-empty ID: {doc}")
         metadata = Metadata({
-            DOCUMENT_ID_ATTRIBUTE: doc.id,
-            DOCUMENT_CONTENT_ATTRIBUTE: doc.content,
+            ATTRIBUTE_DOCUMENT_ID: doc.id,
+            ATTRIBUTE_DOCUMENT_CONTENT: doc.content,
         })
         if doc.metadata is not None:
             metadata.update(doc.metadata)

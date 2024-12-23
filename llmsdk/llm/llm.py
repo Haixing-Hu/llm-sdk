@@ -25,7 +25,7 @@ class LargeLanguageModel(WithLoggerMixin, ABC):
                  tokenizer: Tokenizer,
                  max_tokens: Optional[int] = None,
                  temperature: float = 1.0,
-                 top_p: int = 1,
+                 top_p: float = 1.0,
                  **kwargs) -> None:
         """
         Constructs a LargeLanguageModel.

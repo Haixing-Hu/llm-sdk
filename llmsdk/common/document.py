@@ -15,22 +15,22 @@ import copy
 from .metadata import Metadata
 
 
-DOCUMENT_TYPE_ATTRIBUTE: str = "__type__"
+ATTRIBUTE_DOCUMENT_TYPE: str = "__type__"
 """
 The name of the metadata attribute storing the type of a document. 
 """
 
-RECORD_FIELD_ATTRIBUTE: str = "__record_field__"
+ATTRIBUTE_RECORD_FIELD: str = "__record_field__"
 """
 The name of the metadata attribute storing the field of a record. 
 """
 
-ORIGINAL_DOCUMENT_ID_ATTRIBUTE: str = "__original_document_id__"
+ATTRIBUTE_ORIGINAL_DOCUMENT_ID: str = "__original_document_id__"
 """
 The name of the metadata attribute storing the ID of the original document. 
 """
 
-SPLITTED_DOCUMENT_INDEX_ATTRIBUTE: str = "__splitted_document_index__"
+ATTRIBUTE_SPLITTED_DOCUMENT_INDEX: str = "__splitted_document_index__"
 """
 The name of the metadata attribute storing the index of the splitted document. 
 """
@@ -61,8 +61,8 @@ class Document:
         Tests whether this document is a splitted document.
         :return: True if this document is a splitted document; False otherwise.
         """
-        return (self.metadata.has_value_of_type(ORIGINAL_DOCUMENT_ID_ATTRIBUTE, str)
-                and self.metadata.has_value_of_type(SPLITTED_DOCUMENT_INDEX_ATTRIBUTE, int))
+        return (self.metadata.has_value_of_type(ATTRIBUTE_ORIGINAL_DOCUMENT_ID, str)
+                and self.metadata.has_value_of_type(ATTRIBUTE_SPLITTED_DOCUMENT_INDEX, int))
 
     def get_original_document_id(self) -> str:
         """
@@ -76,7 +76,7 @@ class Document:
         """
         if not self.is_splitted():
             raise ValueError("This document is not a splitted document.")
-        return self.metadata[ORIGINAL_DOCUMENT_ID_ATTRIBUTE]
+        return self.metadata[ATTRIBUTE_ORIGINAL_DOCUMENT_ID]
 
     def get_splitted_document_index(self) -> int:
         """
@@ -88,7 +88,7 @@ class Document:
         """
         if not self.is_splitted():
             raise ValueError("This document is not a splitted document.")
-        return self.metadata[SPLITTED_DOCUMENT_INDEX_ATTRIBUTE]
+        return self.metadata[ATTRIBUTE_SPLITTED_DOCUMENT_INDEX]
 
     def get_original_document_metadata(self) -> Metadata:
         """
@@ -100,8 +100,8 @@ class Document:
         if not self.is_splitted():
             raise ValueError("This document is not a splitted document.")
         metadata = copy.deepcopy(self.metadata)
-        metadata.pop(ORIGINAL_DOCUMENT_ID_ATTRIBUTE)
-        metadata.pop(SPLITTED_DOCUMENT_INDEX_ATTRIBUTE)
+        metadata.pop(ATTRIBUTE_ORIGINAL_DOCUMENT_ID)
+        metadata.pop(ATTRIBUTE_SPLITTED_DOCUMENT_INDEX)
         return metadata
 
     def create_splitted_document(self,
@@ -118,8 +118,8 @@ class Document:
             raise ValueError(f"The ID of the original document must be set: {self}")
         id = self.id + "-" + str(index)
         metadata = copy.deepcopy(self.metadata)
-        metadata[ORIGINAL_DOCUMENT_ID_ATTRIBUTE] = self.id
-        metadata[SPLITTED_DOCUMENT_INDEX_ATTRIBUTE] = index
+        metadata[ATTRIBUTE_ORIGINAL_DOCUMENT_ID] = self.id
+        metadata[ATTRIBUTE_SPLITTED_DOCUMENT_INDEX] = index
         return Document(id=id, content=text, metadata=metadata)
 
     @classmethod
@@ -137,13 +137,13 @@ class Document:
             raise ValueError(f"The ID field '{id_field}' is not found in the record: {record}")
         result = []
         metadata = Metadata(record)
-        metadata[DOCUMENT_TYPE_ATTRIBUTE] = "RECORD"
+        metadata[ATTRIBUTE_DOCUMENT_TYPE] = "RECORD"
         for key in record.keys():
             content = str(record[key]).strip()
             if len(content) == 0:
                 continue
             m = copy.deepcopy(metadata)
-            m[RECORD_FIELD_ATTRIBUTE] = key
+            m[ATTRIBUTE_RECORD_FIELD] = key
             doc = Document(content=content, metadata=m)
             result.append(doc)
         return result
@@ -173,8 +173,8 @@ class Document:
         :return: the record converted from the specified document.
         """
         record = dict(doc.metadata)
-        record.pop(DOCUMENT_TYPE_ATTRIBUTE)
-        record.pop(RECORD_FIELD_ATTRIBUTE)
+        record.pop(ATTRIBUTE_DOCUMENT_TYPE)
+        record.pop(ATTRIBUTE_RECORD_FIELD)
         return record
 
     @classmethod

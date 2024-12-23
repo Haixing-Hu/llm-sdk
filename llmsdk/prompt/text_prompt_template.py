@@ -81,7 +81,7 @@ class TextPromptTemplate(StructuredPromptTemplate):
         p1 = TextPromptTemplate(instruction_template=i1)
         p1.add_example(input="Hello, world!", output="你好，世界！")
         p1.add_example(input="What's your name?", output="你叫什么名字？")
-        v1 = p1.format(language="Chinese", prompt="Today is Sunday.")
+        v1 = p1.format_prompt(language="Chinese", prompt="Today is Sunday.")
         print(f"v1={v1}")
         self.assertEqual("Translate the following text into Chinese.\n\n"
                          "input: Hello, world!\n"
@@ -94,7 +94,7 @@ class TextPromptTemplate(StructuredPromptTemplate):
         p2 = TextPromptTemplate()
         p2.add_example(input="Hello, world!", output="你好，世界！")
         p2.add_example(input="What's your name?", output="你叫什么名字？")
-        v2 = p2.format(instruction="Translate the following text into Chinese.",
+        v2 = p2.format_prompt(instruction="Translate the following text into Chinese.",
                        prompt="Today is Sunday.")
         print(f"v2={v2}")
         self.assertEqual("Translate the following text into Chinese.\n\n"
@@ -105,10 +105,10 @@ class TextPromptTemplate(StructuredPromptTemplate):
                          "input: Today is Sunday.\n"
                          "output: ", v2)
 
-        p3 = ChatPromptTemplate("You are a helpful assistant.")
+        p3 = TextPromptTemplate("You are a helpful assistant.")
         p3.add_history(human_message="Who won the world series in 2020?",
                        ai_message="The Los Angeles Dodgers won the World Series in 2020.")
-        v3 = p3.format(prompt="Where was it played?")
+        v3 = p3.format_prompt(prompt="Where was it played?")
         print(f"v3={v3}")
         self.assertEqual("You are a helpful assistant.\n\n"
                          "input: Who won the world series in 2020?\n"

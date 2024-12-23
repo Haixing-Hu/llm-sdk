@@ -53,7 +53,7 @@ class ChatPromptTemplate(StructuredPromptTemplate):
         p1 = ChatPromptTemplate(instruction_template=i1)
         p1.add_example(input="Hello, world!", output="你好，世界！")
         p1.add_example(input="What's your name?", output="你叫什么名字？")
-        v1 = p1.format(language="Chinese", prompt="Today is Sunday.")
+        v1 = p1.format_prompt(language="Chinese", prompt="Today is Sunday.")
         print(f"v1={v1}")
         self.assertEqual([
             Message(Role.SYSTEM, "Translate the following text into Chinese."),
@@ -65,9 +65,9 @@ class ChatPromptTemplate(StructuredPromptTemplate):
         ], v1)
 
         p2 = ChatPromptTemplate("You are a helpful assistant.")
-        p3.add_history(human_message="Who won the world series in 2020?",
+        p2.add_history(human_message="Who won the world series in 2020?",
                        ai_message="The Los Angeles Dodgers won the World Series in 2020.") in 2020.")
-        v2 = p2.format(prompt="Where was it played?")
+        v2 = p2.format_prompt(prompt="Where was it played?")
         print(f"v2={v2}")
         self.assertEqual([
             Message(Role.SYSTEM, "You are a helpful assistant."),

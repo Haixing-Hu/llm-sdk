@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, List
 
-from .document import Document, DOCUMENT_TYPE_ATTRIBUTE
+from .document import Document, ATTRIBUTE_DOCUMENT_TYPE
 from .example import Example
 from .metadata import Metadata
 
@@ -121,7 +121,7 @@ class Faq:
         question_doc = Document(id=faq.id + "-question",
                                 content=faq.question,
                                 metadata=Metadata({
-                                    DOCUMENT_TYPE_ATTRIBUTE: "FAQ",
+                                    ATTRIBUTE_DOCUMENT_TYPE: "FAQ",
                                     FAQ_PART_ATTRIBUTE: "question",
                                     FAQ_ID_ATTRIBUTE: faq.id,
                                     FAQ_QUESTION_ATTRIBUTE: faq.question,
@@ -131,7 +131,7 @@ class Faq:
         answer_doc = Document(id=faq.id + "-answer",
                               content=faq.answer,
                               metadata=Metadata({
-                                  DOCUMENT_TYPE_ATTRIBUTE: "FAQ",
+                                  ATTRIBUTE_DOCUMENT_TYPE: "FAQ",
                                   FAQ_PART_ATTRIBUTE: "answer",
                                   FAQ_ID_ATTRIBUTE: faq.id,
                                   FAQ_QUESTION_ATTRIBUTE: faq.question,
@@ -158,8 +158,8 @@ class Faq:
         """
         metadata = doc.metadata
         return (metadata is not None
-                and metadata.has_value_of_type(DOCUMENT_TYPE_ATTRIBUTE, str)
-                and metadata[DOCUMENT_TYPE_ATTRIBUTE] == "FAQ"
+                and metadata.has_value_of_type(ATTRIBUTE_DOCUMENT_TYPE, str)
+                and metadata[ATTRIBUTE_DOCUMENT_TYPE] == "FAQ"
                 and metadata.has_value_of_type(FAQ_ID_ATTRIBUTE, str)
                 and metadata.has_value_of_type(FAQ_QUESTION_ATTRIBUTE, str)
                 and metadata.has_value_of_type(FAQ_ANSWER_ATTRIBUTE, str)

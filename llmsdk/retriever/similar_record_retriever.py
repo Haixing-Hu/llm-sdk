@@ -11,7 +11,7 @@ from importlib import import_module
 import json
 
 from ..common.search_type import SearchType
-from ..common.document import Document, RECORD_FIELD_ATTRIBUTE
+from ..common.document import Document, ATTRIBUTE_RECORD_FIELD
 from ..vectorstore.vector_store import VectorStore
 from ..embedding.embedding import Embedding
 from ..llm.llm import LargeLanguageModel
@@ -237,7 +237,7 @@ class SimilarRecordRetriever(VectorStoreBasedRetriever):
                 query=str(record[key]),
                 limit=self._record_limit,
                 score_threshold=self._record_score_threshold,
-                criterion=equal(RECORD_FIELD_ATTRIBUTE, key),
+                criterion=equal(ATTRIBUTE_RECORD_FIELD, key),
             )
             result.extend(Document.to_records(self._record_id_field, docs))
         if len(result) == 0:
